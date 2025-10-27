@@ -25,7 +25,13 @@ async def update(ctx: 'Context', ap_connected: bool) -> None:
 
     if ap_connected and ctx.slot_data is not None:
         # Check if exit to main menu
+        menu = ctx.main_menu
         await handle_main_menu(ctx)
+
+        if menu is True and ctx.main_menu is False:
+            logger.info("Updating game...")
+            ctx.game_interface.file_load(ctx.checked_locations)
+            logger.info("Game State Updated!")
 
         if not ctx.main_menu:
             # Check received items
@@ -54,7 +60,7 @@ async def handle_planet_changed(ctx: 'Context') -> None:
     if ctx.slot_data is None:
         return
     planet = ctx.current_planet
-    ctx.current_planet = ctx.game_interface.new_planet()
+    ctx.current_planet = ctx.game_interface.map_switch()
     if planet is not ctx.current_planet:
 
         if ctx.current_planet == "Tyhrranosis":
@@ -99,9 +105,9 @@ async def handle_checked_locations(ctx: 'Context') -> None:
     if ctx.slot_data is None:
         return
 
-    # logger.info(f"{ctx.location_table}")
+    # logger.info(f"{ctx.server_locations}")
     new_checks = []
-    for ap_code in ctx.location_table:
+    for ap_code in ctx.server_locations:
         if ap_code in ctx.checked_locations:
             continue
         if ctx.game_interface.is_location_checked(ap_code) is True:

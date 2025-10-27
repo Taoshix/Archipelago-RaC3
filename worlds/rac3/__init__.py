@@ -4,15 +4,12 @@ from typing import Any, ClassVar, Dict, Optional
 from BaseClasses import Item, MultiWorld, Tutorial
 from worlds.AutoWorld import CollectionState, WebWorld, World
 from worlds.LauncherComponents import Component, components, launch_subprocess, SuffixIdentifier, Type
-
 from . import UniversalTracker
 from .Items import create_item, create_itempool, get_filler_item_selection, item_table
 from .Locations import get_level_locations, get_location_names, get_regions, get_total_locations, location_groups
-
 from .Rac3Options import GAME_TITLE_FULL, RaC3Options
 from .Regions import create_regions
 from .Rules import set_rules
-from .Types import Multiplier
 
 rac3_logger = logging.getLogger("Ratchet & Clank 3")
 rac3_logger.setLevel(logging.DEBUG)
@@ -121,10 +118,12 @@ class RaC3World(World):
                 "start_inventory_from_pool": self.options.start_inventory_from_pool.value,
                 "starting_weapons": self.options.starting_weapons.value,
                 "bolt_and_xp_multiplier": self.options.bolt_and_xp_multiplier.value,
-                "enable_weapon_level_as_item": self.options.enable_weapon_level_as_item.value,
+                "enable_progressive_weapons": self.options.enable_progressive_weapons.value,
                 "extra_armor_upgrade": self.options.extra_armor_upgrade.value,
                 "skill_points": self.options.skill_points.value,
                 "trophies": self.options.trophies.value,
+                "titanium_bolts": self.options.titanium_bolts.value,
+                "nanotech_milestones": self.options.nanotech_milestones.value,
             },
             "TotalLocations": get_total_locations(self)
         }

@@ -45,12 +45,9 @@ rac3_locations = {
     "Phoenix: Received Infernox Armor": LocData(50030005, "Starship Phoenix"),
     "Phoenix: Meet Sasha on the Bridge": LocData(50030006, "Starship Phoenix"),  # Infobot: Marcadia
     "Phoenix: Post Hideout Assault": LocData(50030007, "Starship Phoenix"),  # Infobot: Koros
-    "Phoenix: Play VidComic 1": LocData(50030008, "Starship Phoenix"),  # Infobot: Annihilation Nation
     "Phoenix: Return after winning Grand Prize Bout": LocData(50030009, "Starship Phoenix"),  # Infobot: Aquatos
     "Phoenix: Return after Aquatos Base": LocData(50030010, "Starship Phoenix"),  # Infobot: Tyhrranosis
     "Phoenix: VR Training after Noid Queen": LocData(50030011, "Starship Phoenix"),  # Infobot: Daxx
-    "Phoenix: Play VidComic 4": LocData(50030012, "Starship Phoenix"),  # Infobot: Metropolis
-    "Phoenix: Play VidComic 5": LocData(50030014, "Starship Phoenix"),  # Infobot: Qwarks Hideout
     "Phoenix: T-Bolt: VR Gadget Training": LocData(50030015, "Starship Phoenix"),
     "Phoenix: Received Hacker": LocData(50030016, "Starship Phoenix"),
     "Phoenix: Received Hypershot": LocData(50030017, "Starship Phoenix"),
@@ -78,21 +75,24 @@ rac3_locations = {
     "Phoenix: Long Term Trophy: Skill Master": LocData(50030037, "Long Term Trophy"),  # All Skill Points collected
 
     # VidComics
+    "Phoenix: Play VidComic 1": LocData(50030008, "Starship Phoenix"),  # Infobot: Annihilation Nation
     "Phoenix: Qwark VidComic 1 Clear": LocData(50310000, "Starship Phoenix"),
     "Phoenix: T-Bolt: VidComic 1 100%": LocData(50310001, "Starship Phoenix"),
+    "Phoenix: Skill Point: Pirate booty - set a new record for qwark": LocData(50310003, "Starship Phoenix"),
     "Phoenix: Qwark VidComic 2 Clear": LocData(50330000, "Starship Phoenix"),
     "Phoenix: T-Bolt: VidComic 2 100%": LocData(50330001, "Starship Phoenix"),
+    "Phoenix: Skill Point: Arriba Amoeba! - set a new record for qwark": LocData(50330003, "Starship Phoenix"),
     "Phoenix: Qwark VidComic 3 Clear": LocData(50340000, "Starship Phoenix"),
     "Phoenix: T-Bolt: VidComic 3 100%": LocData(50340001, "Starship Phoenix"),
+    "Phoenix: Skill Point: Shadow of the robot - set a new record for qwark": LocData(50340003, "Starship Phoenix"),
+    "Phoenix: Play VidComic 4": LocData(50030012, "Starship Phoenix"),  # Infobot: Metropolis
     "Phoenix: Qwark VidComic 4 Clear": LocData(50320000, "Starship Phoenix"),
     "Phoenix: T-Bolt: VidComic 4 100%": LocData(50320001, "Starship Phoenix"),
+    "Phoenix: Skill Point: Deja Q All over Again - set a new record for qwark": LocData(50320003, "Starship Phoenix"),
     "Phoenix: Qwark VidComic 5 Clear": LocData(50350000, "Starship Phoenix"),
     "Phoenix: T-Bolt: VidComic 5 100%": LocData(50350001, "Starship Phoenix"),
-    "Phoenix: Skill Point: Pirate booty - set a new record for qwark": LocData(50310003, "Starship Phoenix"),
-    "Phoenix: Skill Point: Deja Q All over Again - set a new record for qwark": LocData(50330003, "Starship Phoenix"),
-    "Phoenix: Skill Point: Arriba Amoeba! - set a new record for qwark": LocData(50340003, "Starship Phoenix"),
-    "Phoenix: Skill Point: Shadow of the robot - set a new record for qwark": LocData(50320003, "Starship Phoenix"),
     "Phoenix: Skill Point: The Shaming of the Q - set a new record for qwark": LocData(50350003, "Starship Phoenix"),
+    "Phoenix: Play VidComic 5": LocData(50030014, "Starship Phoenix"),  # Infobot: Qwarks Hideout
 
     # ----- Planet Marcadia -----#
     "Marcadia: Received Spitting Hydra": LocData(50040000, "Marcadia"),
@@ -137,9 +137,9 @@ rac3_locations = {
     "Annihilation: Championship Bout II": LocData(50070025, "Annihilation Nation 2"),
     "Annihilation: Qwarktastic Battle": LocData(50070026, "Annihilation Nation 2"),
     "Annihilation: Heat Street": LocData(50070027, "Annihilation Nation"),
-    "Annihilation: Crispy Critter": LocData(50070028, "Annihilation Nation 2"),
-    "Annihilation: Pyro Playground": LocData(50070029, "Annihilation Nation 2"),
-    "Annihilation: Suicide Run": LocData(50070030, "Annihilation Nation 2"),
+    "Annihilation: Crispy Critter": LocData(50070028, "Annihilation Nation"),
+    "Annihilation: Pyro Playground": LocData(50070029, "Annihilation Nation"),
+    "Annihilation: Suicide Run": LocData(50070030, "Annihilation Nation"),
     "Annihilation: BBQ Boulevard": LocData(50070031, "Annihilation Nation 2"),
     "Annihilation: Maze of Blaze": LocData(50070032, "Annihilation Nation 2"),
     "Annihilation: Cremation Station": LocData(50070033, "Annihilation Nation 2"),
@@ -506,6 +506,37 @@ location_table: dict[str, LocData] = {
     # **weapon_upgrades
 }
 
+weapons: list[str] = [
+    "Florana: Received Plasma Whip",
+    "Florana: Received N60 Storm",
+    "Phoenix: Received Suck Cannon",
+    "Phoenix: Received Infector",
+    "Marcadia: Received Spitting Hydra",
+    "Annihilation: Received Agents of Doom",
+    "Aquatos: Received Flux Rifle",
+    "Aquatos: Received Mini-Turret Glove",
+    "Aquatos: Received Lava Gun",
+    "Aquatos: Received Shield Charger",
+    "Aquatos: Received Bouncer",
+    "Aquatos: Received Plasma Coil",
+    "Tyhrranosis: Received Annihilator",
+    "Tyhrranosis: Received Holo-Shield Glove",
+    "Obani Gemini: Received Disk-Blade Gun",
+    "Holostar: Received Rift Inducer",
+    "Aridia: Received Qwack-O-Ray",
+]
+
+gadgets: list[str] = [
+    "Marcadia: Received Refractor",
+    "Annihilation: Received Tyhrra-Guise",
+    "Daxx: Received Charge Boots",
+    "Blackwater City: Received Gravity Boots",
+    "Zeldrin Starport: Received Bolt Grabber V2",
+    "Aridia: Received Warp Pad",
+    "Crash Site: Received Nano-Pak",
+    "Qwarks Hideout: Received Gadgetron PDA",
+]
+
 rangers: list[str] = [
     "Marcadia: Operation IRON SHIELD: Secure the Area",
     "Marcadia: Operation IRON SHIELD: Air Assault",
@@ -559,7 +590,9 @@ unstable: list[str] = [
     "Phoenix: T-Bolt: VR Gadget Training",
     "Phoenix: Received Hacker",
     "Phoenix: Received Hypershot",
-    "Phoenix: VR: VR Gadget Training"
+    "Phoenix: VR: VR Gadget Training",
+    "Obani Gemini: Infobot: Blackwater City",
+    "Crash Site: Infobot: Aridia"
 ]
 
 location_groups: dict[str, set[str]] = {
@@ -599,7 +632,9 @@ location_groups: dict[str, set[str]] = {
     "Arena": set(loc for loc in location_table.keys() if
                  (50070002 <= location_table[loc].ap_code < 50080000) or ("VR" in loc) or ("Grand" in loc)),
     "Nanotech": set(loc for loc in location_table.keys() if "Nanotech" in loc),
-    "Unstable": set(loc for loc in unstable)
+    "Unstable": set(loc for loc in unstable),
+    "Weapons": set(loc for loc in weapons),
+    "Gadgets": set(loc for loc in gadgets)
 }
 
 

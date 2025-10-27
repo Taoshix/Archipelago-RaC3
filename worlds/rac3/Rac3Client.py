@@ -26,7 +26,7 @@ from .Rac3Interface import Rac3Interface
 from .Rac3Callbacks import init, update
 from .Rac3Options import GAME_TITLE, GAME_TITLE_FULL
 
-CLIENT_INIT_LOG = f"{GAME_TITLE} Client"
+CLIENT_INIT_LOG = f"{GAME_TITLE}_Client"
 CLIENT_VERSION = "0.1.0"
 
 
@@ -46,7 +46,7 @@ class CommandProcessor(ClientCommandProcessor):
 
     def _cmd_rac3_info(self):
         if isinstance(self.ctx, Rac3Context):
-            self.ctx.game_interface.dump_info(self.ctx)
+            self.ctx.game_interface.dump_info(self.ctx.current_planet, self.ctx.slot_data)
 
     def _cmd_force_update(self):
         if isinstance(self.ctx, Rac3Context):
@@ -69,7 +69,6 @@ class Rac3Context(CommonContext):
     deathlink_timestamp: float = 0
     death_link_enabled = False
     queued_deaths: int = 0
-    location_table = None
     current_planet: str = 'Galaxy'
     main_menu: bool = True
 
@@ -113,7 +112,6 @@ class Rac3Context(CommonContext):
         if cmd == "Connected":
             self.slot_data = args["slot_data"]
             # logger.info(f"Received data: {args}")
-            self.location_table = self.server_locations  # list
             self.game_interface.proc_option(self.slot_data)
 
             # Set death link tag if it was requested in options

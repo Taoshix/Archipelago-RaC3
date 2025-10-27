@@ -1172,14 +1172,14 @@ LOCATIONS = [
     {
         "Name": "Qwark Vid Comics/VC3 - All Tokens Titanium Bolt",
         "Id": 50340001,
-        "Address": "0x001BBB33",
+        "Address": "0x001BBB35",
         "CheckType": 0,
         "AddressBit": 0
     },
     {
         "Name": "Qwark Vid Comics/VC4 - All Tokens Titanium Bolt",
         "Id": 50320001,
-        "Address": "0x001BBB35",
+        "Address": "0x001BBB33",
         "CheckType": 0,
         "AddressBit": 0
     },
@@ -1975,14 +1975,14 @@ LOCATIONS = [
         "Id": 50340000,
         "Address": "0x00142734",
         "CheckType": 0,
-        "AddressBit": 2
+        "AddressBit": 4
     },
     {
         "Name": "Qwark Vid Comics/Qwark VidComic 4 Clear",
         "Id": 50320000,
         "Address": "0x00142734",
         "CheckType": 0,
-        "AddressBit": 4
+        "AddressBit": 2
     },
     {
         "Name": "Qwark Vid Comics/Qwark VidComic 5 Clear",
@@ -2218,14 +2218,14 @@ LOCATIONS = [
     {
         "Name": "Qwark Vid Comics/VC3 - Set a new record for Qwark (1:50) (SP)",
         "Id": 50340003,
-        "Address": "0x001D54CA",
+        "Address": "0x001D54CC",
         "CheckType": 0,
         "AddressBit": 0
     },
     {
         "Name": "Qwark Vid Comics/VC4 - Set a new record for Qwark (4:45) (SP)",
         "Id": 50320003,
-        "Address": "0x001D54CC",
+        "Address": "0x001D54CA",
         "CheckType": 0,
         "AddressBit": 0
     },
@@ -4108,14 +4108,14 @@ LOCATIONS = [
     {
         "Name": "Phoenix/VC3 - All Tokens Titanium Bolt",
         "Id": 50340001,
-        "Address": "0x001BBB33",
+        "Address": "0x001BBB35",
         "CheckType": 0,
         "AddressBit": 0
     },
     {
         "Name": "Phoenix/VC4 - All Tokens Titanium Bolt",
         "Id": 50320001,
-        "Address": "0x001BBB35",
+        "Address": "0x001BBB33",
         "CheckType": 0,
         "AddressBit": 0
     },
@@ -4271,14 +4271,14 @@ LOCATIONS = [
         "Id": 50340000,
         "Address": "0x00142734",
         "CheckType": 0,
-        "AddressBit": 2
+        "AddressBit": 4
     },
     {
         "Name": "Phoenix/Qwark VidComic 4 Clear",
         "Id": 50320000,
         "Address": "0x00142734",
         "CheckType": 0,
-        "AddressBit": 4
+        "AddressBit": 2
     },
     {
         "Name": "Phoenix/Qwark VidComic 5 Clear",
@@ -4514,14 +4514,14 @@ LOCATIONS = [
     {
         "Name": "Phoenix/VC3 - Set a new record for Qwark (1:50) (SP)",
         "Id": 50340003,
-        "Address": "0x001D54CA",
+        "Address": "0x001D54CC",
         "CheckType": 0,
         "AddressBit": 0
     },
     {
         "Name": "Phoenix/VC4 - Set a new record for Qwark (4:45) (SP)",
         "Id": 50320003,
-        "Address": "0x001D54CC",
+        "Address": "0x001D54CA",
         "CheckType": 0,
         "AddressBit": 0
     },

@@ -179,19 +179,29 @@ jobs:
           new_tag="v${{ steps.semver.outputs.version }}"
           short_sha=$(git rev-parse --short HEAD)
 
-          # Find previous release tag (one before the new tag)
-          prev_tag=$(git tag --sort=-v:refname | head -n 2 | tail -n 1 || true)
-          if [[ -z "$prev_tag" || "$prev_tag" == "$new_tag" ]]; then
-            echo "⚠️ No previous release tag found — will show recent commits."
-            prev_tag=""
+          git fetch --tags
+
+          echo "🔍 Determining previous tag for changelog..."
+
+          # Find the most recent relevant tag depending on branch type
+          if [[ "$branch" == "main" ]]; then
+            # For main: compare to latest *non-pre* tag
+            prev_tag=$(git tag --sort=-v:refname | grep -v -- '-pre' | head -n 1 || true)
+          else
+            # For staging: compare to latest tag of ANY kind (pre or stable)
+            prev_tag=$(git tag --sort=-v:refname | head -n 1 || true)
+          fi
+          
+          # Fallback: if none found, show full commit history
+          if [[ -z "$prev_tag" ]]; then
+            echo "⚠️ No previous ${branch} release tag found — showing full history."
+            changelog="${repo_url}/commits/${branch}"
+          else
+            changelog="${repo_url}/compare/${prev_tag}...${new_tag}"
           fi
 
-          # Build changelog link
-          if [[ -n "$prev_tag" ]]; then
-            changelog="${repo_url}/compare/${prev_tag}...${new_tag}"
-          else
-            changelog="${repo_url}/commits/${branch}"
-          fi
+          echo "Previous tag: ${prev_tag:-<none>}"
+          echo "Current tag:  ${new_tag}"
 
           echo "🔍 Using changelog link: $changelog"
 

@@ -26,7 +26,7 @@ Currently there are some checks that doesn't work with sequence breaking (Exampl
 these are collected into a location group called  `Unstable`. If you generate the yaml for yourself make sure it is in 
 the **excluded locations** section (it should be there by default along with some ones).
 
-## Q: I'm missing Holostar Studios and/or Qwark's hideout in my ship, but I got their infobots, what should I do?
+## I'm missing Holostar Studios and/or Qwark's hideout in my ship, but I got their infobots, what should I do?
 
 These 2 specific planets have softlock preventions in place. In order to visit Holostar you need to have the hypershot
 and the hacker. For Hideout you need to have the refractor to avoid being softlocked on Phoenix Rescue.
@@ -36,5 +36,6 @@ Please refer to these:
 - [Unstable](https://github.com/Taoshix/Archipelago-RaC3/blob/main/worlds/rac3/Locations.py#L581-L596)
 - [Weapons](https://github.com/Taoshix/Archipelago-RaC3/blob/main/worlds/rac3/Locations.py#L509-L527)
 - [Gadgets](https://github.com/Taoshix/Archipelago-RaC3/blob/main/worlds/rac3/Locations.py#L529-L538)
+
 
 

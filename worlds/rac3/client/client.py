@@ -74,7 +74,7 @@ class CommandProcessor(ClientCommandProcessor):
             return
         if isinstance(self.ctx, Rac3Context):
             if self.ctx.game_interface.get_connection_state():
-                self.output("Already Connected to Emulator")
+                self.output("Already Connected to Emulator.")
             else:
                 self.ctx.game_interface.connect_to_game()
 

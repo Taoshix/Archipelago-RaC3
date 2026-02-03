@@ -69,7 +69,7 @@ class CommandProcessor(ClientCommandProcessor):
             self.ctx.on_deathlink({"time": time(), "cause": "Amondo got gaslit"})
 
     def _cmd_connect_rac3(self):
-        """Attempt to connect the client to the emulator"""
+        """Attempt to connect the client to the emulator."""
         if not self.verify(1):
             return
         if isinstance(self.ctx, Rac3Context):

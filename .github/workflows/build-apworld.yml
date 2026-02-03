@@ -339,15 +339,25 @@ jobs:
           set -e
           echo "🧾 Updating archipelago.json manifest & set VERSION_NUMBER"
 
+          branch="${{ needs.build.outputs.branch }}"
           version="${{ steps.semver.outputs.version }}"
           version="${version#v}"
           version="${version%-pre}"
 
+          # For staging branch push, manifest strips pre-release/patch, VERSION_NUMBER uses full semver
+          if [[ "$branch" == "staging" && "${{ github.event_name }}" == "push" ]]; then
+            # Strip any -pre or .1 etc from version for manifest
+            manifest_version="$(echo "$version" | sed -E 's/[-.].*$//')"
+            rac3_version="$version"
+          else
+            manifest_version="$version"
+            rac3_version="$version"
+          fi
+
           # Get authors from git history
-          git fetch origin ${{ needs.build.outputs.branch }}
+          git fetch origin $branch
           authors=$(git log --format='%aN' -- worlds/rac3 | sort -u)
 
-          # Add custom authors. Example: ("NewContributor" "AnotherDev")
           custom_authors=("AmondoVagyok" "Myth197" "Taoshi" "Yuxia228" "1theory")
           for a in "${custom_authors[@]}"; do
             if ! echo "$authors" | grep -Fxq "$a"; then
@@ -355,24 +365,19 @@ jobs:
             fi
           done
 
-          # Default if no authors found
           if [ -z "$authors" ]; then
             authors="Unknown"
           fi
 
-          # Convert authors to JSON array
           authors_json=$(echo "$authors" | jq -R . | jq -s .)
 
-          # Extract AP version
           ap_version=$(grep '^__version__ = ' Utils.py | cut -d'"' -f2)
           echo "Maximum AP version: $ap_version"
 
-          # Unzip the built .apworld
           mkdir -p tmp_unzip
           unzip -o -q rac3.apworld -d tmp_unzip
 
-          # Update only root archipelago.json
-          jq --arg world_version "$version" \
+          jq --arg world_version "$manifest_version" \
              --argjson authors "$authors_json" \
              --arg min_ap "0.5.0" \
              --arg max_ap "$ap_version" \
@@ -381,31 +386,23 @@ jobs:
               | .minimum_ap_version = $min_ap' \
              tmp_unzip/archipelago.json > tmp_unzip/archipelago.json.tmp
 
-          # Maximum AP not set. If needed can use the below to set to current used AP version
-          # | .maximum_ap_version = $max_ap
-          
-          # Replace the old file with the updated one
           mv tmp_unzip/archipelago.json.tmp tmp_unzip/archipelago.json
 
-          # Remove nested archipelago.json but keep the root one
           find tmp_unzip/rac3 -type f -name 'archipelago.json' -exec rm {} \;
           echo "🗑️ Removed extra archipelago.json"
 
-          # Update client VERSION_NUMBER
           client_file="tmp_unzip/rac3/constants/options.py"
           old_version=$(grep -E '^\s*VERSION_NUMBER\s*=' "$client_file" | cut -d'"' -f2 || echo "<none>")
-          echo "🔧 Updating VERSION_NUMBER in $client_file from $old_version to $version"
-          sed -i -E 's/^(\s*VERSION_NUMBER\s*=\s*).*/\1"'$version'"/' "$client_file"
+          echo "🔧 Updating VERSION_NUMBER in $client_file from $old_version to $rac3_version"
+          sed -i -E 's/^(\s*VERSION_NUMBER\s*=\s*).*/\1"'$rac3_version'"/' "$client_file"
           echo "🔍 Post-update line:"
           grep -n 'VERSION_NUMBER' "$client_file"
-          # Hard fail if replacement didn't happen
-          if ! grep -Eq "VERSION_NUMBER\s*=\s*\"$version\"" "$client_file"; then
+          if ! grep -Eq "VERSION_NUMBER\s*=\s*\"$rac3_version\"" "$client_file"; then
             echo "❌ VERSION_NUMBER update failed!"
             exit 1
           fi
           rm -f "${client_file}.bak"
 
-          # Rezip the .apworld
           cd tmp_unzip
           zip -qr ../rac3.apworld *
           cd ..
@@ -426,6 +423,7 @@ jobs:
           body: "Generating release notes..."
           prerelease: ${{ steps.semver.outputs.is_pre == 'true' }}
           target_commitish: ${{ needs.build.outputs.branch }}
+          draft: ${{ needs.build.outputs.branch == 'staging' && github.event_name == 'push' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

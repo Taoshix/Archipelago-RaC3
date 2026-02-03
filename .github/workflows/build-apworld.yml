@@ -276,17 +276,6 @@ jobs:
 
           echo "🔢 Determining next semantic version for branch: $branch"
 
-          # Get latest tag (any tag, pre or stable)
-          latest_tag=$(git tag --sort=-v:refname | head -n 1 || true)
-          [[ -z "$latest_tag" ]] && latest_tag="v0.0.0"
-          echo "Latest tag: $latest_tag"
-
-          # Strip leading "v" if present
-          tag_stripped="${latest_tag#v}"
-          # Split version safely (defaults if missing)
-          IFS='.' read -r major minor patch subver <<< "$tag_stripped"
-          major=${major:-0}; minor=${minor:-0}; patch=${patch:-0};
-
           # Manual inputs
           manual="${{ github.event_name == 'workflow_dispatch' }}"
           manual_pre="${{ github.event.inputs.prerelease || false }}"
@@ -309,24 +298,47 @@ jobs:
             exit 0
           fi
 
+          # For workflow-rework branch, use draft test versioning
+          if [[ "$branch" == "workflow-rework" && "${{ github.event_name }}" == "push" ]]; then
+            # Find last stable tag (no -pre, -rc, -beta, -alpha, and no fourth number)
+            last_stable_tag=$(git tag --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+            if [[ -z "$last_stable_tag" ]]; then
+              base_version="0.0.0"
+            else
+              base_version="${last_stable_tag#v}"
+            fi
+            # Find last draft version (with four numbers)
+            last_draft_tag=$(git tag --sort=-v:refname | grep -E "^v?${base_version//./\\.}\\.[0-9]+$" | head -n 1)
+            if [[ -z "$last_draft_tag" ]]; then
+              draft_number=1
+            else
+              draft_number=$(echo "${last_draft_tag#v}" | awk -F. '{print $4+1}')
+            fi
+            version="${base_version}.${draft_number}"
+            echo "✅ Next draft test version: $version"
+            echo "version=$version" >> $GITHUB_OUTPUT
+            echo "branch=$branch" >> $GITHUB_OUTPUT
+            echo "is_pre=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Get latest tag (any tag, pre or stable)
+          latest_tag=$(git tag --sort=-v:refname | head -n 1 || true)
+          [[ -z "$latest_tag" ]] && latest_tag="v0.0.0"
+          echo "Latest tag: $latest_tag"
+
+          # Strip leading "v" if present
+          tag_stripped="${latest_tag#v}"
+          # Split version safely (defaults if missing)
+          IFS='.' read -r major minor patch subver <<< "$tag_stripped"
+          major=${major:-0}; minor=${minor:-0}; patch=${patch:-0};
+
           # Determine prerelease
           if [[ "$manual" == "true" ]]; then
             is_pre="$manual_pre"
           else
             # Auto pre-release for non-main branches by default
             is_pre="$([[ "$branch" != "main" ]] && echo "true" || echo "false")"
-          fi
-
-          # Check for draft test version (four numbers) and bump last if automatic release from staging
-          if [[ "$branch" == "workflow-rework" && "${{ github.event_name }}" == "push" && -n "$subver" ]]; then
-          # Bump the fourth number
-          subver=$((subver + 1))
-          version="${major}.${minor}.${patch}.${subver}"
-          echo "✅ Next draft test version: $version"
-          echo "version=$version" >> $GITHUB_OUTPUT
-          echo "branch=$branch" >> $GITHUB_OUTPUT
-          echo "is_pre=true" >> $GITHUB_OUTPUT
-          exit 0
           fi
 
           # Auto bump version
@@ -357,10 +369,10 @@ jobs:
           version="${version#v}"
           version="${version%-pre}"
 
-          # For staging branch push, manifest strips pre-release/patch, VERSION_NUMBER uses full semver
+          # For workflow-rework branch push, manifest strips fourth number, VERSION_NUMBER uses full semver
           if [[ "$branch" == "workflow-rework" && "${{ github.event_name }}" == "push" ]]; then
-            # Strip any -pre or .1 etc from version for manifest
-            manifest_version="$(echo "$version" | sed -E 's/[-.].*$//')"
+            # manifest_version: strip fourth number for manifest (e.g., 0.4.0.1 -> 0.4.0)
+            manifest_version="$(echo "$version" | awk -F. '{print $1 "." $2 "." $3}')"
             rac3_version="$version"
           else
             manifest_version="$version"

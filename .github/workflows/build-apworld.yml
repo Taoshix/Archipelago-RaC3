@@ -297,9 +297,9 @@ jobs:
               echo "📝 Custom version provided: $custom_version"
 
               if [[ "$custom_version" == *"-pre" ]]; then
-                is_pre="true"
+                  is_pre="true"
               else
-                is_pre="false"
+                  is_pre="false"
               fi
 
               echo "version=$custom_version" >> $GITHUB_OUTPUT

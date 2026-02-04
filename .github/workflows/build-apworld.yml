@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - staging
-      - workflow-rework
   workflow_dispatch:
     inputs:
       prerelease:
@@ -318,7 +317,7 @@ jobs:
           fi
 
           # Check for draft test version (four numbers) and bump last if automatic release from staging
-          if [[ "$branch" == "workflow-rework" && "${{ github.event_name }}" == "push" && -n "$subver" ]]; then
+          if [[ "$branch" == "staging" && "${{ github.event_name }}" == "push" && -n "$subver" ]]; then
           # Bump the fourth number
           subver=$((subver + 1))
           version="${major}.${minor}.${patch}.${subver}"
@@ -358,7 +357,7 @@ jobs:
           version="${version%-pre}"
 
           # For staging branch push, manifest strips pre-release/patch, VERSION_NUMBER uses full semver
-          if [[ "$branch" == "workflow-rework" && "${{ github.event_name }}" == "push" ]]; then
+          if [[ "$branch" == "staging" && "${{ github.event_name }}" == "push" ]]; then
             # Strip any -pre or .1 etc from version for manifest
             manifest_version="$(echo "$version" | sed -E 's/\.[0-9]+$//')"
             rac3_version="$version"
@@ -450,7 +449,7 @@ jobs:
           body: "Generating release notes..."
           prerelease: ${{ steps.semver.outputs.is_pre == 'true' }}
           target_commitish: ${{ needs.build.outputs.branch }}
-          draft: ${{ needs.build.outputs.branch == 'workflow-rework' && github.event_name == 'push' }}
+          draft: ${{ needs.build.outputs.branch == 'staging' && github.event_name == 'push' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

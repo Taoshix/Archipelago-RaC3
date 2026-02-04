@@ -360,7 +360,7 @@ jobs:
           # For staging branch push, manifest strips pre-release/patch, VERSION_NUMBER uses full semver
           if [[ "$branch" == "workflow-rework" && "${{ github.event_name }}" == "push" ]]; then
             # Strip any -pre or .1 etc from version for manifest
-            manifest_version="$(echo "$version" | sed -E 's/[-.].*$//')"
+            manifest_version="$(echo "$version" | sed -E 's/\.[0-9]+$//')"
             rac3_version="$version"
           else
             manifest_version="$version"

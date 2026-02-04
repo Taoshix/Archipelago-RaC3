@@ -155,7 +155,7 @@ class CommandProcessor(ClientCommandProcessor):
             create_task(handle_respawn(self.ctx, force_load=True))
 
     def _cmd_ryno(self):
-        """Toggles the maximum upgrade level for the RYNO between lv5 and lv4"""
+        """Toggles the maximum upgrade level for the RYNO between lv5 and lv4."""
         if not self.verify():
             return
         if isinstance(self.ctx, Rac3Context):

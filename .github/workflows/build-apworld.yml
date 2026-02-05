@@ -464,6 +464,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create and apply tag for draft release
+        if: ${{ needs.build.outputs.branch == 'staging' && github.event_name == 'push' }}
+        shell: bash
+        run: |
+          set -e
+          tag_name="v${{ steps.semver.outputs.version }}"
+          git tag "$tag_name"
+          git push origin "$tag_name"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

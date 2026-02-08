@@ -338,16 +338,19 @@ jobs:
               exit 0
             fi
 
-            # Check for draft test version (four numbers) and bump last if automatic release from staging
-            if [[ "$branch" == "staging" && "${{ github.event_name }}" == "push" && -n "$subver" ]]; then
-            # Bump the fourth number
-            subver=$((subver + 1))
-            version="${major}.${minor}.${patch}.${subver}"
-            echo "✅ Next draft test version: $version"
-            echo "version=$version" >> $GITHUB_OUTPUT
-            echo "branch=$branch" >> $GITHUB_OUTPUT
-            echo "is_pre=true" >> $GITHUB_OUTPUT
-            exit 0
+            # Auto staging push: always produce X.Y.Z.N
+            if [[ "$branch" == "staging" && "${{ github.event_name }}" == "push" ]]; then
+              if [[ -z "$subver" || "$subver" == "0" ]]; then
+                subver=1
+              else
+                subver=$((subver + 1))
+              fi
+              version="${major}.${minor}.${patch}.${subver}"
+              echo "✅ Next draft test version: $version"
+              echo "version=$version" >> $GITHUB_OUTPUT
+              echo "branch=$branch" >> $GITHUB_OUTPUT
+              echo "is_pre=true" >> $GITHUB_OUTPUT
+              exit 0
             fi
 
             # Auto bump version
@@ -381,11 +384,8 @@ jobs:
           # For staging branch push, manifest strips pre-release/patch, VERSION_NUMBER uses full semver
           if [[ "$branch" == "staging" && "${{ github.event_name }}" == "push" ]]; then
             # Strip to three components for manifest
-            if [[ $(grep -o '\.' <<< "$version" | wc -l) -ge 3 ]]; then
-              manifest_version="${version%.*}"
-            else
-              manifest_version="$version"
-            fi
+            IFS='.' read -r vmajor vminor vpatch vextra <<< "$version"
+            manifest_version="${vmajor}.${vminor}.${vpatch}"
             rac3_version="$version"
           else
             manifest_version="$version"

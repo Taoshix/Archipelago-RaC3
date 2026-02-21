@@ -557,6 +557,8 @@ jobs:
           ### Notes
           This release was automatically generated from the **${branch}** branch.  
           Latest (main) releases are recommended, as pre-releases (staging) may contain experimental or in-progress changes.
+          [Setup Guide](https://github.com/Taoshix/Archipelago-RaC3/blob/staging/worlds/rac3/docs/setup_en.md)
+          [FAQ](https://github.com/Taoshix/Archipelago-RaC3/blob/staging/worlds/rac3/docs/frequently_asked_questions_Rac3_en.md)
 
           ### If a location is broken and does not get sent out
           Go to the server console (locally or via the Archipelago room page) and run:  

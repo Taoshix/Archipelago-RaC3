@@ -81,8 +81,17 @@ class Pine:
         self._sock_state: bool = False
         # self._init_socket()
 
+    def is_wsl(self) -> bool:
+        if system() != "Linux":
+            return False
+        try:
+            with open("/proc/sys/kernel/osrelease", "r") as f:
+                return "microsoft" in f.read().lower()
+        except Exception:
+            return False
+
     def _init_socket(self) -> bool:
-        if system() == "Windows":
+        if system() == "Windows" or self.is_wsl():
             socket_family = socket.AF_INET
             socket_name = ("127.0.0.1", self._slot)
         elif system() == "Linux":

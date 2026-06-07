@@ -1,3 +1,5 @@
+"""This module provides handling for location regions"""
+
 from typing import TYPE_CHECKING
 
 from BaseClasses import Location, Region
@@ -11,7 +13,8 @@ from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
 from worlds.rac3.constants.locations.trophies import RAC3TROPHY
 from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.player_type import RAC3PLAYERTYPE
-from worlds.rac3.constants.region import RAC3REGION
+from worlds.rac3.constants.region import RAC3REGION, REGIONS_WITH_LOCATIONS
+from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.rac3options import RaC3Options
 
 if TYPE_CHECKING:
@@ -19,6 +22,7 @@ if TYPE_CHECKING:
 
 
 class GameLocation(Location):
+    """Rac3 game location"""
     game = RAC3OPTION.GAME_TITLE_FULL
 
 
@@ -391,10 +395,11 @@ simple_skillpoints: list[str] = [
 
 
 def create_regions(world: "RaC3World"):
+    """Creates each region and connects them together"""
     # ----- Introduction Sequence -----#
     menu = create_region(world, RAC3REGION.MENU)
     veldin = create_region_and_connect(world, RAC3REGION.VELDIN, f"{RAC3REGION.MENU} -> {RAC3REGION.VELDIN}", menu)
-    if world.options.intro_skip.value:
+    if world.options.shortcuts.value.get(RAC3SHORTCUTS.VELDIN_SKIP, False):
         starship_phoenix = create_region_and_connect(world, RAC3REGION.STARSHIP_PHOENIX,
                                                      f"{RAC3REGION.MENU} -> {RAC3REGION.STARSHIP_PHOENIX}", menu)
         create_region_and_connect(world, RAC3REGION.FLORANA,
@@ -454,7 +459,8 @@ def create_regions(world: "RaC3World"):
 
     # New Game Plus
 
-    create_region_and_connect(world, RAC3REGION.NGPLUS, f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.NGPLUS}", starship_phoenix)
+    create_region_and_connect(world, RAC3REGION.NGPLUS, f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.NGPLUS}",
+                              starship_phoenix)
 
     # shock_blaster_upgrades = create_region(world, f"{RAC3ITEM.SHOCK_BLASTER} Upgrades")
     # menu.connect(shock_blaster_upgrades, rule=lambda state: state.has(RAC3ITEM.SHOCK_BLASTER, world.player)),
@@ -518,6 +524,7 @@ def create_regions(world: "RaC3World"):
 
 
 def create_region(world: "RaC3World", name: str) -> Region:
+    """Returns a new Region object already populated with its item locations"""
     reg = Region(name, world.player, world.multiworld)
     options = world.options
     for key, data in RAC3_LOCATION_DATA_TABLE.items():
@@ -530,6 +537,7 @@ def create_region(world: "RaC3World", name: str) -> Region:
 
 
 def create_region_and_connect(world: "RaC3World", name: str, entrance_name: str, connected_region: Region) -> Region:
+    """Returns a new Region, connected to a given region, already populated with its item locations"""
     reg: Region = create_region(world, name)
     connected_region.connect(reg, entrance_name)
     return reg
@@ -549,7 +557,7 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                 if options.trophies.value < 2:  # Skip long term trophies if not set to every trophy
                     return True
                 if (options.skill_points.value < 2 and options.sewer_limitation < 100 and loc ==
-                      RAC3TROPHY.PHOENIX_SKILL_MASTER):
+                    RAC3TROPHY.PHOENIX_SKILL_MASTER):
                     return True
             case RAC3TAG.SKILLPOINT:
                 if options.skill_points.value == 0:
@@ -605,6 +613,9 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             case RAC3TAG.WEAPONS:
                 if options.weapon_vendors.value == 0 and loc not in veldin_weapons:
                     return True  # Skips every weapon vendor checks except the Veldin ones
+            case RAC3TAG.NGPLUS:
+                if options.ngplus_vendors.value == 0:
+                    return True # Skips any NG+ items
             case RAC3TAG.ONE_HP_UNSTABLE:
                 if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False):
                     return True  # Skip all unstable locations in One HP Challenge
@@ -616,3 +627,8 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                     return True  # Skip all armor upgrade locations if armor upgrades are disabled
             # Add more conditions here if needed in the future
     return False
+
+
+def get_regions() -> set[str]:
+    """Returns a set containing the planet names"""
+    return {name for name in REGIONS_WITH_LOCATIONS}

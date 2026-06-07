@@ -1,6 +1,8 @@
 """Constants for Ratchet & Clank 3 player action types."""
 
+
 class RAC3ACTIONTYPE:
+    """Ratchet's (or the current playable character's) action types."""
     STATIONARY = 0x00
     WALKING = 0x01
     FALLING = 0x02

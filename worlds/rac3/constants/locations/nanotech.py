@@ -1,4 +1,7 @@
+"""This module contains string constants for Nanotech level ups"""
+
 class RAC3NANOTECH:
+    """String constants for Nanotech level ups"""
     LEVEL_11 = "Nanotech Milestone: 11"
     LEVEL_12 = "Nanotech Milestone: 12"
     LEVEL_13 = "Nanotech Milestone: 13"
@@ -89,6 +92,7 @@ class RAC3NANOTECH:
     LEVEL_98 = "Nanotech Milestone: 98"
     LEVEL_99 = "Nanotech Milestone: 99"
     LEVEL_100 = "Nanotech Milestone: 100"
+
 
 NANOTECH_OPTION_TO_MOD = {
     1: 20,

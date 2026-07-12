@@ -337,6 +337,13 @@ class RAC3ITEMDATA:
             tags: list[str] = [RAC3ITEMTAG.WEAPON_MODPACK]
         return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
 
+    @staticmethod
+    def construct_tbolt(idx):
+        """Construct Titanium Bolts"""
+        return RAC3ITEMDATA(idx, RAC3STATUS.TITANIUM_BOLT,
+                            ap_classification=ItemClassification.progression_deprioritized_skip_balancing,
+                            tags=[RAC3ITEMTAG.TITANIUM_BOLT])
+
 
 RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     # Items
@@ -349,8 +356,8 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.BOLT_GRABBER: RAC3ITEMDATA.construct_gadget(0x07, ItemClassification.useful),
     RAC3ITEM.LEVITATOR: RAC3ITEMDATA.construct_unused(0x08),  # Unused
     RAC3ITEM.WRENCH: RAC3ITEMDATA.construct_unused(0x09, tags=[RAC3ITEMTAG.EQUIPABLE]),
-    RAC3ITEM.BOMB_GLOVE: RAC3ITEMDATA.construct_unused(0x0A, 40,
-                                                       [RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),  # Unused
+    RAC3ITEM.BOMB_GLOVE:
+        RAC3ITEMDATA.construct_unused(0x0A, 40, [RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),  # Unused
     RAC3ITEM.HYPERSHOT: RAC3ITEMDATA.construct_gadget(0x0B, ItemClassification.progression,
                                                       [RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),
     RAC3ITEM.MORPH_O_RAY:
@@ -708,8 +715,9 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.MODPACK_SHIELD_CHARGER: RAC3ITEMDATA.construct_weapon_modpack(0x150),
     RAC3ITEM.MODPACK_BOUNCER: RAC3ITEMDATA.construct_weapon_modpack(0x151),
     RAC3ITEM.MODPACK_PLASMA_COIL: RAC3ITEMDATA.construct_weapon_modpack(0x152),
+    # TBolt
+    RAC3ITEM.TITANIUM_BOLT: RAC3ITEMDATA.construct_tbolt(0x153),
     # Filler
-    RAC3ITEM.TITANIUM_BOLT: RAC3ITEMDATA.construct_other(0x153),
     RAC3ITEM.WEAPON_XP: RAC3ITEMDATA.construct_other(0x154),
     RAC3ITEM.NANOTECH_XP: RAC3ITEMDATA.construct_other(0x155),
     RAC3ITEM.BOLTS: RAC3ITEMDATA.construct_other(0x156, RAC3STATUS.BOLTS),
@@ -758,6 +766,7 @@ ngplus_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NGPLUS)
 non_prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NON_PROG_WEAPON)
 prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROG_WEAPON)
 progressive_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROGRESSIVE)
+titanium_bolt_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.TITANIUM_BOLT)
 trap_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.TRAP)
 unused_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.UNUSED)
 vidcomic_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.VIDCOMIC)
@@ -795,6 +804,7 @@ item_counts: dict[str, int] = {
     **dict.fromkeys(prog_weapon_data.keys(), 5),
     **dict.fromkeys(gadget_data.keys(), 1),
     **dict.fromkeys(cheat_data.keys(), 1),
+    RAC3ITEM.TITANIUM_BOLT: 40,
     RAC3ITEM.CLANK: 1,
     RAC3ITEM.PROGRESSIVE_ARMOR: 4,
     RAC3ITEM.PROGRESSIVE_VIDCOMIC: 5,
@@ -808,6 +818,7 @@ ngplus_item_counts: dict[str, int] = {
     **dict.fromkeys(prog_weapon_data.keys(), 8),
     **dict.fromkeys(gadget_data.keys(), 1),
     **dict.fromkeys(cheat_data.keys(), 1),
+    RAC3ITEM.TITANIUM_BOLT: 40,
     RAC3ITEM.CLANK: 1,
     RAC3ITEM.PROGRESSIVE_ARMOR: 4,
     RAC3ITEM.PROGRESSIVE_VIDCOMIC: 5,
@@ -823,6 +834,7 @@ item_table: dict[str, RAC3ITEMDATA] = {
     **vidcomic_data,
     **infobot_data,
     **filler_data,
+    **titanium_bolt_data,
     **trap_data,
     **unused_data,
     **weapon_mod_data,

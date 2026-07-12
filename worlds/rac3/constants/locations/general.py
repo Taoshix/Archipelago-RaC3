@@ -123,7 +123,7 @@ class RAC3LOCATION:
     TYHRRANOSIS_RANGERS_4 = "Tyhrranosis: Operation ISLAND STRIKE 4: The Final Battle"
     DAXX_CHARGE_BOOTS = "Daxx: Building above ship"
     DAXX_FACILITY = "Daxx: Infiltrate Weapons Facility"
-    DAXX_GUNSHIP = "Daxx: Gunship"
+    DAXX_WARSHIP = "Daxx: Warship"
     OBANI_GEMINI_SKIDD = "Obani Gemini: Meet Skidd"
     BLACKWATER_CITY_RANGERS_1 = "Blackwater City: Operation BLACK TIDE 1: The Battle of Blackwater City"
     BLACKWATER_CITY_RANGERS_2 = "Blackwater City: Operation BLACK TIDE 2: The Bridge"

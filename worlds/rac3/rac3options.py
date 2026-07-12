@@ -174,7 +174,6 @@ rac3_option_groups = [
         GoalCompletion,
     ]),
     OptionGroup("RAC3 Required Boss Options", [
-        GoalNef,
         GoalBossQwark,
         GoalBossTwo,
         GoalBossNoid,

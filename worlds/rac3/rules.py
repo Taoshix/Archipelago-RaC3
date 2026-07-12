@@ -408,7 +408,7 @@ def set_rules(world: "RaC3World"):
         RAC3LOCATION.NATION_SUICIDE_RUN:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_PYRO_PLAYGROUND, world.player),
         RAC3LOCATION.NATION_BBQ_BOULEVARD:
-            lambda state: state.can_reach_location(RAC3LOCATION.DAXX_GUNSHIP, world.player)
+            lambda state: state.can_reach_location(RAC3LOCATION.DAXX_WARSHIP, world.player)
                           and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK, RAC3ITEM.CLANK,
                                              RAC3ITEM.PROGRESSIVE_PACK, RAC3ITEM.CHARGE_BOOTS], world.player),
         RAC3LOCATION.NATION_MAZE_OF_BLAZE:
@@ -568,7 +568,7 @@ def set_rules(world: "RaC3World"):
 
         # RAC3LOCATION.DAXX_CHARGE_BOOTS
         # RAC3TROPHY.DAXX_PLUMBER
-        RAC3LOCATION.DAXX_GUNSHIP: lambda state: state.has(RAC3ITEM.HYPERSHOT, world.player),
+        RAC3LOCATION.DAXX_WARSHIP: lambda state: state.has(RAC3ITEM.HYPERSHOT, world.player),
         RAC3TBOLT.DAXX_TAXI:
             lambda state: state.has(RAC3ITEM.HYPERSHOT, world.player) and
                           state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player),

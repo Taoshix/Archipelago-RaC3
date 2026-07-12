@@ -14,6 +14,7 @@ class RAC3ITEMTAG:
     PROG_WEAPON = "Progressive Weapon"
     PROG_WRENCH = "Progressive Wrench"
     PROGRESSIVE = "Progressive"
+    TITANIUM_BOLT = "Titanium Bolt"
     TRAP = "Trap"
     UNUSED = "Unused"
     VIDCOMIC = "VidComic"

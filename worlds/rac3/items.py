@@ -376,6 +376,13 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 rac3_logger.warning(f"multiple copies of {name} added to the item pool")
             itempool += create_multiple_items(world, name, item_amount, item_type)
 
+    victory = create_item(world, RAC3ITEM.VICTORY)
+    if world.options.goal_bio.value:
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(victory)
+    elif world.options.goal_nef.value:
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_NEFARIOUS, world.player).place_locked_item(victory)
+    else:
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(victory)
     return itempool
 
 

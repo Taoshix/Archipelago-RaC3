@@ -10,9 +10,11 @@ from worlds.rac3.test import RAC3TestBase
 
 class TestBiobliterator(RAC3TestBase):
     options = {
+        RAC3OPTION.LOCK_CC: 0,
+        RAC3OPTION.GOAL_BIO: 1,
         RAC3OPTION.BOLT_AND_XP_MULTIPLIER: 0
     }
-
+    # Todo: Test Goal options
     def test_logic(self):
         state: CollectionState = self.multiworld.state
         self.assertTrue(self.can_reach_region(RAC3REGION.VELDIN), "Can't start on Veldin")
@@ -21,6 +23,8 @@ class TestBiobliterator(RAC3TestBase):
         self.assertFalse(self.can_reach_region(RAC3REGION.COMMAND_CENTER), "Command Center reachable from Veldin")
         self.assertFalse(self.can_reach_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR),
                          "Goal location reachable from Start")
+        # self.assertFalse(self.can_reach_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT), "Goal condition location "
+        #                                                                                "reachable from the start")
         self.assertBeatable(False)
 
         state.sweep_for_advancements()

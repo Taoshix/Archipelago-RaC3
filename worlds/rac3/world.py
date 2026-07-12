@@ -63,6 +63,7 @@ class RaC3World(World):
                                 "There may be bugs present and features that have not been tested fully.\n"
                                 "These builds are meant for testing and bug reporting purposes "
                                 "and should not be used for normal play!\n")
+        self.sanitize_options()
         # implement .yaml-less Universal Tracker support
         setup_options_from_slot_data(self)
         create_regions(self)
@@ -71,6 +72,32 @@ class RaC3World(World):
         self.handle_option_errors(starting_planet_list, starting_weapon_list)
         self.dead_seed_check(starting_planet_list, starting_weapon_list)
         self.place_starting_items(starting_planet_list, starting_weapon_list)
+        if self.options.lock_command_center.value:
+            self.preplaced_items.append(RAC3ITEM.COMMAND_CENTER)
+
+    def sanitize_options(self):
+        """Reads the YAML options and adjusts them to sensible values"""
+        if self.options.goal_planets.value > 0:
+            planets = self.options.goal_planets.value
+            if self.options.rangers.value in [self.options.rangers.option_none,
+                                              self.options.rangers.option_optional_missions]:
+                planets -= 3  # Marcadia, Blackwater City, Aridia
+            if self.options.arena.value != self.options.arena.option_all:
+                planets -= 1  # AN
+            if planets != self.options.goal_planets.value:
+                self.options.goal_planets.value = planets if planets > 0 else 0
+                rac3_logger.info(
+                    f"Player: {self.player_name} had their required planets reduced to "
+                    f"{self.options.goal_planets.value} due to disabled settings")
+        if self.options.goal_skillpoints.value > 0 and self.options.lock_command_center.value:
+            self.options.goal_skillpoints.value -= 1  # Spread Your Germs Skillpoint
+            rac3_logger.info(f"Player: {self.player_name} had their required skillpoints reduced to "
+                             f"{self.options.goal_skillpoints.value} because of locked Command Center")
+        if self.options.goal_museum.value and self.options.lock_command_center.value:
+            self.options.goal_museum.value = False
+            rac3_logger.info(f"Player: {self.player_name} had their required Insomniac Museum removed as it is not "
+                             f"possible to reach before Command Center, which is locked by it")
+        return
 
     def place_starting_items(self, starting_planet_list: list[str], starting_weapon_list: list[str]):
         """Take the list of starting planets and starting weapons and place them on locations or as precollected"""

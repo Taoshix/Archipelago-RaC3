@@ -1,12 +1,12 @@
 """This module contains the logic implementation for RAC3"""
-from collections.abc import Callable
-from logging import DEBUG, getLogger
 import math
+from logging import DEBUG, getLogger
 from typing import TYPE_CHECKING
 
-from BaseClasses import CollectionState
+from BaseClasses import CollectionRule, CollectionState
 from worlds.generic.Rules import add_rule
 from worlds.rac3.constants.data.item import infobot_data, non_prog_weapon_data, prog_weapon_data
+from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.nanotech import RAC3NANOTECH
@@ -80,6 +80,68 @@ def can_earn_good_exp(state: CollectionState, world: "RaC3World") -> bool:
     return False
 
 
+def can_reach_skillpoints(state: CollectionState, world: "RaC3World", rules_dict: dict[str, CollectionRule],
+                          count: int) -> bool:
+    """Checks if more skillpoints can be collected than the count"""
+    add = 0
+    for loc in location_groups[RAC3TAG.SKILLPOINT]:
+        if state.can_reach_region(RAC3_LOCATION_DATA_TABLE[loc].REGION, world.player) and rules_dict[loc](state):
+            add += 1
+    return add >= count
+
+
+def can_reach_planets(state: CollectionState, world: "RaC3World", rules_dict: dict[str, CollectionRule],
+                      count: int) -> bool:
+    """Checks if more planets can be completed than the count"""
+    locations: dict[str, set[str]] = {
+        RAC3ITEM.FLORANA: {RAC3LOCATION.FLORANA_DEFEAT_QWARK},
+        RAC3ITEM.MARCADIA: set(),  # Marcadia
+        RAC3ITEM.ANNIHILATION_NATION: set(),  # Annihilation Nation
+        RAC3ITEM.AQUATOS: {RAC3LOCATION.AQUATOS_BASE},
+        RAC3ITEM.TYHRRANOSIS: {RAC3LOCATION.TYHRRANOSIS_BOSS},
+        RAC3ITEM.DAXX: {RAC3LOCATION.DAXX_WARSHIP, RAC3LOCATION.DAXX_FACILITY},
+        RAC3ITEM.OBANI_GEMINI: {RAC3LOCATION.OBANI_GEMINI_SKIDD},
+        RAC3ITEM.BLACKWATER_CITY: set(),  # Blackwater City
+        RAC3ITEM.HOLOSTAR_STUDIOS: {RAC3LOCATION.HOLOSTAR_RETURN_TO_SHIP},
+        RAC3ITEM.OBANI_DRACO: {RAC3LOCATION.DRACO_COURTNEY},
+        RAC3ITEM.ZELDRIN_STARPORT: {RAC3LOCATION.ZELDRIN_STARPORT_SHIP},
+        RAC3ITEM.METROPOLIS: {RAC3LOCATION.METROPOLIS_DEFEAT_KLUNK},
+        RAC3ITEM.CRASH_SITE: {RAC3LOCATION.CRASH_SITE_ESCAPE_POD},
+        RAC3ITEM.ARIDIA: set(),  # Aridia
+        RAC3ITEM.QWARKS_HIDEOUT: {RAC3LOCATION.HIDEOUT_FIND_QWARK},
+        RAC3ITEM.KOROS: {RAC3LOCATION.KOROS_BASE},
+    }
+    locations_2: dict[str, bool] = {
+        RAC3ITEM.MARCADIA: state.has_all([RAC3ITEM.MARCADIA, RAC3ITEM.REFRACTOR], world.player),
+        RAC3ITEM.ANNIHILATION_NATION: state.has_all([RAC3ITEM.ANNIHILATION_NATION, RAC3ITEM.DAXX,
+                                                     RAC3ITEM.HYPERSHOT], world.player)
+                                      and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK, RAC3ITEM.CLANK,
+                                                         RAC3ITEM.PROGRESSIVE_PACK, RAC3ITEM.CHARGE_BOOTS],
+                                                        world.player),
+        RAC3ITEM.BLACKWATER_CITY: state.has(RAC3ITEM.BLACKWATER_CITY, world.player),
+        RAC3ITEM.ARIDIA: state.has(RAC3ITEM.ARIDIA, world.player) and
+                         state.has_any([RAC3ITEM.GRAV_BOOTS, RAC3ITEM.RIFT_INDUCER,
+                                        RAC3ITEM.FLUX_RIFLE, RAC3ITEM.PROGRESSIVE_FLUX_RIFLE,
+                                        RAC3ITEM.ANNIHILATOR, RAC3ITEM.PROGRESSIVE_ANNIHILATOR,
+                                        RAC3ITEM.RY3N0, RAC3ITEM.PROGRESSIVE_RY3N0,
+                                        RAC3ITEM.SUCK_CANNON, RAC3ITEM.PROGRESSIVE_SUCK_CANNON,
+                                        RAC3ITEM.DISC_BLADE, RAC3ITEM.PROGRESSIVE_DISC_BLADE,
+                                        RAC3ITEM.PLASMA_COIL, RAC3ITEM.PROGRESSIVE_PLASMA_COIL], world.player)
+                         or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 2)
+    }
+    add = 0
+    for planet, locs in locations.items():
+        if locs:
+            check: bool = True
+            for loc in locs:
+                check &= rules_dict[loc](state)
+            if check:
+                add += 1
+        elif locations_2[planet]:
+            add += 1
+    return add >= count
+
+
 # Todo: Rule Builder
 def set_rules(world: "RaC3World"):
     """Apply logic rules to each location"""
@@ -88,7 +150,7 @@ def set_rules(world: "RaC3World"):
     if ngplus_enabled:
         progressive_requirement += 5 if world.options.ngplus_items.value else 4
 
-    region_rules_dict: dict[str, Callable] = {
+    region_rules_dict: dict[str, CollectionRule] = {
 
         # Intro Florana
         f"{RAC3REGION.VELDIN} -> {RAC3REGION.FLORANA}":
@@ -157,7 +219,7 @@ def set_rules(world: "RaC3World"):
             lambda state: state.has(RAC3ITEM.COMMAND_CENTER, world.player),
     }
 
-    rules_dict: dict[str, Callable] = {
+    rules_dict: dict[str, CollectionRule] = {
         # RAC3LOCATION.VELDIN_FIRST_RANGER
         # RAC3LOCATION.VELDIN_SECOND_RANGER
         # RAC3LOCATION.VELDIN_SAVE_VELDIN
@@ -269,10 +331,10 @@ def set_rules(world: "RaC3World"):
         RAC3SKILLPOINT.PHOENIX_VR_TRAINING:
             lambda state: state.can_reach_location(RAC3LOCATION.TYHRRANOSIS_BOSS, world.player)
                           and state.has_all([RAC3ITEM.HACKER, RAC3ITEM.HYPERSHOT], world.player),
-        RAC3TBOLT.PHOENIX_VID_COMIC_1: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
-        RAC3LOCATION.PHOENIX_VID_COMIC_1_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
-        RAC3LOCATION.PHOENIX_VID_COMIC_1_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
-        RAC3SKILLPOINT.PHOENIX_COMIC_1: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
+        RAC3TBOLT.PHOENIX_VID_COMIC_1: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player),
+        RAC3LOCATION.PHOENIX_VID_COMIC_1_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player),
+        RAC3LOCATION.PHOENIX_VID_COMIC_1_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player),
+        RAC3SKILLPOINT.PHOENIX_COMIC_1: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player),
         RAC3TBOLT.PHOENIX_VID_COMIC_2: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
         RAC3LOCATION.PHOENIX_VID_COMIC_2_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
         RAC3LOCATION.PHOENIX_VID_COMIC_2_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
@@ -681,7 +743,7 @@ def set_rules(world: "RaC3World"):
                                           RAC3ITEM.FLUX_RIFLE, RAC3ITEM.ANNIHILATOR,
                                           RAC3ITEM.RY3N0, RAC3ITEM.SUCK_CANNON,
                                           RAC3ITEM.DISC_BLADE, RAC3ITEM.PLASMA_COIL], world.player)
-                           or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 2 
+                           or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 2
                                         if progressive_requirement == 1 else progressive_requirement)
                            or state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, progressive_requirement)
                            or state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, progressive_requirement)
@@ -1399,8 +1461,88 @@ def set_rules(world: "RaC3World"):
     for region in world.multiworld.get_regions(world.player):
         for entrance in region.entrances:
             add_rule(entrance, region_rules_dict.get(entrance.name, lambda _: True))
+
+    def get_nano() -> CollectionRule:
+        """Get the nanotech logic to goal"""
+        return rules_dict.get(f"Nanotech Milestone: {world.options.goal_nano.value}", lambda _: True)
+
+    def get_crystal() -> CollectionRule:
+        """Get the sewer crystal logic to goal"""
+        if world.options.goal_crystal.value > 0:
+            if world.options.goal_crystal.value <= 20:
+                return lambda state: state.has(RAC3ITEM.AQUATOS, world.player)
+            elif world.options.goal_crystal.value <= 50:
+                return lambda state: state.has_all([RAC3ITEM.AQUATOS, RAC3ITEM.MAP_O_MATIC], world.player)
+            else:
+                return lambda state: state.has_all([RAC3ITEM.AQUATOS, RAC3ITEM.MAP_O_MATIC,
+                                                    RAC3ITEM.GRAV_BOOTS], world.player)
+        return lambda _: True
+
+    def get_tbolts() -> CollectionRule:
+        """Get the Titanium Bolt logic to goal"""
+        if world.options.goal_tbolts.value > 0:
+            return lambda state: state.has(RAC3ITEM.TITANIUM_BOLT, world.player, world.options.goal_tbolts.value)
+        return lambda _: True
+
+    def get_skillpoints() -> CollectionRule:
+        """Get the Skillpoint logic to goal"""
+        return lambda state: can_reach_skillpoints(state, world, rules_dict, world.options.goal_skillpoints.value)
+
+    def get_qwark() -> CollectionRule:
+        """Get the Qwarktastic Battle logic to goal"""
+        if world.options.goal_qwark.value > 0:
+            return lambda state: all_locations(state, world, RAC3TAG.ARENA, RAC3LOCATION.NATION_QWARKTASTIC_BATTLE)
+        return lambda _: True
+
+    def get_museum() -> CollectionRule:
+        """Get the Insomniac Museum teleporter logic to goal"""
+        if world.options.goal_museum.value > 0:
+            return lambda state: all_locations(state, world, RAC3TAG.TROPHY, "")
+        return lambda _: True
+
+    def get_planets() -> CollectionRule:
+        """Get the Planet Completion logic to goal"""
+        return lambda state: can_reach_planets(state, world, rules_dict, world.options.goal_planets.value)
+
+    def get_completion() -> CollectionRule:
+        """Get the Completion percentage logic to goal"""
+        return lambda state: (
+            len(state.locations_checked) / len([world.get_locations()]) >= world.options.goal_completion / 100)
+
+    def get_bosses() -> CollectionRule:
+        """Get the boss logic to goal"""
+        locations: list[CollectionRule] = []
+        if world.options.goal_boss_qwark.value > 0:
+            locations.extend([lambda state: state.has(RAC3ITEM.FLORANA, world.player),
+                              rules_dict[RAC3LOCATION.FLORANA_DEFEAT_QWARK]])
+        if world.options.goal_boss_two.value > 0:
+            locations.append(lambda state: state.has(RAC3ITEM.ANNIHILATION_NATION, world.player))
+        if world.options.goal_boss_noid.value > 0:
+            locations.append(lambda state: state.has(RAC3ITEM.TYHRRANOSIS, world.player))
+        if world.options.goal_boss_warship.value > 0:
+            locations.append(lambda state: state.has_all([RAC3ITEM.DAXX, RAC3ITEM.HYPERSHOT], world.player))
+        if world.options.goal_boss_scorpio.value > 0:
+            locations.extend([lambda state: state.has(RAC3ITEM.ANNIHILATION_NATION, world.player),
+                              rules_dict[RAC3LOCATION.NATION_BBQ_BOULEVARD]])
+        if world.options.goal_boss_talos.value > 0:
+            locations.append(lambda state: state.has(RAC3ITEM.HOLOSTAR_STUDIOS, world.player))
+        if world.options.goal_boss_gears.value > 0:
+            locations.append(lambda state: state.has_all([RAC3ITEM.OBANI_DRACO, RAC3ITEM.GRAV_BOOTS], world.player))
+        if world.options.goal_boss_klunk.value > 0:
+            locations.append(lambda state: state.has_all([RAC3ITEM.METROPOLIS, RAC3ITEM.GRAV_BOOTS,
+                                                          RAC3ITEM.REFRACTOR], world.player))
+        return lambda state: all(loc(state) for loc in locations)
+
+    goal_rule: CollectionRule = (get_nano() and get_crystal() and get_tbolts() and get_skillpoints() and
+                                 get_qwark() and get_museum() and get_planets() and get_completion() and get_bosses())
+
     for location in world.get_locations():
-        add_rule(location, rules_dict.get(location.name, lambda _: True))
+        if location.name in [RAC3LOCATION.COMMAND_CENTER_NEFARIOUS, RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR]:
+            add_rule(location, goal_rule)
+        if location.name != RAC3LOCATION.COMMAND_CENTER_INFOBOT:
+            add_rule(location, rules_dict.get(location.name, lambda _: True))
+        else:
+            add_rule(location, goal_rule)
 
     # world.multiworld.completion_condition[world.player] = lambda state: state.has(RAC3ITEM.VICTORY, world.player)
     world.multiworld.completion_condition[world.player] = lambda state: state.has(RAC3ITEM.VICTORY, world.player)

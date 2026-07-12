@@ -566,6 +566,9 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                     return True  # Skip all weapon level locations that are V6 or higher if NG+ items are disabled
                 if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False) and "Shield Charger" in loc:
                     return True  # Skip Shield Charger level locations in One HP Challenge
+            case RAC3TAG.GOAL:
+                if options.lock_command_center.value == 0 and (options.goal_bio.value or options.goal_nef.value):
+                    return True # Skip if command center infobot isn't locked, and the location won't be the goal
             # Add more conditions here if needed in the future
     return False
 

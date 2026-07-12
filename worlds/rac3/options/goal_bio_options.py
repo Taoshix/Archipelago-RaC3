@@ -1,10 +1,10 @@
 """This module contains options for if defeating the biobliterator is required to goal"""
 
-from Options import Toggle
+from Options import DefaultOnToggle
 from worlds.rac3.constants.options import RAC3OPTION
 
 
-class GoalBio(Toggle):
+class GoalBio(DefaultOnToggle):
     """
     Determines if defeating the Biobliterator is required to goal
     --------------------------------------------------------------------------------------

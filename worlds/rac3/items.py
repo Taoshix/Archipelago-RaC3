@@ -108,7 +108,12 @@ def create_itempool(world: "RaC3World") -> list[Item]:
             itempool += create_multiple_items(world, name, item_amount, item_type)
 
     victory = create_item(world, RAC3ITEM.VICTORY)
-    world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(victory)
+    if world.options.goal_bio.value:
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(victory)
+    elif world.options.goal_nef.value:
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_NEFARIOUS, world.player).place_locked_item(victory)
+    else:
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(victory)
     return itempool
 
 

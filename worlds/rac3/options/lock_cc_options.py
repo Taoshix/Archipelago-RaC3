@@ -8,8 +8,8 @@ class LockCommandCenter(Toggle):
     """
     Determines if completing all conditions unlocks the Planet Command Center
     --------------------------------------------------------------------------------------
-    Off:    Completing all conditions will unlock the dropship on Command Center
-    On:     Completing all conditions will unlock the Command Center Infobot
+    No:     Completing all conditions will unlock the dropship on Command Center
+    Yes:    Completing all conditions will unlock the Command Center Infobot
     ---------------------------------------------------------------------------------------
     Biobliterator and Dr Nefarious goal conditions are never required to activate either the dropship or the infobot
     """

@@ -370,7 +370,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 continue
 
         # Titanium Bolts option
-        if RAC3ITEMTAG.TITANIUM_BOLT in item_tags and options.goal_tbolts.value == 0:
+        if RAC3ITEMTAG.TITANIUM_BOLT in item_tags and not options.titanium_bolts.value:
             continue
 
         # Catch accidental duplicates
@@ -385,10 +385,16 @@ def create_itempool(world: "RaC3World") -> list[Item]:
             itempool += create_multiple_items(world, name, item_amount, item_type)
 
     victory = create_item(world, RAC3ITEM.VICTORY)
+    infobot = create_item(world, RAC3ITEM.COMMAND_CENTER)
     if world.options.goal_bio.value:
-        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(victory)
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(
+            victory)
+        if world.options.lock_command_center.value:
+            world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(infobot)
     elif world.options.goal_nef.value:
         world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_NEFARIOUS, world.player).place_locked_item(victory)
+        if world.options.lock_command_center.value:
+            world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(infobot)
     else:
         world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(victory)
     return itempool

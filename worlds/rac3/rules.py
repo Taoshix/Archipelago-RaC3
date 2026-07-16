@@ -413,7 +413,8 @@ def set_rules(world: "RaC3World"):
         RAC3LOCATION.NATION_ONSLAUGHT:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_90_SECONDS, world.player),
         RAC3LOCATION.NATION_CHAMPIONSHIP_BOUT:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_ONSLAUGHT, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_ONSLAUGHT, world.player) and
+                          state.can_reach_location(RAC3LOCATION.NATION_TWO_MINUTE_WARNING, world.player),
         RAC3LOCATION.NATION_WHIP_IT_GOOD:
             lambda state: (state.has(RAC3ITEM.PLASMA_WHIP, world.player)
                            or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, progressive_requirement))
@@ -424,29 +425,31 @@ def set_rules(world: "RaC3World"):
                           and state.can_reach_location(RAC3LOCATION.NATION_WHIP_IT_GOOD, world.player),
 
         RAC3SKILLPOINT.NATION_BASH:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player),
         RAC3LOCATION.NATION_MEET_COURTNEY:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
         RAC3LOCATION.NATION_INFOBOT_HOLOSTAR:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player),
         RAC3LOCATION.NATION_NINJA_CHALLENGE:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player),
         RAC3LOCATION.NATION_COUNTING_DUCKS:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player),
         RAC3LOCATION.NATION_CYCLING_WEAPONS:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player),
         RAC3LOCATION.NATION_ONE_HIT_WONDER:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player),
         RAC3LOCATION.NATION_TIME_TO_SUCK:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player)
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_MEET_COURTNEY, world.player)
                           and (state.has(RAC3ITEM.SUCK_CANNON, world.player)
                                or state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, progressive_requirement)),
         RAC3LOCATION.NATION_NAPTIME:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: (state.can_reach_location(RAC3LOCATION.NATION_COUNTING_DUCKS, world.player)
+                           and state.can_reach_location(RAC3LOCATION.NATION_NINJA_CHALLENGE, world.player)),
         RAC3LOCATION.NATION_MORE_CYCLING_WEAPONS:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: (state.can_reach_location(RAC3LOCATION.NATION_COUNTING_DUCKS, world.player)
+                           and state.can_reach_location(RAC3LOCATION.NATION_CYCLING_WEAPONS, world.player)),
         RAC3LOCATION.NATION_DODGE_THE_TWINS:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_ONE_HIT_WONDER, world.player),
         RAC3LOCATION.NATION_CHOP_CHOP:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_TIME_TO_SUCK, world.player)
                           and (state.has(RAC3ITEM.DISC_BLADE, world.player)
@@ -460,8 +463,10 @@ def set_rules(world: "RaC3World"):
                           and (state.has(RAC3ITEM.QWACK_O_RAY, world.player)
                                or state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, progressive_requirement)),
         RAC3LOCATION.NATION_CHAMPIONSHIP_BOUT_II:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
         RAC3LOCATION.NATION_QWARKTASTIC_BATTLE: lambda state: state.has(RAC3ITEM.VICTORY, world.player),
+            lambda state: (state.can_reach_location(RAC3LOCATION.NATION_NAPTIME, world.player)
+                           and state.can_reach_location(RAC3LOCATION.NATION_MORE_CYCLING_WEAPONS, world.player)
+                           and state.can_reach_location(RAC3LOCATION.NATION_DODGE_THE_TWINS, world.player)),
         # RAC3LOCATION.NATION_HEAT_STREET
         RAC3LOCATION.NATION_CRISPY_CRITTER:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_HEAT_STREET, world.player),

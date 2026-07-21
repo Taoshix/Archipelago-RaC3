@@ -22,6 +22,7 @@ from worlds.rac3.options.prog_weapons_options import ProgressiveWeapons
 from worlds.rac3.options.rangers_options import Rangers
 from worlds.rac3.options.ratchet_skins_options import RatchetSkin
 from worlds.rac3.options.scout_vendors_options import ScoutVendors
+from worlds.rac3.options.sewer_gravity_options import SewerChargeGravity
 from worlds.rac3.options.sewer_limitation_options import SewerLimitation
 from worlds.rac3.options.sewer_options import SewerCrystals
 from worlds.rac3.options.ship_nose_options import ShipNose
@@ -94,6 +95,7 @@ class RaC3Options(PerGameCommonOptions):
     helpdesk: HelpDesk
     vendor_access: VendorAccess
     weapon_level_locations: WeaponLevels
+    sewer_charge_gravity: SewerChargeGravity
 
 
 rac3_option_groups = [
@@ -147,6 +149,7 @@ rac3_option_groups = [
     OptionGroup("RAC3 QoL Options", [
         HelpDesk,
         VendorAccess,
+        SewerChargeGravity,
     ]),
     OptionGroup("Item & Location Options", [
         RAC3ExcludeLocations,
@@ -193,4 +196,5 @@ slot_data_options: list[str] = [
     RAC3OPTION.HELP_DESK,
     RAC3OPTION.WEAPON_LEVEL_LOCATIONS,
     RAC3OPTION.VENDOR_ACCESS,
+    RAC3OPTION.SEWER_CHARGE_GRAVITY,
 ]

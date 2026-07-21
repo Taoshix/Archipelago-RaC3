@@ -56,6 +56,7 @@ def setup_options_from_slot_data(world: "RaC3World") -> None:
             world.options.helpdesk.value = world.passthrough[RAC3OPTION.HELP_DESK]
             world.options.weapon_level_locations.value = world.passthrough[RAC3OPTION.WEAPON_LEVEL_LOCATIONS]
             world.options.vendor_access.value = world.passthrough[RAC3OPTION.VENDOR_ACCESS]
+            world.options.sewer_charge_gravity.value = world.passthrough[RAC3OPTION.SEWER_CHARGE_GRAVITY]
         else:
             world.using_ut = False
     else:

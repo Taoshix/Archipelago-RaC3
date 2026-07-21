@@ -132,6 +132,7 @@ class Rac3Interface(GameInterface):
         helpdesk: int
         weapon_level_locations: int
         vendor_access: int
+        sewer_charge_gravity: bool
 
     UnlockItem: dict[str, UnlockData] = None
     options = Options
@@ -359,6 +360,7 @@ class Rac3Interface(GameInterface):
         self.options.helpdesk = slot_data[RAC3OPTION.HELP_DESK]
         self.options.weapon_level_locations = slot_data[RAC3OPTION.WEAPON_LEVEL_LOCATIONS]
         self.options.vendor_access = slot_data[RAC3OPTION.VENDOR_ACCESS]
+        self.options.sewer_charge_gravity = slot_data[RAC3OPTION.SEWER_CHARGE_GRAVITY]
 
     ########################################
     # Called on Game and Server Connection #
@@ -1792,6 +1794,7 @@ class Rac3Interface(GameInterface):
         self.patch_cycler()
         self.overflow_fix()
         self.process_delayed_things_cycler()
+        self.sewer_enhanced_gravity_cycler()
         self.health_cycler()
         self.shortcut_cycler()
         self.speedup_cycler()
@@ -1805,6 +1808,8 @@ class Rac3Interface(GameInterface):
             return
 
         for name in gadget_data.keys():
+            if name == RAC3ITEM.GRAV_BOOTS and self.should_apply_sewer_enhanced_gravity():
+                continue
             addr = gadget_data[name].UNLOCK_ADDRESS
             if self.UnlockItem[name].status:
                 if self.UnlockItem[name].unlock_delay:
@@ -1825,6 +1830,29 @@ class Rac3Interface(GameInterface):
         if current_time - self.gadget_grace_period < 0.75:
             return False
         return True
+
+    def should_apply_sewer_enhanced_gravity(self) -> bool:
+        """Check if we should apply the ability to use charge boots and run up walls in the sewer"""
+        sewer_shuttle_pos = RAC3POSITIONDATA(218, 393, 939)
+        aquatos_base_entrance_pos = RAC3POSITIONDATA(474.5, 446, 970)
+        if (self.planet == RAC3REGION.AQUATOS_SEWERS 
+            and self.UnlockItem[RAC3ITEM.CHARGE_BOOTS].status 
+            and self.UnlockItem[RAC3ITEM.GRAV_BOOTS].status
+            and self.options.sewer_charge_gravity
+            and not self.pause_state_value == RAC3PAUSESTATE.PAUSED # Make gravity boots show up in gadget menu
+            and self.distance(self.player_pos, sewer_shuttle_pos) > 22 # prevent player from getting stuck in the plumber area
+            and self.distance_2d(self.player_pos, aquatos_base_entrance_pos) > 3 # prevent weird behavior from first time entering the sewer 
+            and self.player_pos.Z > 940): # disable when swimming in the sewer water
+            return True
+        return False
+
+    def sewer_enhanced_gravity_cycler(self):
+        """Apply the ability to use charge boots and run up walls in the sewer"""
+        if self.should_apply_sewer_enhanced_gravity():
+            self._write8(gadget_data[RAC3ITEM.GRAV_BOOTS].UNLOCK_ADDRESS, 0)
+            self._write32(RAC3STATUS.ENHANCED_GRAVITY, 1)
+        else:
+            self._write32(RAC3STATUS.ENHANCED_GRAVITY, 0)
 
     def near_pda_vendor(self) -> bool:
         """Check if we are near the PDA Vendor"""
@@ -1852,10 +1880,18 @@ class Rac3Interface(GameInterface):
             self._read_float(moby + 0x10),
             self._read_float(moby + 0x14),
             self._read_float(moby + 0x18))
-        distance = ((player_pos.X - moby_pos.X) ** 2 +
-                    (player_pos.Y - moby_pos.Y) ** 2 +
-                    (player_pos.Z - moby_pos.Z) ** 2) ** 0.5
-        return distance
+        return self.distance(player_pos, moby_pos)
+
+    def distance(self, pos1: RAC3POSITIONDATA, pos2: RAC3POSITIONDATA) -> float:
+        """Calculate the distance between two positions"""
+        return ((pos1.X - pos2.X) ** 2 +
+                (pos1.Y - pos2.Y) ** 2 +
+                (pos1.Z - pos2.Z) ** 2) ** 0.5
+
+    def distance_2d(self, pos1: RAC3POSITIONDATA, pos2: RAC3POSITIONDATA) -> float:
+        """Calculate the 2D distance between two positions"""
+        return ((pos1.X - pos2.X) ** 2 +
+                (pos1.Y - pos2.Y) ** 2) ** 0.5
 
     @deprecated("Unused")
     def get_checked_locations_by_tag(self, tag: str) -> list[str]:

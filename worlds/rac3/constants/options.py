@@ -49,3 +49,4 @@ class RAC3OPTION:
     HELP_DESK = "Help Desk"
     WEAPON_LEVEL_LOCATIONS = "Weapon Level Locations"
     VENDOR_ACCESS = "Vendor Access"
+    SEWER_CHARGE_GRAVITY = "Sewer Charge Gravity"

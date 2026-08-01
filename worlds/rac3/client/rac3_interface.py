@@ -132,6 +132,7 @@ class Rac3Interface(GameInterface):
         helpdesk: int
         weapon_level_locations: int
         vendor_access: int
+        bonus_vidcomic_health: int
 
     UnlockItem: dict[str, UnlockData] = None
     options = Options
@@ -359,6 +360,7 @@ class Rac3Interface(GameInterface):
         self.options.helpdesk = slot_data[RAC3OPTION.HELP_DESK]
         self.options.weapon_level_locations = slot_data[RAC3OPTION.WEAPON_LEVEL_LOCATIONS]
         self.options.vendor_access = slot_data[RAC3OPTION.VENDOR_ACCESS]
+        self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
 
     ########################################
     # Called on Game and Server Connection #
@@ -1781,6 +1783,7 @@ class Rac3Interface(GameInterface):
         self.planet_cycler()
         self.weapon_cycler()
         self.vidcomic_cycler()
+        self.vidcomic_health_cycler()
         self.armor_cycler()
         self.timer_cycler()
         self.cheat_cycler()
@@ -2005,6 +2008,21 @@ class Rac3Interface(GameInterface):
 
             value = 0 if index > prog_comic.status else 1
             self._write8(addr, value)
+
+    def vidcomic_health_cycler(self):
+        """Cycle through all vidcomic health upgrades and update their state"""
+        bonus_health_upgrades = self.UnlockItem[RAC3ITEM.BONUS_VIDCOMIC_HEALTH_UPGRADE].status
+        if not bonus_health_upgrades:
+            return
+
+        bits = set()
+        if bonus_health_upgrades >= 1:
+            bits.add(0x0) 
+        if bonus_health_upgrades >= 2:
+            bits.add(0x6)
+        if bonus_health_upgrades >= 3:
+            bits.add(0x7)
+        self._write_bits(RAC3STATUS.VIDCOMIC_HEALTH_UPGRADES, bits)
 
     def armor_cycler(self):
         """Cycle through all armors and update their state"""

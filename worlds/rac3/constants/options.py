@@ -49,3 +49,5 @@ class RAC3OPTION:
     HELP_DESK = "Help Desk"
     WEAPON_LEVEL_LOCATIONS = "Weapon Level Locations"
     VENDOR_ACCESS = "Vendor Access"
+    BONUS_VIDCOMIC_HEALTH = "Bonus VidComic Health Upgrades"
+    VIDCOMIC_HEALTH_UPGRADE = "VidComic Health Upgrade Locations"

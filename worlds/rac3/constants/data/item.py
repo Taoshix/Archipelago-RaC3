@@ -205,6 +205,17 @@ class RAC3ITEMDATA:
             tags: list[str] = [RAC3ITEMTAG.CHEAT]
         return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
 
+    @staticmethod
+    def construct_vidcomic_health(idx: int,
+                                   address: int = 0,
+                                   tag: list[str] | None = None):
+        """Construct a vidcomic health upgrade item"""
+        if tag:
+            tags: list[str] = [*tag, RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE]
+        else:
+            tags: list[str] = [RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE]
+        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
+
 
 RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     # Items
@@ -497,6 +508,8 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.DISARM_TRAP: RAC3ITEMDATA.construct_unused(0x110),
     RAC3ITEM.WRENCH_ONLY_TRAP: RAC3ITEMDATA.construct_trap(0x111),
     RAC3ITEM.GADGETRON_DEBT_TRAP: RAC3ITEMDATA.construct_trap(0x112),
+    # VidComic Health Upgrades
+    RAC3ITEM.BONUS_VIDCOMIC_HEALTH_UPGRADE: RAC3ITEMDATA.construct_vidcomic_health(0x113),
     # Goal
     RAC3ITEM.VICTORY: RAC3ITEMDATA.construct_goal(0x201),
 }
@@ -530,6 +543,7 @@ progressive_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROGRESSIVE)
 trap_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.TRAP)
 unused_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.UNUSED)
 vidcomic_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.VIDCOMIC)
+vidcomic_health_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE)
 weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.WEAPON)
 weapon_upgrade_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.WEAPON_UPGRADE)
 clank_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.CLANK)
@@ -576,7 +590,8 @@ item_table: dict[str, RAC3ITEMDATA] = {
     **unused_data,
     **weapon_upgrade_data,
     **clank_data,
-    **cheat_data
+    **cheat_data,
+    **vidcomic_health_data,
 }
 default_starting_weapons: dict[str, int] = dict.fromkeys(non_prog_weapon_data.keys(), 1)
 timer_to_status: dict[str, int] = {

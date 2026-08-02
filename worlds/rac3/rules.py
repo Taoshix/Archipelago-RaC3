@@ -14,6 +14,7 @@ from worlds.rac3.constants.locations.sewers import RAC3SEWER
 from worlds.rac3.constants.locations.skillpoints import RAC3SKILLPOINT
 from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
+from worlds.rac3.constants.locations.objects import RAC3OBJECT
 from worlds.rac3.constants.locations.trophies import RAC3TROPHY
 from worlds.rac3.constants.locations.vendors import RAC3VENDORLOCATION
 from worlds.rac3.constants.locations.weapon_levels import RAC3WEAPONLEVEL
@@ -599,6 +600,37 @@ def set_rules(world: "RaC3World"):
 
         # RAC3LOCATION.SKIDD_CAPTURED
 
+        RAC3OBJECT.DRACO_SCOUTBOT_07: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_08: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_09: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_10: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_11: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_12: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_13: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_14: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_15: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_16: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_17: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_18: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_19: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_20: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_21: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_22: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_23: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_24: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_25: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_26: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_27: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_28: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_29: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_30: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_31: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_32: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_33: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_34: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_35: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_36: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
+        RAC3OBJECT.DRACO_SCOUTBOT_37: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),        
         RAC3LOCATION.DRACO_COURTNEY: lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player),
 
         # RAC3TBOLT.ZELDRIN_STARPORT_1

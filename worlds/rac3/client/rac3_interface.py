@@ -99,6 +99,7 @@ class Rac3Interface(GameInterface):
         bolt_and_xp_multiplier: int
         progressive_weapons: int
         progressive_wrench: int
+        object_sanity: int
         armor_upgrade: int
         skill_points: int
         trophies: int
@@ -327,6 +328,7 @@ class Rac3Interface(GameInterface):
         self.options.bolt_and_xp_multiplier = slot_data[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
         self.options.progressive_weapons = slot_data[RAC3OPTION.PROGRESSIVE_WEAPONS]
         self.options.progressive_wrench = slot_data[RAC3OPTION.PROGRESSIVE_WRENCH]
+        self.options.object_sanity = slot_data[RAC3OPTION.OBJECT_SANITY]
         self.options.armor_upgrade = slot_data[RAC3OPTION.ARMOR_UPGRADE]
         self.options.skill_points = slot_data[RAC3OPTION.SKILL_POINTS]
         self.options.trophies = slot_data[RAC3OPTION.TROPHIES]
@@ -1978,8 +1980,9 @@ class Rac3Interface(GameInterface):
             prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
             wrench_level_instruction = RAC3WRENCH.get_wrench_property_address(self.planet) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
             target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench.status]
-            self._write8(wrench_level_instruction, 0)    
-            self._write8(RAC3STATUS.WRENCH_LEVEL, target_id)
+            if self._read32(wrench_level_instruction) == RAC3INSTRUCTION.ORIGINAL_INSTRUCTION.WRENCH_UPGRADE_NTSC:
+                self._write8(wrench_level_instruction, 0)    
+                self._write8(RAC3STATUS.WRENCH_LEVEL, target_id)
 
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,

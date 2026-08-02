@@ -504,6 +504,9 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             case RAC3TAG.T_BOLT:
                 if options.titanium_bolts.value == 0:
                     return True  # Skip titanium bolt locations if titanium bolt option is disabled
+            case RAC3TAG.OBJECT:
+                if options.object_sanity.value == 0:
+                    return True  # Skip object locations if disabled
             case RAC3TAG.NANOTECH:
                 if should_skip_nanotech_location(loc, options):
                     return True  # Skip nanotech milestones outside the selected interval or NG+ range

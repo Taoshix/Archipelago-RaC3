@@ -191,6 +191,8 @@ class RaC3World(World):
             option_list.append(RAC3OPTION.TROPHIES)
         if self.options.titanium_bolts.value == 0:
             option_list.append(RAC3OPTION.TITANIUM_BOLTS)
+        if self.options.object_sanity.value == 0:
+            option_list.append(RAC3OPTION.OBJECT_SANITY)
         if self.options.nanotech_milestones.value < 3:
             option_list.append(RAC3OPTION.NANOTECH_MILESTONES)
         if self.options.rangers.value == 0:
@@ -250,6 +252,7 @@ class RaC3World(World):
             RAC3OPTION.BOLT_AND_XP_MULTIPLIER: self.options.bolt_and_xp_multiplier.value,
             RAC3OPTION.PROGRESSIVE_WEAPONS: self.options.progressive_weapons.value,
             RAC3OPTION.PROGRESSIVE_WRENCH: self.options.progressive_wrench.value,
+            RAC3OPTION.OBJECT_SANITY: self.options.object_sanity.value,
             RAC3OPTION.ARMOR_UPGRADE: self.options.armor_upgrade.value,
             RAC3OPTION.SKILL_POINTS: self.options.skill_points.value,
             RAC3OPTION.TROPHIES: self.options.trophies.value,

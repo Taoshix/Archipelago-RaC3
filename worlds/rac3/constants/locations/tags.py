@@ -24,3 +24,4 @@ class RAC3TAG:
     SHIP = "Ship"
     ARMOR = "Armor"
     WEAPON_LEVEL = "Weapon Level"
+    OBJECT = "Object"

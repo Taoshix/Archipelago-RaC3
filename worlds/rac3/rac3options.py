@@ -20,6 +20,7 @@ from worlds.rac3.options.ngplus_vendor_options import NGPlusVendor
 from worlds.rac3.options.one_hp_options import OneHpChallenge
 from worlds.rac3.options.prog_weapons_options import ProgressiveWeapons
 from worlds.rac3.options.prog_wrench_options import ProgressiveWrench
+from worlds.rac3.options.object_sanity_options import ObjectSanity
 from worlds.rac3.options.rangers_options import Rangers
 from worlds.rac3.options.ratchet_skins_options import RatchetSkin
 from worlds.rac3.options.scout_vendors_options import ScoutVendors
@@ -131,6 +132,7 @@ rac3_option_groups = [
         SkillPoints,
         Trophies,
         TitaniumBolts,
+        ObjectSanity,
         WeaponLevels,
         Rangers,
         VidComics,
@@ -163,6 +165,7 @@ slot_data_options: list[str] = [
     RAC3OPTION.BOLT_AND_XP_MULTIPLIER,
     RAC3OPTION.PROGRESSIVE_WEAPONS,
     RAC3OPTION.PROGRESSIVE_WRENCH,
+    RAC3OPTION.OBJECT_SANITY,
     RAC3OPTION.NGPLUS_ITEMS,
     RAC3OPTION.NGPLUS_START,
     RAC3OPTION.ARMOR_UPGRADE,

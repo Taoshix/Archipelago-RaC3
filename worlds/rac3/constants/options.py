@@ -13,6 +13,7 @@ class RAC3OPTION:
     BOLT_AND_XP_MULTIPLIER = "Bolt and XP Multiplier"
     PROGRESSIVE_WEAPONS = "Progressive Weapons"
     PROGRESSIVE_WRENCH = "Progressive Wrench"
+    OBJECT_SANITY = "Object Sanity"
     ARMOR_UPGRADE = "Armor Upgrade"
     SKILL_POINTS = "Skill Points"
     TROPHIES = "Trophies"

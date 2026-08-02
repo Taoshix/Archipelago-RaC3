@@ -1980,9 +1980,9 @@ class Rac3Interface(GameInterface):
             prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
             wrench_level_instruction = RAC3WRENCH.get_wrench_property_address(self.planet) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
             target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench.status]
-            if self._read32(wrench_level_instruction) == RAC3INSTRUCTION.ORIGINAL_INSTRUCTION.WRENCH_UPGRADE_NTSC:
-                self._write8(wrench_level_instruction, 0)    
-                self._write8(RAC3STATUS.WRENCH_LEVEL, target_id)
+            #if self._read32(wrench_level_instruction) == RAC3INSTRUCTION.ORIGINAL_INSTRUCTIONS.WRENCH_UPGRADE_NTSC:
+            self._write8(wrench_level_instruction, 0)    
+            self._write8(RAC3STATUS.WRENCH_LEVEL, target_id)
 
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,

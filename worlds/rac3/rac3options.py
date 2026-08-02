@@ -63,6 +63,7 @@ class RaC3Options(PerGameCommonOptions):
     bolt_and_xp_multiplier: BoltAndXPMultiplier
     progressive_weapons: ProgressiveWeapons
     progressive_wrench: ProgressiveWrench
+    object_sanity: ObjectSanity
     armor_upgrade: ArmorUpgrade
     filler_weight: FillerWeight
     traps_enabled: EnableTraps

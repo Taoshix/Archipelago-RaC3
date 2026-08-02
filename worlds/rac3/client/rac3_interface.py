@@ -133,6 +133,7 @@ class Rac3Interface(GameInterface):
         weapon_level_locations: int
         vendor_access: int
         bonus_vidcomic_health: int
+        vidcomic_health_upgrade_locations: int
 
     UnlockItem: dict[str, UnlockData] = None
     options = Options
@@ -361,6 +362,7 @@ class Rac3Interface(GameInterface):
         self.options.weapon_level_locations = slot_data[RAC3OPTION.WEAPON_LEVEL_LOCATIONS]
         self.options.vendor_access = slot_data[RAC3OPTION.VENDOR_ACCESS]
         self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
+        self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADE]
 
     ########################################
     # Called on Game and Server Connection #

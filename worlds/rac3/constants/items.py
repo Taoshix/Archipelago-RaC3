@@ -231,6 +231,7 @@ class RAC3ITEM:
     PROGRESSIVE_VIDCOMIC = "Progressive VidComic"
     PROGRESSIVE_ARMOR = "Progressive Armor"
     PROGRESSIVE_PACK = "Progressive Pack"
+    PROGRESSIVE_WRENCH = "Progressive Omniwrench"
 
     MOD_SHOCK_SHOCK_BLASTER = "Shock Blaster Shock Mod"
     MOD_ACID_SHOCK_BLASTER = "Shock Blaster Acid Mod"

@@ -333,6 +333,7 @@ class RaC3World(World):
             RAC3OPTION.BOLT_AND_XP_MULTIPLIER: self.options.bolt_and_xp_multiplier.value,
             RAC3OPTION.PROGRESSIVE_WEAPONS: self.options.progressive_weapons.value,
             RAC3OPTION.WEAPON_MODS: self.options.weapon_mods.value,
+            RAC3OPTION.PROGRESSIVE_WRENCH: self.options.progressive_wrench.value,
             RAC3OPTION.ARMOR_UPGRADE: self.options.armor_upgrade.value,
             RAC3OPTION.SKILL_POINTS: self.options.skill_points.value,
             RAC3OPTION.SKILL_POINTS_PICK_AND_MIX: self.options.skill_points_pick_and_mix.value,

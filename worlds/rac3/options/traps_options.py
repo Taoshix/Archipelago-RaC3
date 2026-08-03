@@ -8,7 +8,7 @@ class EnableTraps(Toggle):
     """
     Determines whether trap items are included in the item pool.
     ------------------------------------------------------------
-    No: No traps will be included in the item pool.
+    No:   No traps will be included in the item pool.
     Yes:  Traps will be included in the item pool.
     ------------------------------------------------------------
     """

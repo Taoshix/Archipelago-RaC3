@@ -93,6 +93,10 @@ class RaC3World(World):
             self.options.goal_skillpoints.value -= 1  # Spread Your Germs Skillpoint
             rac3_logger.info(f"Player: {self.player_name} had their required skillpoints reduced to "
                              f"{self.options.goal_skillpoints.value} because of locked Command Center")
+        if self.options.goal_tbolts.value > 0 and self.options.lock_command_center.value:
+            self.options.goal_tbolts.value -= 1  # CC Tbolt
+            rac3_logger.info(f"Player: {self.player_name} had their required titanium bolts reduced to "
+                             f"{self.options.goal_tbolts.value} because of locked Command Center")
         if self.options.goal_museum.value and self.options.lock_command_center.value:
             self.options.goal_museum.value = False
             rac3_logger.info(f"Player: {self.player_name} had their required Insomniac Museum removed as it is not "

@@ -8,7 +8,7 @@ class TitaniumBolts(DefaultOnToggle):
     """
     Determines whether Titanium Bolts are locations in the world.
     -----------------------------------------------------------------------------------------------
-    No: No Titanium Bolts are locations.
+    No:   No Titanium Bolts are locations.
     Yes:  Titanium Bolts are added as locations.
     -----------------------------------------------------------------------------------------------
     Any Titanium bolts locked behind other locations such as Ranger Missions require those options to be enabled

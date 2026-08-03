@@ -8,7 +8,7 @@ class VRChallenges(DefaultOnToggle):
     """
     Determines whether VR Challenges and anything that is located in or behind them is a location.
     -----------------------------------------------------------------------------------------------
-    No: Removes anything that is located in or behind a VR Challenge from being a location.
+    No:   Removes anything that is located in or behind a VR Challenge from being a location.
     Yes:  VR Challenges, and anything directly locked behind them, are added as locations.
     -----------------------------------------------------------------------------------------------
     Any Skill Points or Titanium Bolts are added if their respective setting is enabled.

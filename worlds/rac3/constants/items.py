@@ -293,8 +293,6 @@ class RAC3ITEM:
     QUICK_SELECT_E = "Quick Select E"
     QUICK_SELECT_F = "Quick Select F"
 
-    VICTORY = "Biobliterator Defeated!"
-
 
 UPGRADE_DICT: dict[str, list[int]] = {
     RAC3ITEM.SHOCK_BLASTER: [0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E],

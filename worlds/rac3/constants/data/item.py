@@ -534,8 +534,6 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.GADGETRON_DEBT_TRAP: RAC3ITEMDATA.construct_trap(0x112),
     # VidComic Health Upgrades
     RAC3ITEM.BONUS_VIDCOMIC_HEALTH_UPGRADE: RAC3ITEMDATA.construct_vidcomic_health(0x113),
-    # Goal
-    RAC3ITEM.VICTORY: RAC3ITEMDATA.construct_goal(0x201),
 }
 
 
@@ -589,7 +587,6 @@ item_counts: dict[str, int] = {
     RAC3ITEM.PROGRESSIVE_VIDCOMIC: 5,
     RAC3ITEM.PROGRESSIVE_PACK: 2,
     **dict.fromkeys(infobot_data.keys(), 1),
-    RAC3ITEM.VICTORY: 0,
 }
 
 ngplus_item_counts: dict[str, int] = {
@@ -603,7 +600,6 @@ ngplus_item_counts: dict[str, int] = {
     RAC3ITEM.PROGRESSIVE_VIDCOMIC: 5,
     RAC3ITEM.PROGRESSIVE_PACK: 2,
     **dict.fromkeys(infobot_data.keys(), 1),
-    RAC3ITEM.VICTORY: 0,
 }
 item_table: dict[str, RAC3ITEMDATA] = {
     **non_prog_weapon_data,

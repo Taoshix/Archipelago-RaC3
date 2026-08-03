@@ -10,7 +10,7 @@ class NGPlusItems(Toggle):
     When enabled, it puts the RY3N0 into the item pool and the mega versions of weapons in the vendor
     if you have a V5 weapon.
     ---------------------------------------------------------------------------------------------------------
-    No: The RY3N0 will not appear in the multiworld, the mega versions of weapons are not purchasable.
+    No:   The RY3N0 will not appear in the multiworld, the mega versions of weapons are not purchasable.
     Yes:  The RY3N0 will appear in the multiworld, the mega versions of weapons are purchasable.
     ---------------------------------------------------------------------------------------------------------
     For progressive weapons, it will instead add 3 more upgrades to the pool, up to V8.

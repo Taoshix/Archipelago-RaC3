@@ -8,8 +8,8 @@ class ArmorVendors(DefaultOnToggle):
     """
     Determines whether armor vendor items are locations in the world.
     ------------------------------------------------------------------------------
-    No:     No armor vendor items are locations.
-    Yes:    Armor vendor items are added as locations.
+    No:   No armor vendor items are locations.
+    Yes:  Armor vendor items are added as locations.
     ------------------------------------------------------------------------------
     Visiting the planet associated with the armor will put it in the armor vendor.
     Magnaplate:   Starship Phoenix

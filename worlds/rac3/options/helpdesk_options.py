@@ -8,8 +8,8 @@ class HelpDesk(DefaultOnToggle):
     """
     Determines if the in-game help desk should be enabled/disabled from the start.
     ------------------------------------------------------------------------------
-    No:     Helpdesk is disabled when creating a new save.
-    Yes:    Helpdesk is enabled when creating a new save.
+    No:   Helpdesk is disabled when creating a new save.
+    Yes:  Helpdesk is enabled when creating a new save.
     ------------------------------------------------------------------------------
     """
     display_name = RAC3OPTION.HELP_DESK

@@ -8,8 +8,8 @@ class GoalNef(Toggle):
     """
     Determines if defeating Dr Nefarious is required to goal
     --------------------------------------------------------------------------------------
-    Off:    Dr Nefarious is not required, Goal is triggered the instant all other conditions are met
-    On:     Dr Nefarious is required, it is unlocked after all other conditions have been met
+    Off:  Dr Nefarious is not required, Goal is triggered the instant all other conditions are met
+    On:   Dr Nefarious is required, it is unlocked after all other conditions have been met
     ---------------------------------------------------------------------------------------
     If the Biobliterator is required, this option does nothing
     """

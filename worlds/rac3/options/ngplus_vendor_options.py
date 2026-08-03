@@ -8,7 +8,7 @@ class NGPlusVendor(Toggle):
     """
     Determines if the RY3N0 Purchase should be a location in the vendor or not.
     ------------------------------------------------------------------------------------
-    No: The RY3N0 is not a purchasable location.
+    No:   The RY3N0 is not a purchasable location.
     Yes:  The RY3N0 is a purchasable location.
     ------------------------------------------------------------------------------------
     """

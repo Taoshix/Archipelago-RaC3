@@ -8,8 +8,8 @@ class GoalQwark(Toggle):
     """
     Determines if completing the Qwarktastic Battle is required to goal
     --------------------------------------------------------------------------------------
-    Off:    Qwarktastic Battle is not required to goal
-    On:     Qwarktastic Battle is required to goal
+    Off:  Qwarktastic Battle is not required to goal
+    On:   Qwarktastic Battle is required to goal
     ---------------------------------------------------------------------------------------
     Completing this mission will give you an item
     """

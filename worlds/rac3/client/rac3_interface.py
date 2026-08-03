@@ -362,7 +362,7 @@ class Rac3Interface(GameInterface):
         self.options.weapon_level_locations = slot_data[RAC3OPTION.WEAPON_LEVEL_LOCATIONS]
         self.options.vendor_access = slot_data[RAC3OPTION.VENDOR_ACCESS]
         self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
-        self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADE]
+        self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES]
 
     ########################################
     # Called on Game and Server Connection #

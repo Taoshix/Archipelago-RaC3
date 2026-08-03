@@ -97,7 +97,7 @@ class RaC3Options(PerGameCommonOptions):
     vendor_access: VendorAccess
     weapon_level_locations: WeaponLevels
     bonus_vidcomic_health: BonusVidComicHealthUpgrades
-    vidcomic_health_upgrade: VidComicHealthUpgrades
+    vidcomic_health_upgrades: VidComicHealthUpgrades
 
 
 rac3_option_groups = [
@@ -200,5 +200,5 @@ slot_data_options: list[str] = [
     RAC3OPTION.WEAPON_LEVEL_LOCATIONS,
     RAC3OPTION.VENDOR_ACCESS,
     RAC3OPTION.BONUS_VIDCOMIC_HEALTH,
-    RAC3OPTION.VIDCOMIC_HEALTH_UPGRADE
+    RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES
 ]

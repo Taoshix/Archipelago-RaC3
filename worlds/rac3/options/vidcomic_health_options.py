@@ -13,7 +13,7 @@ class VidComicHealthUpgrades(Choice):
     ------------------------------------------------------------------------------------
     Note: This option has no effect if VidComics are disabled.
     """
-    display_name = RAC3OPTION.VIDCOMIC_HEALTH_UPGRADE
+    display_name = RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES
     option_disabled = 0
     option_enabled = 1
     default = 1

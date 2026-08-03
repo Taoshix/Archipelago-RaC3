@@ -3561,6 +3561,7 @@ UT_MAPPING: dict[str, int] = {}
 @dataclass
 class RAC3LOCATIONDATA:
     """Data class for each location"""
+    NAME: str
     ID: int
     REGION: str
     CHECK_ADDRESS: list[RAC3ADDRESSDATA]
@@ -3568,6 +3569,7 @@ class RAC3LOCATIONDATA:
     TAGS: set[str]
 
     def __init__(self,
+                 name: str = "NO NAME LOCATION",
                  idx: int = 0,
                  region: str = RAC3REGION.GALAXY,
                  check: list[RAC3ADDRESSDATA] | None = None,
@@ -3579,6 +3581,7 @@ class RAC3LOCATIONDATA:
         :param tags: Category of location
         :rtype: RAC3LOCATIONDATA
         """
+        self.NAME = name
         self.ID = idx
         self.REGION = region
         self.CHECK_ADDRESS = check if check else []
@@ -3618,7 +3621,7 @@ class RAC3LOCATIONDATA:
         check: list[RAC3ADDRESSDATA] = []
         for item in _LOCATION_NAME_TO_ADDRESS[location_name]:
             check += [RAC3ADDRESSDATA(item)]
-        return RAC3LOCATIONDATA(loc_id, planet_name, check, tags)
+        return RAC3LOCATIONDATA(location_name, loc_id, planet_name, check, tags)
 
 
 RAC3_LOCATION_DATA_TABLE: dict[str, RAC3LOCATIONDATA] = {name: RAC3LOCATIONDATA.construct(name) for name in

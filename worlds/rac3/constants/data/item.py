@@ -810,7 +810,6 @@ item_counts: dict[str, int] = {
     RAC3ITEM.PROGRESSIVE_VIDCOMIC: 5,
     RAC3ITEM.PROGRESSIVE_PACK: 2,
     **dict.fromkeys(infobot_data.keys(), 1),
-    RAC3ITEM.VICTORY: 0,
 }
 
 ngplus_item_counts: dict[str, int] = {
@@ -824,7 +823,6 @@ ngplus_item_counts: dict[str, int] = {
     RAC3ITEM.PROGRESSIVE_VIDCOMIC: 5,
     RAC3ITEM.PROGRESSIVE_PACK: 2,
     **dict.fromkeys(infobot_data.keys(), 1),
-    RAC3ITEM.VICTORY: 0,
 }
 item_table: dict[str, RAC3ITEMDATA] = {
     **non_prog_weapon_data,

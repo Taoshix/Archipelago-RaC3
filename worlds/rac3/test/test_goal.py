@@ -68,6 +68,8 @@ class TestAllGoals(RAC3TestBase):
         # "helpdesk": HelpDesk.default,
         # "vendor_access": VendorAccess.default,
         # "weapon_level_locations": WeaponLevels.default,
+        # "bonus_vidcomic_health": BonusVidComicHealthUpgrades.default,
+        # "vidcomic_health_upgrades": VidComicHealthUpgrades.default,
         "lock_command_center": LockCommandCenter.option_false,
         "goal_bio": GoalBio.option_true,
         "goal_nef": GoalNef.option_true,

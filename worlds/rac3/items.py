@@ -88,8 +88,10 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 continue
 
         # Vidcomics option
-        if RAC3ITEMTAG.VIDCOMIC in item_tags and not options.vidcomics.value:
-            continue
+        # Todo: uncomment the below code block once rulebuilder is implemented and unittests do not fail on
+        #  inaccessible event locations
+        # if RAC3ITEMTAG.VIDCOMIC in item_tags and not options.vidcomics.value:
+        #     continue
         if RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE in item_tags:
             if not options.vidcomics.value:
                 continue

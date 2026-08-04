@@ -9,6 +9,7 @@ from worlds.rac3.constants.region import RAC3REGION
 from worlds.rac3.options.arena_options import Arena
 from worlds.rac3.options.armor_upgrade_options import ArmorUpgrade
 from worlds.rac3.options.armor_vendor_options import ArmorVendors
+from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealthUpgrades
 from worlds.rac3.options.clank_options import ClankOptions
 from worlds.rac3.options.filler_weight_options import FillerWeight
 from worlds.rac3.options.goal_bio_options import GoalBio
@@ -57,6 +58,7 @@ from worlds.rac3.options.trap_weight_options import TrapWeight
 from worlds.rac3.options.traps_options import EnableTraps
 from worlds.rac3.options.trophies_options import Trophies
 from worlds.rac3.options.vendor_access_options import VendorAccess
+from worlds.rac3.options.vidcomic_health_options import VidComicHealthUpgrades
 from worlds.rac3.options.vidcomics_options import VidComics
 from worlds.rac3.options.vr_challenges_options import VRChallenges
 from worlds.rac3.options.weapon_level_options import WeaponLevels
@@ -105,6 +107,8 @@ class TestDefaults(RAC3TestBase):
         # "helpdesk": HelpDesk.default,
         # "vendor_access": VendorAccess.default,
         # "weapon_level_locations": WeaponLevels.default,
+        # "bonus_vidcomic_health": BonusVidComicHealthUpgrades.default,
+        # "vidcomic_health_upgrades": VidComicHealthUpgrades.default,
         # "lock_command_center": LockCommandCenter.default,
         # "goal_bio": GoalBio.default,
         # "goal_nef": GoalNef.default,
@@ -197,7 +201,7 @@ class TestNotDefault(RAC3TestBase):
         "trophies": Trophies.option_all,
         "titanium_bolts": TitaniumBolts.option_false,
         "rangers": Rangers.option_story_missions,
-        "vidcomics": VidComics.option_true,
+        "vidcomics": VidComics.option_false,
         "vr_challenges": VRChallenges.option_false,
         "arena": Arena.option_second_only,
         "sewer_crystals": SewerCrystals.option_all,
@@ -222,6 +226,8 @@ class TestNotDefault(RAC3TestBase):
         "helpdesk": HelpDesk.option_false,
         "vendor_access": VendorAccess.option_infobot,
         "weapon_level_locations": WeaponLevels.option_all,
+        "bonus_vidcomic_health": BonusVidComicHealthUpgrades.range_end,
+        "vidcomic_health_upgrades": VidComicHealthUpgrades.option_false,
         "lock_command_center": LockCommandCenter.option_true,
         "goal_bio": GoalBio.option_false,
         "goal_nef": GoalNef.option_true,

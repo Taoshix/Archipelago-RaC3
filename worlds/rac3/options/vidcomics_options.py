@@ -1,10 +1,10 @@
 """This module contains options for Qwark VidComic locations"""
 
-from Options import Toggle
+from Options import DefaultOnToggle
 from worlds.rac3.constants.options import RAC3OPTION
 
 
-class VidComics(Toggle):
+class VidComics(DefaultOnToggle):
     """
     Determines whether VidComics and anything that is located in or behind them is a location.
     -----------------------------------------------------------------------------------------------

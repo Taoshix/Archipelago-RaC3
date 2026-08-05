@@ -1,13 +1,12 @@
 repos:
   - repo: local
-    rev: v0.11.12
     hooks:
-      - id: ruff
-        args: [--fix, --config, ruff.toml]
       - id: pytest-changed-worlds
         name: pytest
-        entry: python -m pytest
+        entry: pytest -rA --tb=short
         args: [worlds/rac3]
         language: system
         pass_filenames: false
-        stages: [commit]
+        always_run: true
+        verbose: true
+        stages: [pre-commit]

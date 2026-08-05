@@ -3,10 +3,10 @@ repos:
     hooks:
       - id: pytest-changed-worlds
         name: pytest
-        entry: pytest -rA --tb=short
+        entry: pytest -ra --tb=short
         args: [worlds/rac3]
         language: system
         pass_filenames: false
         always_run: true
         verbose: true
-        stages: [pre-commit]
+        stages: [post-commit, pre-push]

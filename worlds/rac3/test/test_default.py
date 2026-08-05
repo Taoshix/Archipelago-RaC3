@@ -287,8 +287,8 @@ class TestNotDefault(RAC3TestBase):
             if name in ["goal_museum"]:
                 continue
             with self.subTest(f"Test not default: {name}"):
-                self.assertNotEquals(option, getattr(self.world.options, name).default,
-                                     f"{name} is still the default value {option}, add test cases")
+                self.assertNotEqual(option, getattr(self.world.options, name).default,
+                                    f"{name} is still the default value {option}, add test cases")
 
     def test_goal_items_placed(self):
         """Test that the required items to beat the game have been placed somewhere"""

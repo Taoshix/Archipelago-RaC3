@@ -2015,6 +2015,9 @@ class Rac3Interface(GameInterface):
     def wrench_cycler(self):
         """Cycle through the wrench properties and update its state"""
         prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
+        if not prog_wrench:
+            return
+
         if self.planet != RAC3REGION.MENU and self.between_planets is False:
             wrench_instruction = RAC3WRENCH.get_wrench_property_address(self.planet) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
             wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet) + RAC3WRENCH.UPGRADE_ID_OFFSET

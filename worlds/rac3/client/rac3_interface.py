@@ -1972,7 +1972,7 @@ class Rac3Interface(GameInterface):
     def wrench_cycler(self):
         """Cycle through the wrench properties and update its state"""
         if self.options.progressive_wrench:
-            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH.status]
+            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH].status
             if not prog_wrench:
                 return
             

@@ -59,7 +59,8 @@ from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRES
 from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
                                           PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES,
                                           PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
-                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET, WRENCH_FUNCTION_OFFSET)
+                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET,
+                                          WRENCH_FUNCTION_OFFSET_NTSC, WRENCH_FUNCTION_OFFSET_PAL)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS, SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS, SPEEDUPS
@@ -2006,18 +2007,19 @@ class Rac3Interface(GameInterface):
 
     def wrench_cycler(self):
         """Cycle through the wrench properties and update its state"""
-        prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
-        if not prog_wrench:
-            return
+        if self.options.progressive_wrench:
+            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
+            if not prog_wrench:
+                return
 
-        if self.planet != RAC3REGION.MENU and self.between_planets is False:
-            wrench_instruction = RAC3WRENCH.get_wrench_property_address(self.planet) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
-            wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet) + RAC3WRENCH.UPGRADE_ID_OFFSET
-            target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench]
-            if self._read32(wrench_instruction) == 0xA0620009:
-                for _ in range(6):
-                    self._write8(wrench_upgrade, target_id)
-                    wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
+            if self.planet != RAC3REGION.MENU and self.between_planets is False:
+                wrench_instruction = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
+                wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.UPGRADE_ID_OFFSET
+                target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench]
+                if self._read32(wrench_instruction) == 0xA0620009:
+                    for _ in range(6):
+                        self._write8(wrench_upgrade, target_id)
+                        wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):

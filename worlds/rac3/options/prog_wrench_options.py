@@ -11,7 +11,7 @@ class ProgressiveWrench(Choice):
     Disable for the vanilla OmniWrench behaviour.
     Enable for OmniWrench upgrades to be included in the item pool.
     ------------------------------------------------------------------------------------
-    Note: Experimental feature.
+    Note: Experimental feature. Even if enabled, you will start with the OmniWrench V1.
     """
     display_name = RAC3OPTION.PROGRESSIVE_WRENCH
     option_disabled = 0

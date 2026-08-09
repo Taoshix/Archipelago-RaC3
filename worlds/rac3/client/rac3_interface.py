@@ -1971,19 +1971,19 @@ class Rac3Interface(GameInterface):
 
     def wrench_cycler(self):
         """Cycle through the wrench properties and update its state"""
-        if self.options.progressive_wrench:
-            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH].status
-            if not prog_wrench:
-                return
-            
+        if self.options.progressive_wrench:   
+            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
             if self.planet != RAC3REGION.MENU and self.between_planets is False:
                 wrench_instruction = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
-                wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.UPGRADE_ID_OFFSET         
-                target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench]
+                wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.UPGRADE_ID_OFFSET 
+                target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench.status]
                 if self._read32(wrench_instruction) == 0xA0620009:
                     for _ in range(6):
                         self._write8(wrench_upgrade, target_id)
                         wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
+
+        else:      
+            return             
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):

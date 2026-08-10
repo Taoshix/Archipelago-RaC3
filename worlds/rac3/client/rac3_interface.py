@@ -59,8 +59,7 @@ from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRES
 from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
                                           PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES,
                                           PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
-                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET,
-                                          WRENCH_FUNCTION_OFFSET_NTSC, WRENCH_FUNCTION_OFFSET_PAL)
+                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS, SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS, SPEEDUPS

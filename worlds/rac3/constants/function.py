@@ -13,7 +13,7 @@ class RAC3FUNCTION:
     EQUIP_WRENCH_BASE_JP = 0x004C89E0
     SWING_WRENCH_BASE_NTSC = 0x004D38F0
     SWING_WRENCH_BASE_PAL = 0x004D7C78
-    CHECK_FLOOR_BASE_NTSC = 0x004C0B40 # +0x30C to CHECK_FLOOR_ADDRESS. Value: A6221470, if A6220000 or NOP'd, nothing is written in the CURRENT_FLOOR address
+    CHECK_FLOOR_BASE_NTSC = 0x004C0B40 # Value: A6221470, if A6220000 or NOP'd, nothing is written in the CURRENT_FLOOR address
     CHECK_FLOOR_BASE_PAL = 0x004C4D98
     ENEMY_SPEED_BASE_NTSC = 0x00410494 # -0x54 to its function start. Value: 3C043F7F, tampering with 3F7F directly affects the enemies speed
     ENEMY_SPEED_BASE_PAL = 0x00413A04
@@ -39,8 +39,106 @@ class RAC3FUNCTION:
     MAGNETISM_BASE_PAL = 0x004BDB14
     MAGNETISM_BASE_JP = 0x004C4754
     GRAV_BOOTS_EVERYWHERE_BASE_NTSC = 0x004B9808 # -0x50 to its function start. Value: A6200368, if tampered with, every surface is magnetic
-    GRAV_BOOTS_EVERYWHERE_BASE_PAL = 0x004BDA50
-    GRAV_BOOTS_EVERYWHERE_BASE_JP = 0x004C4690
+    GRAV_BOOTS_EVERYWHERE_BASE_PAL = 0x004BDA50  # theoretically, this could be accomplished with just the CHECK_FLOOR function, but this one is saved
+    GRAV_BOOTS_EVERYWHERE_BASE_JP = 0x004C4690   # just for reference and future use
+
+    ORIGINAL_CHECK_FLOOR_VALUE = 0xA6221470
+    ORIGINAL_ENEMY_SPEED_VALUE = 0x3C043F7F
+    ORIGINAL_RATCHET_SKELETON_VALUE = 0x23010004
+    ORIGINAL_SHIP_KEYS_1_VALUE = 0x3C02001D
+    ORIGINAL_SHIP_KEYS_2_VALUE = 0x90425533
+    ORIGINAL_PLAYER_STATE_LOCK_VALUE = 0xAE1125C4
+    ORIGINAL_JUMP_FUNCTION_VALUE = 0x1040000E
+    ORIGINAL_INVERSE_JUMP_VALUE = 0x247000F0
+    ORIGINAL_TELEPORT_VALUE = 0xA0E50020
+    ORIGINAL_MAGNETISM_VALUE = 0xA4820368
+    ORIGINAL_GRAV_BOOTS_EVERYWHERE_VALUE = 0xA6200368
+
+    @staticmethod
+    def get_check_floor_address(planet: str, game_id: str = '') -> int:
+        """Provides the address that effectively allows or disallows the CURRENT_FLOOR to be overwritten"""
+        ADDRESS_OFFSET = 0x30C
+        match game_id:
+            case RAC3VERSION.US_ID:
+                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_NTSC + CHECK_FLOOR_OFFSET_NTSC[planet] + ADDRESS_OFFSET
+                return addr
+            case RAC3VERSION.EU_ID:
+                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_PAL + CHECK_FLOOR_OFFSET_PAL[planet] + ADDRESS_OFFSET
+                return addr
+           #case RAC3VERSION.JP_ID:
+               #addr = RAC3FUNCTION.CHECK_FLOOR_BASE_JP + CHECK_FLOOR_OFFSET_JP[planet]
+               #return addr
+            case _:
+                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_NTSC + CHECK_FLOOR_OFFSET_NTSC[planet] + ADDRESS_OFFSET
+                return addr
+            
+    @staticmethod
+    def get_enemy_speed_address(planet: str, game_id: str = '') -> int:
+        """Provides the address that effectively affects the enemies speed""" # Most likely causes enemy-related bugs if too fast. Use with caution
+        match game_id:
+            case RAC3VERSION.US_ID:
+                addr = RAC3FUNCTION.ENEMY_SPEED_BASE_NTSC + ENEMY_SPEED_OFFSET_NTSC[planet]
+                return addr
+            case RAC3VERSION.EU_ID:
+                addr = RAC3FUNCTION.ENEMY_SPEED_BASE_PAL + ENEMY_SPEED_OFFSET_PAL[planet]
+                return addr
+            case RAC3VERSION.JP_ID:
+                addr = RAC3FUNCTION.ENEMY_SPEED_BASE_JP + ENEMY_SPEED_OFFSET_JP[planet]
+                return addr
+            case _:
+                addr = RAC3FUNCTION.ENEMY_SPEED_BASE_NTSC + ENEMY_SPEED_OFFSET_NTSC[planet]
+                return addr
+
+    @staticmethod
+    def get_ratchet_skeleton_address(planet: str, game_id: str = '') -> int:
+        """Provides the address that affects Ratchet's moby bones"""
+        match game_id:
+            case RAC3VERSION.US_ID:
+                addr = RAC3FUNCTION.RATCHET_SKELETON_BASE_NTSC + RATCHET_SKELETON_OFFSET_NTSC[planet]
+                return addr
+            case RAC3VERSION.EU_ID:
+                addr = RAC3FUNCTION.RATCHET_SKELETON_BASE_PAL + RATCHET_SKELETON_OFFSET_PAL[planet]
+                return addr
+            case RAC3VERSION.JP_ID:
+                addr = RAC3FUNCTION.RATCHET_SKELETON_BASE_JP + RATCHET_SKELETON_OFFSET_JP[planet]
+                return addr
+            case _:
+                addr = RAC3FUNCTION.RATCHET_SKELETON_BASE_NTSC + RATCHET_SKELETON_OFFSET_NTSC[planet]
+                return addr
+
+    @staticmethod
+    def get_ship_keys_address(planet: str, game_id: str = '') -> int:
+        """Provides the address that can effectively change what allows the player to enter the ship"""
+        match game_id:
+            case RAC3VERSION.US_ID:
+                addr = RAC3FUNCTION.SHIP_KEYS_BASE_NTSC + SHIP_KEYS_OFFSET_NTSC[planet] 
+                return addr
+            case RAC3VERSION.EU_ID:
+                addr = RAC3FUNCTION.SHIP_KEYS_BASE_PAL + SHIP_KEYS_OFFSET_PAL[planet] 
+                return addr
+           #case RAC3VERSION.JP_ID:
+               #addr = RAC3FUNCTION.SHIP_KEYS_BASE_JP + SHIP_KEYS_OFFSET_JP[planet]
+               #return addr
+            case _:
+                addr = RAC3FUNCTION.SHIP_KEYS_BASE_NTSC + SHIP_KEYS_OFFSET_NTSC[planet]
+                return addr
+
+    @staticmethod
+    def get_player_state_lock_address(planet: str, game_id: str = '') -> int:
+        """Provides the address that effectively unlocks player state to write whatever to it""" # Can cause crashes with untested action states
+        match game_id:
+            case RAC3VERSION.US_ID:
+                addr = RAC3FUNCTION.PLAYER_STATE_LOCK_BASE_NTSC + PLAYER_STATE_LOCK_OFFSET_NTSC[planet]
+                return addr
+            case RAC3VERSION.EU_ID:
+                addr = RAC3FUNCTION.PLAYER_STATE_LOCK_BASE_PAL + PLAYER_STATE_LOCK_OFFSET_PAL[planet]
+                return addr
+            case RAC3VERSION.JP_ID:
+                addr = RAC3FUNCTION.PLAYER_STATE_LOCK_BASE_JP + PLAYER_STATE_LOCK_OFFSET_JP[planet]
+                return addr
+            case _:
+                addr = RAC3FUNCTION.PLAYER_STATE_LOCK_BASE_NTSC + PLAYER_STATE_LOCK_OFFSET_NTSC[planet]
+                return addr
 
 WRENCH_FUNCTION_OFFSET_NTSC: dict[str, int] = {
     RAC3REGION.VELDIN: 0x2FDE8,

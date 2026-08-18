@@ -90,7 +90,7 @@ def set_rules(world: "RaC3World"):
 
     progressive_wrench_requirement = 1
     if world.options.progressive_wrench.value != 0:
-        progressive_wrench_requirement += 4 if world.options.ngplus_items.value else 3
+        progressive_wrench_requirement += 5 if world.options.ngplus_items.value else 4
     else: progressive_wrench_requirement = 0
 
 

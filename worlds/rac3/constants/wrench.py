@@ -21,6 +21,15 @@ class RAC3WRENCH:
     EQUIP_WRENCH_ADDRESS_OFFSET: int = 0x174 # 908228CA, if 90820000 or NOP'd, you cannot equip the wrench.
     HELD_WRENCH_ADDRESS_OFFSET: int = 0x1B0 # 24040009, if 24040000 or NOP'd, the player will hold nothing when pressing square.
 
+    ORIGINAL_INSTRUCTION_VALUE = 0xA0620009
+    ORIGINAL_SWING_VALUE = 0x24020009
+    ORIGINAL_EQUIP_VALUE = 0x908228CA
+    ORIGINAL_HOLD_VALUE = 0x24040009
+
+    PATCHED_SWING_VALUE = 0x24020000
+    PATCHED_EQUIP_VALUE = 0x90820000
+    PATCHED_HOLD_VALUE = 0x24040000
+
    #todo: Research and write the offsets in their determined file 
 
     @staticmethod

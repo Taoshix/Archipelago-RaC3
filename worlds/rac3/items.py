@@ -302,7 +302,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
             if name == RAC3ITEM.PROGRESSIVE_RY3N0:
                 item_amount: int = 5
             if name == RAC3ITEM.PROGRESSIVE_WRENCH:
-                item_amount: int = 7
+                item_amount: int = 8
             else:
                 item_amount: int = ngplus_item_counts.get(name, 1)
         elif name != RAC3ITEM.PROGRESSIVE_RY3N0:
@@ -310,7 +310,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
         else:
             continue
         if not options.ngplus_items.value and name == RAC3ITEM.PROGRESSIVE_WRENCH:
-            item_amount: int = 4
+            item_amount: int = 5
         # Already placed items (Starting items and vanilla)
         if name in world.preplaced_items:
             count = world.preplaced_items.count(name)

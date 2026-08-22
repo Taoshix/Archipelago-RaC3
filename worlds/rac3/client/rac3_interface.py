@@ -2207,12 +2207,16 @@ class Rac3Interface(GameInterface):
                         self.last_hovered_weapon = weapon_name
                     else:
                         restore_level = self.weapon_levels.get(weapon_name, 1)
+                        if weapon_name == RAC3ITEM.RY3N0 and restore_level > self.ryno:
+                            restore_level = self.ryno
                         self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
                                      UPGRADE_DICT[weapon_name][restore_level - 1])
             # restore last hovered weapon if we closed the vendor while it was hovering over it
             if (self.last_hovered_weapon != "" and self.vendor_type != RAC3VENDORTYPE.WEAPON
                 and self.pause_state_value != RAC3PAUSESTATE.WEAPON_UPGRADE):
                 restore_level = self.weapon_levels.get(self.last_hovered_weapon, 1)
+                if self.last_hovered_weapon == RAC3ITEM.RY3N0 and restore_level > self.ryno:
+                    restore_level = self.ryno
                 self._write8(non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
                              UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1])
                 self.last_hovered_weapon = ""

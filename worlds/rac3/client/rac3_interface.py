@@ -795,7 +795,7 @@ class Rac3Interface(GameInterface):
             self.pause_state = True if self.pause_state_value > RAC3PAUSESTATE.UNPAUSED else False
             self.pause_menu = bool(self._read8(pause_addr)) if pause_addr else False
             if self.current_game == RAC3VERSION.JP_ID:
-                if self.pause_state_value == RAC3PAUSESTATE.MINIGAME:
+                if self.pause_state_value != RAC3PAUSESTATE.PAUSED:
                     self.pause_menu = False
                 elif pause_addr and (jp_addr := jp_get_pause_physical_address(pause_addr, self.planet)) is not None:
                     self.pause_menu = bool(super()._read8(jp_addr))
@@ -824,7 +824,7 @@ class Rac3Interface(GameInterface):
             # Unknown planet, abort homewarp
             logger.error(f"Aborting homewarp, Unknown Planet: {self.planet}")
             return
-        if planet_id not in PLANET_NAME_FROM_ID.keys():
+        if planet_id not in PLANET_NAME_FROM_ID.keys() or planet_id in [0x0F, 0x19]:
             # Invalid planet id, abort homewarp
             logger.error(f"Aborting homewarp, Invalid Planet ID: {planet_id}")
             return
@@ -1478,6 +1478,9 @@ class Rac3Interface(GameInterface):
         """Determine if the current respawn coordinates should be overwritten to the ship coordinates"""
         if self.player_type in {RAC3PLAYERTYPE.CLANK, RAC3PLAYERTYPE.GIANT, RAC3PLAYERTYPE.QWARK}:
             return False
+        if self.current_game == RAC3VERSION.JP_ID and self.planet == RAC3REGION.HOLOSTAR_STUDIOS:
+            # Entrance coordinates on JP are at the ship instead of clank's trailer
+            return RAC3LOCATION.HOLOSTAR_RETURN_TO_SHIP in self.checked_locations
         match self.planet:
             case RAC3REGION.VELDIN | RAC3REGION.TYHRRANOSIS | RAC3REGION.ZELDRIN_STARPORT:
                 # Veldin: Problems with F-sector
@@ -1844,14 +1847,8 @@ class Rac3Interface(GameInterface):
 
     def distance_to_moby(self, moby: int) -> float:
         """Calculate the distance from the player to the moby"""
-        if not moby:
+        if self.between_planets or not moby:
             return float("inf")
-        if not self.ratchet_moby:
-            self.ratchet_moby = self._read32(RAC3STATUS.RATCHET_MOBY_POINTER)
-            assert self.ratchet_moby, "Ratchet moby pointer is null"
-        assert self.ratchet_moby < moby < self.ratchet_moby + 0x00300000, \
-            (f"Moby {hex(moby)} not in the typical moby range ({hex(self.ratchet_moby)} - "
-             f"{hex(self.ratchet_moby + 0x00300000)})")
         player_pos = self.player_pos
         moby_pos = RAC3POSITIONDATA(
             self._read_float(moby + 0x10),

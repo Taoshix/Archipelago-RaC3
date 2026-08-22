@@ -313,6 +313,23 @@ class CommandProcessor(ClientCommandProcessor):
             else:
                 self.output(f"Could not find moby with ID {hex(target_id)}")
 
+    def _cmd_translate_address(self, *args):
+        """Takes the input address and runs it through address convert function to see what current game version would treat it as"""
+        if not self.verify(3):
+            return
+        if isinstance(self.ctx, Rac3Context):
+            if not self.is_development_build():
+                # let everyone know that a development command was used in a release build.
+                self.default(f'Development command "/translate_address {" ".join(str(x) for x in args)}" was used in a non-development build.')
+
+            try:
+                input_address = int(args[0], 16)
+            except ValueError:
+                self.output("Invalid address. Please provide a valid hexadecimal number.")
+                return
+
+            translated_address = self.ctx.game_interface.address_convert(input_address)
+            self.output(f"Input Address: {hex(input_address)} Translated Address: {hex(translated_address)} Offset: {hex(translated_address - input_address)}")
 
 class Rac3Context(CommonContext):
     """Class for handling server connection with the game client"""

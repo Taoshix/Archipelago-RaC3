@@ -448,8 +448,6 @@ class Rac3Interface(GameInterface):
         """Runs when loading into game from the main menu to update the player with filler items from the server"""
         if RAC3ITEMTAG.FILLER in RAC3_ITEM_DATA_TABLE[ITEM_FROM_AP_CODE[item]].TAGS:
             self.initial_fillers[ITEM_FROM_AP_CODE[item]] = self.initial_fillers.get(ITEM_FROM_AP_CODE[item], 0) + 1
-            if self.initial_fillers[ITEM_FROM_AP_CODE[item]] > 255:
-                self.initial_fillers[ITEM_FROM_AP_CODE[item]] = 255
 
     def process_offline_fillers(self, data_received: bool):
         """Process any filler items received while offline"""

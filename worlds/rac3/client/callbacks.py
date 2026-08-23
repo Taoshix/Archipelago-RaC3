@@ -382,8 +382,7 @@ async def handle_check_goal(ctx: "Context") -> None:
     if ctx.slot_data is None:
         return
 
-    victory_code = ctx.game_interface.get_victory_code()
-    if victory_code in ctx.checked_locations and not ctx.finished_game:
+    if ctx.game_interface.check_victory() and not ctx.finished_game:
         ctx.finished_game = True
         await ctx.send_msgs([ClientMessage.status_update(ClientStatus.CLIENT_GOAL)])
 

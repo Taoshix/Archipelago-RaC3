@@ -1338,9 +1338,11 @@ class Rac3Interface(GameInterface):
     ##############
 
     @staticmethod
-    def get_victory_code():
-        """Returns the apcode value of the goal location"""
-        return RAC3_LOCATION_DATA_TABLE[RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR].AP_CODE
+    def check_victory() -> bool:
+        """Returns a bool for if the current game state is 'completed' or not"""
+        victory = True
+        # Todo: add the checks for each goal here, set victory to False if any are not met
+        return victory
         # let this be changed by an option
 
     ###################

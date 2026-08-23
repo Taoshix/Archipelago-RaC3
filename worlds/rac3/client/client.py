@@ -353,6 +353,7 @@ class Rac3Context(CommonContext):
     data_package: int = 0
     data_received: bool = False
     save_data: dict[int, tuple[int, int]] = {}
+    last_saved: float = 0.0
 
     def __init__(self, server_address: str, password: str):
         super().__init__(server_address, password)

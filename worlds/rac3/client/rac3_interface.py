@@ -2126,8 +2126,11 @@ class Rac3Interface(GameInterface):
                     target_level = 5
                 if target_level > 8 and self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0:
                     target_level = 8
+                # Todo: update the ryno special cases to handle any weapon
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
+                if weapon_name == RAC3ITEM.RY3N0 and self.weapon_levels.get(weapon_name, 1) > self.ryno:
+                    self.weapon_levels[weapon_name] = self.ryno
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL
                 prev_saved = self.weapon_levels.get(weapon_name, 1)
@@ -2175,6 +2178,8 @@ class Rac3Interface(GameInterface):
                         target_level = 1
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
+                if weapon_name == RAC3ITEM.RY3N0 and self.weapon_levels.get(weapon_name, 1) > self.ryno:
+                    self.weapon_levels[weapon_name] = self.ryno
                 # logger.debug(f"weapon: {weapon_name}, target: {target_level}")
                 target_id = UPGRADE_DICT[weapon_name][target_level - 1]
                 target_name = ITEM_NAME_FROM_ID[target_id]
@@ -2210,6 +2215,7 @@ class Rac3Interface(GameInterface):
                     else:
                         restore_level = self.weapon_levels.get(weapon_name, 1)
                         if weapon_name == RAC3ITEM.RY3N0 and restore_level > self.ryno:
+                            self.weapon_levels[weapon_name] = self.ryno
                             restore_level = self.ryno
                         self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
                                      UPGRADE_DICT[weapon_name][restore_level - 1])

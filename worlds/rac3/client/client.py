@@ -242,20 +242,14 @@ class CommandProcessor(ClientCommandProcessor):
                 self.output("No level specified. Provide an integer ID or region name.")
                 return
 
-            arg = args[0]
-            # If the argument is already an int, call directly
-            if isinstance(arg, int):
-                self.ctx.game_interface.homewarp(arg)
-                return
-
-            # Try to parse as integer string first
+            arg = " ".join(args).strip()
             try:
                 level_id = int(arg)
                 self.ctx.game_interface.homewarp(level_id)
                 return
             except ValueError:
-                # Not an integer string — treat as a region key/name and look up its ID (case-insensitive)
-                key = str(arg).strip()
+                # Not an integer string, so try to look it up in the region data table
+                key = arg.strip()
                 region = RAC3_REGION_DATA_TABLE.get(key)
                 if region is None:
                     lower_key = key.lower()

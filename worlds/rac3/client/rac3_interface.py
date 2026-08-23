@@ -490,7 +490,7 @@ class Rac3Interface(GameInterface):
 
     def load_save(self, save: dict[int, tuple[int, int]]):
         """Set the player's current values based on the server's save-data"""
-        if self.main_menu:
+        if self.check_main_menu():
             return
         logger.debug(f"Save data: {save}")
         defaults: dict[int, tuple[int, int]] = {data.ADDRESS: (data.TYPE, data.VALUE) for data in SAVE_DATA}
@@ -2012,7 +2012,7 @@ class Rac3Interface(GameInterface):
 
         bits = set()
         if bonus_health_upgrades >= 1:
-            bits.add(0x0) 
+            bits.add(0x0)
         if bonus_health_upgrades >= 2:
             bits.add(0x6)
         if bonus_health_upgrades >= 3:

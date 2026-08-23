@@ -56,7 +56,8 @@ from worlds.rac3.constants.pause_state import RAC3PAUSESTATE
 from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERACTION
 from worlds.rac3.constants.player_type import PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
-from worlds.rac3.constants.region import (PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID, PLANET_VENDOR_OFFSET,
+from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
+                                          PLANET_VENDOR_OFFSET,
                                           PLANETS_WITH_HACKER_PUZZLES, PLANETS_WITH_REFRACTOR_PUZZLES,
                                           PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION, REGION_TO_HACKER_DOOR_COUNT,
                                           RESPAWN_COORDS_OFFSET)
@@ -824,10 +825,11 @@ class Rac3Interface(GameInterface):
             # Unknown planet, abort homewarp
             logger.error(f"Aborting homewarp, Unknown Planet: {self.planet}")
             return
-        if planet_id not in PLANET_NAME_FROM_ID.keys() or planet_id in [0x0F, 0x19]:
-            # Invalid planet id, abort homewarp
-            logger.error(f"Aborting homewarp, Invalid Planet ID: {planet_id}")
-            return
+        if planet_id not in PLANET_NAME_FROM_ID.keys():
+            if PLANET_NAME_FROM_ID[planet_id] in INVALID_PLANETS:
+                # Invalid planet id, abort homewarp
+                logger.error(f"Aborting homewarp, Invalid Planet: {PLANET_NAME_FROM_ID[planet_id]}, ID: {planet_id}")
+                return
         planet_data = RAC3_REGION_DATA_TABLE[self.planet]
         if planet_data.PLANET_TO_LOAD:
             self.homewarping = True

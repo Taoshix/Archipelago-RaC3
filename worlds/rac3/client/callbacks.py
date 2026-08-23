@@ -33,8 +33,7 @@ if TYPE_CHECKING:
 async def pcsx2_sync_task(ctx: "Context"):
     """Connects to PCSX2 and loops through update functions until the connection is closed."""
     logger.info(f"Starting {RAC3OPTION.GAME_TITLE_FULL} Connector")
-    version_dots = RAC3OPTION.VERSION_NUMBER.count(".")
-    if version_dots >= 3 or "dev" in RAC3OPTION.VERSION_NUMBER:
+    if "-dev" in RAC3OPTION.VERSION_NUMBER or RAC3OPTION.VERSION_NUMBER.count(".") >= 3:
         logger.warning("\nYou are using a development build of the RaC3 Archipelago Randomizer!\n"
                        "There may be bugs present and features that have not been tested fully.\n"
                        "These builds are meant for testing and bug reporting purposes "
@@ -210,8 +209,9 @@ async def _handle_game_ready(ctx: "Context") -> None:
             await update(ctx)
             after_time = time()
             elapsed = after_time - current_time
-            logger.debug(f"Update cycle took {elapsed:.5f} seconds (Reads: {ctx.game_interface.cycle_reads_count}, "
-                         f"Writes: {ctx.game_interface.cycle_writes_count})")
+            if "-dev" in RAC3OPTION.VERSION_NUMBER or RAC3OPTION.VERSION_NUMBER.count(".") >= 3:
+                logger.debug(f"Update cycle took {elapsed:.5f} seconds (Reads: {ctx.game_interface.cycle_reads_count}, "
+                            f"Writes: {ctx.game_interface.cycle_writes_count})")
             # logger.debug(f"Data Package: {ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, 'Empty')}")
             ctx.game_interface.cycle_times.append(elapsed)
             if len(ctx.game_interface.cycle_times) > 100:

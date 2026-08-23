@@ -190,9 +190,6 @@ class CommandProcessor(ClientCommandProcessor):
                 self.output(f"Please type a valid number")
                 return
             self.ctx.game_interface.ryno = int(args[0])
-            current_stored_ryno_level = self.ctx.game_interface.weapon_levels[RAC3ITEM.RY3N0]
-            if current_stored_ryno_level > int(args[0]):
-                self.ctx.game_interface.weapon_levels[RAC3ITEM.RY3N0] = int(args[0])
             self.output(f"RY3NO max upgrade set to Lv{args[0]}")
             if self.verify():
                 self.ctx.game_interface.enqueue_notification(f"RY3NO max upgrade set to Lv{args[0]}")

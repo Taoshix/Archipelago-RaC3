@@ -1662,7 +1662,11 @@ class Rac3Interface(GameInterface):
 
     def write_vendor_inventory(self, inventory: list[RAC3VENDORSLOTDATA], vendor_type: RAC3VENDORTYPE):
         """Write a list of vendor slot data objects to the current planet's vendor inventory"""
-        self._write32(RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game), len(inventory))
+        operations8 = []
+        operations16 = []
+        operations32 = []
+        #self._write32(RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game), len(inventory))
+        operations32.append((RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game), len(inventory)))
         if len(inventory) == 0:
             start_address = RAC3VENDOR.get_vendor_property_address(self.planet, 0, self.current_game)
             match vendor_type:
@@ -1673,8 +1677,10 @@ class Rac3Interface(GameInterface):
                     string_key = (RAC3VENDOR.ALL_ITEMS_SOLD_OUT_LOC_KEY
                                   if self.has_checked_all_locations_with_tag(RAC3TAG.SHIP)
                                   else RAC3VENDOR.NO_ITEMS_AVAILABLE_LOC_KEY)
-                    self._write32(item_name_addr, self.vendor_string_pointers[string_key])
-                    self._write32(already_equipped_addr, 1)
+                    #self._write32(item_name_addr, self.vendor_string_pointers[string_key])
+                    #self._write32(already_equipped_addr, 1)
+                    operations32.append((item_name_addr, self.vendor_string_pointers[string_key]))
+                    operations32.append((already_equipped_addr, 1))
                 case _:
                     # clear out vendor slot memory
                     slot_size = VENDORTYPE_TO_SLOT_SIZE[vendor_type]
@@ -1684,18 +1690,18 @@ class Rac3Interface(GameInterface):
             for prop in slot_data.get_data():
                 match prop.size:
                     case 1:
-                        self._write8(RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
-                                                                                 VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game),
-                                     prop.value)
+                        operations8.append((RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
+                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game), prop.value))
                     case 2:
-                        self._write16(RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
-                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game),
-                                      prop.value)
+                        operations16.append((RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
+                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game), prop.value))
                     case 4:
-                        self._write32(RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
-                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game),
-                                      prop.value)
+                        operations32.append((RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
+                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game), prop.value))
         logger.debug(f"Wrote {len(inventory)} items to {vendor_type.name} vendor on planet {self.planet}")
+        self._write8_batch(operations8)
+        self._write16_batch(operations16)
+        self._write32_batch(operations32)
 
     def hovering_over_ammo(self) -> bool:
         """Check if the player is currently hovering over the max ammo item in a weapon vendor"""

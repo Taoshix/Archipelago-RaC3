@@ -484,7 +484,7 @@ async def handle_save(ctx: "Context") -> None:
         # logger.debug(f"local_save : {local_save}")
         # logger.debug(f"server_save: {ctx.save_data}")
         current_time = time()
-        if not (local_save == ctx.save_data) and (current_time - ctx.last_saved > 60):
+        if not (local_save == ctx.save_data) and (current_time - ctx.last_saved > 20):
             logger.debug("Sending new save data to server")
             ctx.last_saved = current_time
             ctx.data_received = False

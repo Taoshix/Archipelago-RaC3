@@ -238,6 +238,15 @@ class Rac3Interface(GameInterface):
     def _read32(self, address: int) -> int:
         return super()._read32(self.address_convert(address))
 
+    def _read8_batch(self, addresses: list[int]) -> list[int]:
+        return super()._read8_batch([self.address_convert(address) for address in addresses])
+
+    def _read16_batch(self, addresses: list[int]) -> list[int]:
+        return super()._read16_batch([self.address_convert(address) for address in addresses])
+
+    def _read32_batch(self, addresses: list[int]) -> list[int]:
+        return super()._read32_batch([self.address_convert(address) for address in addresses])
+
     def _read_bytes(self, address: int, n: int) -> bytes:
         return super()._read_bytes(self.address_convert(address), n)
 
@@ -263,6 +272,15 @@ class Rac3Interface(GameInterface):
 
     def _write32(self, address: int, value: int):
         return super()._write32(self.address_convert(address), value)
+
+    def _write8_batch(self, operations: list[tuple[int, int]]):
+        return super()._write8_batch([(self.address_convert(addr), val) for addr, val in operations])
+
+    def _write16_batch(self, operations: list[tuple[int, int]]):
+        return super()._write16_batch([(self.address_convert(addr), val) for addr, val in operations])
+
+    def _write32_batch(self, operations: list[tuple[int, int]]):
+        return super()._write32_batch([(self.address_convert(addr), val) for addr, val in operations])
 
     def _write_bytes(self, address: int, value: bytes):
         return super()._write_bytes(self.address_convert(address), value)

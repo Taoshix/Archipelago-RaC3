@@ -35,6 +35,18 @@ class GameInterface:
         self.cycle_reads_count += 1
         return self.pcsx2_interface.read_int32(address)
 
+    def _read8_batch(self, addresses: list[int]) -> list[int]:
+        self.cycle_reads_count += len(addresses)
+        return self.pcsx2_interface.batch_read_int8(addresses)
+
+    def _read16_batch(self, addresses: list[int]) -> list[int]:
+        self.cycle_reads_count += len(addresses)
+        return self.pcsx2_interface.batch_read_int16(addresses)
+
+    def _read32_batch(self, addresses: list[int]) -> list[int]:
+        self.cycle_reads_count += len(addresses)
+        return self.pcsx2_interface.batch_read_int32(addresses)
+
     def _read_bytes(self, address: int, n: int) -> bytes:
         self.cycle_reads_count += 1
         return self.pcsx2_interface.read_bytes(address, n)
@@ -58,6 +70,18 @@ class GameInterface:
     def _write32(self, address: int, value: int):
         self.cycle_writes_count += 1
         self.pcsx2_interface.write_int32(address, value)
+
+    def _write8_batch(self, operations: list[tuple[int, int]]):
+        self.cycle_writes_count += len(operations)
+        self.pcsx2_interface.batch_write_int8(operations)
+
+    def _write16_batch(self, operations: list[tuple[int, int]]):
+        self.cycle_writes_count += len(operations)
+        self.pcsx2_interface.batch_write_int16(operations)
+
+    def _write32_batch(self, operations: list[tuple[int, int]]):
+        self.cycle_writes_count += len(operations)
+        self.pcsx2_interface.batch_write_int32(operations)
 
     def _write_bytes(self, address: int, value: bytes):
         self.cycle_writes_count += 1

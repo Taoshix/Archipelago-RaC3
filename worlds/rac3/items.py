@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification
 from worlds.rac3.constants.data.item import (goal_data, infobot_data, item_counts, item_table, NAME_TO_PROG_DICT,
-                                             ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, RAC3ITEMDATA)
+                                             ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, RAC3ITEMDATA,
+                                             titanium_bolt_data)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -40,6 +41,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
             continue
         if RAC3ITEMTAG.UNUSED in item_tags:
             continue
+        # Item counts
         if options.ngplus_items.value:
             if name == RAC3ITEM.PROGRESSIVE_RY3N0:
                 item_amount: int = 5
@@ -54,7 +56,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
             count = world.preplaced_items.count(name)
             if item_amount <= count:
                 continue
-            item_amount -= count  # remove one from the pool as it has already been placed
+            item_amount -= count  # remove items from the pool that have already been placed
 
         # Progressive Weapons option
         if RAC3ITEMTAG.PROG_WEAPON in item_tags and not options.progressive_weapons.value:
@@ -86,23 +88,30 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 continue
 
         # Vidcomics option
-        if RAC3ITEMTAG.VIDCOMIC in item_tags and not options.vidcomics.value:
-            continue
+        # Todo: uncomment the below code block once rulebuilder is implemented and unittests do not fail on
+        #  inaccessible event locations
+        # if RAC3ITEMTAG.VIDCOMIC in item_tags and not options.vidcomics.value:
+        #     continue
         if RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE in item_tags:
             if not options.vidcomics.value:
                 continue
             item_amount = options.bonus_vidcomic_health.value
 
+        # Titanium Bolts option
+        if RAC3ITEMTAG.TITANIUM_BOLT in item_tags and not options.titanium_bolts.value:
+            continue
+
         # Catch accidental duplicates
         if item_amount is None:
             rac3_logger.warning(f"{name} has an incorrect amount count")
         else:
-            if item_amount > 1 and name not in progressive_data.keys():
+            if item_amount > 1 and name not in progressive_data.keys() and name not in titanium_bolt_data.keys():
                 rac3_logger.warning(f"multiple copies of {name} added to the item pool")
             itempool += create_multiple_items(world, name, item_amount, item_type)
 
-    victory = create_item(world, RAC3ITEM.VICTORY)
-    world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(victory)
+    infobot = create_item(world, RAC3ITEM.COMMAND_CENTER)
+    if world.options.lock_command_center.value and (world.options.goal_bio.value or world.options.goal_nef.value):
+        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(infobot)
     return itempool
 
 

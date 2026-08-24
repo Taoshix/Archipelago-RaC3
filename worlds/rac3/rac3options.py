@@ -11,7 +11,26 @@ from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealt
 from worlds.rac3.options.clank_options import ClankOptions
 from worlds.rac3.options.exclude_options import RAC3ExcludeLocations
 from worlds.rac3.options.filler_weight_options import FillerWeight
+from worlds.rac3.options.goal_bio_options import GoalBio
+from worlds.rac3.options.goal_boss_gears_options import GoalBossGears
+from worlds.rac3.options.goal_boss_klunk_options import GoalBossKlunk
+from worlds.rac3.options.goal_boss_noid_options import GoalBossNoid
+from worlds.rac3.options.goal_boss_qwark_options import GoalBossQwark
+from worlds.rac3.options.goal_boss_scorpio_options import GoalBossScorpio
+from worlds.rac3.options.goal_boss_talos_options import GoalBossTalos
+from worlds.rac3.options.goal_boss_two_options import GoalBossTwo
+from worlds.rac3.options.goal_boss_warship_options import GoalBossWarship
+from worlds.rac3.options.goal_crystal_options import GoalCrystal
+from worlds.rac3.options.goal_museum_options import GoalMuseum
+from worlds.rac3.options.goal_nano_options import GoalNano
+from worlds.rac3.options.goal_nef_options import GoalNef
+from worlds.rac3.options.goal_percentage import GoalCompletion
+from worlds.rac3.options.goal_planets_options import GoalPlanets
+from worlds.rac3.options.goal_qwark_options import GoalQwark
+from worlds.rac3.options.goal_skillpoints_options import GoalSkillpoints
+from worlds.rac3.options.goal_tbolts_options import GoalTbolts
 from worlds.rac3.options.helpdesk_options import HelpDesk
+from worlds.rac3.options.lock_cc_options import LockCommandCenter
 from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
 from worlds.rac3.options.nanotech_options import NanotechMilestones
@@ -98,6 +117,25 @@ class RaC3Options(PerGameCommonOptions):
     weapon_level_locations: WeaponLevels
     bonus_vidcomic_health: BonusVidComicHealthUpgrades
     vidcomic_health_upgrades: VidComicHealthUpgrades
+    lock_command_center: LockCommandCenter
+    goal_bio: GoalBio
+    goal_nef: GoalNef
+    goal_nano: GoalNano
+    goal_crystal: GoalCrystal
+    goal_tbolts: GoalTbolts
+    goal_skillpoints: GoalSkillpoints
+    goal_qwark: GoalQwark
+    goal_museum: GoalMuseum
+    goal_planets: GoalPlanets
+    goal_completion: GoalCompletion
+    goal_boss_qwark: GoalBossQwark
+    goal_boss_two: GoalBossTwo
+    goal_boss_noid: GoalBossNoid
+    goal_boss_warship: GoalBossWarship
+    goal_boss_scorpio: GoalBossScorpio
+    goal_boss_talos: GoalBossTalos
+    goal_boss_gears: GoalBossGears
+    goal_boss_klunk: GoalBossKlunk
 
 
 rac3_option_groups = [
@@ -105,6 +143,29 @@ rac3_option_groups = [
         ProgressionBalancing,
         Accessibility,
         DeathLink,
+    ]),
+    OptionGroup("RAC3 Goal Options", [
+        LockCommandCenter,
+        GoalBio,
+        GoalNef,
+        GoalNano,
+        GoalCrystal,
+        GoalTbolts,
+        GoalSkillpoints,
+        GoalQwark,
+        GoalMuseum,
+        GoalPlanets,
+        GoalCompletion,
+    ]),
+    OptionGroup("RAC3 Required Boss Options", [
+        GoalBossQwark,
+        GoalBossTwo,
+        GoalBossNoid,
+        GoalBossWarship,
+        GoalBossScorpio,
+        GoalBossTalos,
+        GoalBossGears,
+        GoalBossKlunk,
     ]),
     OptionGroup("RAC3 Game Options", [
         Shortcuts,

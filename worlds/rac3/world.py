@@ -63,6 +63,7 @@ class RaC3World(World):
                                 "There may be bugs present and features that have not been tested fully.\n"
                                 "These builds are meant for testing and bug reporting purposes "
                                 "and should not be used for normal play!\n")
+        self.sanitize_options()
         # implement .yaml-less Universal Tracker support
         setup_options_from_slot_data(self)
         create_regions(self)
@@ -71,6 +72,36 @@ class RaC3World(World):
         self.handle_option_errors(starting_planet_list, starting_weapon_list)
         self.dead_seed_check(starting_planet_list, starting_weapon_list)
         self.place_starting_items(starting_planet_list, starting_weapon_list)
+        if self.options.lock_command_center.value:
+            self.preplaced_items.append(RAC3ITEM.COMMAND_CENTER)
+
+    def sanitize_options(self):
+        """Reads the YAML options and adjusts them to sensible values"""
+        if self.options.goal_planets.value > 0:
+            planets = self.options.goal_planets.value
+            if self.options.rangers.value in [self.options.rangers.option_none,
+                                              self.options.rangers.option_optional_missions]:
+                planets -= 3  # Marcadia, Blackwater City, Aridia
+            if self.options.arena.value != self.options.arena.option_all:
+                planets -= 1  # AN
+            if planets != self.options.goal_planets.value:
+                self.options.goal_planets.value = planets if planets > 0 else 0
+                rac3_logger.info(
+                    f"Player: {self.player_name} had their required planets reduced to "
+                    f"{self.options.goal_planets.value} due to disabled settings")
+        if self.options.goal_skillpoints.value > 0 and self.options.lock_command_center.value:
+            self.options.goal_skillpoints.value -= 1  # Spread Your Germs Skillpoint
+            rac3_logger.info(f"Player: {self.player_name} had their required skillpoints reduced to "
+                             f"{self.options.goal_skillpoints.value} because of locked Command Center")
+        if self.options.goal_tbolts.value > 0 and self.options.lock_command_center.value:
+            self.options.goal_tbolts.value -= 1  # CC Tbolt
+            rac3_logger.info(f"Player: {self.player_name} had their required titanium bolts reduced to "
+                             f"{self.options.goal_tbolts.value} because of locked Command Center")
+        if self.options.goal_museum.value and self.options.lock_command_center.value:
+            self.options.goal_museum.value = False
+            rac3_logger.info(f"Player: {self.player_name} had their required Insomniac Museum removed as it is not "
+                             f"possible to reach before Command Center, which is locked by it")
+        return
 
     def place_starting_items(self, starting_planet_list: list[str], starting_weapon_list: list[str]):
         """Take the list of starting planets and starting weapons and place them on locations or as precollected"""
@@ -288,6 +319,25 @@ class RaC3World(World):
             RAC3OPTION.VENDOR_ACCESS: self.options.vendor_access.value,
             RAC3OPTION.BONUS_VIDCOMIC_HEALTH: self.options.bonus_vidcomic_health.value,
             RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES: self.options.vidcomic_health_upgrades.value,
+            RAC3OPTION.LOCK_CC: self.options.lock_command_center.value,
+            RAC3OPTION.GOAL_BIO: self.options.goal_bio.value,
+            RAC3OPTION.GOAL_NEF: self.options.goal_nef.value,
+            RAC3OPTION.GOAL_NANO: self.options.goal_nano.value,
+            RAC3OPTION.GOAL_CRYSTAL: self.options.goal_crystal.value,
+            RAC3OPTION.GOAL_TBOLTS: self.options.goal_tbolts.value,
+            RAC3OPTION.GOAL_SKILLPOINTS: self.options.goal_skillpoints.value,
+            RAC3OPTION.GOAL_QWARK: self.options.goal_qwark.value,
+            RAC3OPTION.GOAL_MUSEUM: self.options.goal_museum.value,
+            RAC3OPTION.GOAL_PLANETS: self.options.goal_planets.value,
+            RAC3OPTION.GOAL_COMPLETION: self.options.goal_completion.value,
+            RAC3OPTION.GOAL_BOSS_QWARK: self.options.goal_boss_qwark.value,
+            RAC3OPTION.GOAL_BOSS_TWO: self.options.goal_boss_two.value,
+            RAC3OPTION.GOAL_BOSS_NOID: self.options.goal_boss_noid.value,
+            RAC3OPTION.GOAL_BOSS_WARSHIP: self.options.goal_boss_warship.value,
+            RAC3OPTION.GOAL_BOSS_SCORPIO: self.options.goal_boss_scorpio.value,
+            RAC3OPTION.GOAL_BOSS_TALOS: self.options.goal_boss_talos.value,
+            RAC3OPTION.GOAL_BOSS_GEARS: self.options.goal_boss_gears.value,
+            RAC3OPTION.GOAL_BOSS_KLUNK: self.options.goal_boss_klunk.value,
             RAC3OPTION.TOTAL_LOCATIONS: get_total_locations(self),
         }
 

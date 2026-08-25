@@ -341,6 +341,7 @@ async def handle_checked_locations(ctx: "Context") -> None:
     if new_checks:
         real_checks = list(await ctx.check_locations(new_checks))
         ctx.locations_checked.update(real_checks)
+        ctx.skip_wait_save = True
         for location in real_checks:
             net_item = ctx.locations_info.get(location, None)
             if net_item is not None and net_item.player != ctx.slot:
@@ -484,10 +485,11 @@ async def handle_save(ctx: "Context") -> None:
         # logger.debug(f"local_save : {local_save}")
         # logger.debug(f"server_save: {ctx.save_data}")
         current_time = time()
-        if not (local_save == ctx.save_data) and (current_time - ctx.last_saved > 20):
+        if not (local_save == ctx.save_data) and (current_time - ctx.last_saved > 20 or ctx.skip_wait_save):
             logger.debug("Sending new save data to server")
             ctx.last_saved = current_time
             ctx.data_received = False
+            ctx.skip_wait_save = False
             ctx.save_data = local_save
             await ctx.send_msgs([ClientMessage.update_save(ctx.uuid, local_save)])
     else:

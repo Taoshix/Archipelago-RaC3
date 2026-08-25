@@ -354,7 +354,7 @@ class Rac3Context(CommonContext):
     data_received: bool = False
     save_data: dict[int, tuple[int, int]] = {}
     last_saved: float = 0.0
-    skip_wait_save: bool = False
+    skip_save_cooldown: bool = False
 
     def __init__(self, server_address: str, password: str):
         super().__init__(server_address, password)

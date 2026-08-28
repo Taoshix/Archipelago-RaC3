@@ -204,14 +204,18 @@ async def _handle_game_ready(ctx: "Context") -> None:
         if not ctx.main_menu:
             ctx.game_interface.cycle_reads_count = 0
             ctx.game_interface.cycle_writes_count = 0
+            ctx.game_interface.cycle_batch_reads_count = 0
+            ctx.game_interface.cycle_batch_writes_count = 0
             ctx.game_interface.cycle_cache.clear()
             current_time = time()
             await update(ctx)
             after_time = time()
             elapsed = after_time - current_time
-            if "-dev" in RAC3OPTION.VERSION_NUMBER or RAC3OPTION.VERSION_NUMBER.count(".") >= 3:
-                logger.debug(f"Update cycle took {elapsed:.5f} seconds (Reads: {ctx.game_interface.cycle_reads_count}, "
-                            f"Writes: {ctx.game_interface.cycle_writes_count})")
+            if "-dev" in RAC3OPTION.VERSION_NUMBER or RAC3OPTION.VERSION_NUMBER.count(".") >= 3: # Is dev build
+                logger.debug(f"Update cycle took {elapsed:.5f} seconds (Reads: {ctx.game_interface.cycle_reads_count} "
+                            f"(Batch: {ctx.game_interface.cycle_batch_reads_count}), "
+                            f"Writes: {ctx.game_interface.cycle_writes_count} "
+                            f"(Batch: {ctx.game_interface.cycle_batch_writes_count}))")
             # logger.debug(f"Data Package: {ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, 'Empty')}")
             ctx.game_interface.cycle_times.append(elapsed)
             if len(ctx.game_interface.cycle_times) > 100:

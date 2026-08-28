@@ -16,6 +16,8 @@ class GameInterface:
     emulator_connected: bool = False
     cycle_reads_count: int = 0
     cycle_writes_count: int = 0
+    cycle_batch_reads_count: int = 0
+    cycle_batch_writes_count: int = 0
     cycle_times: list[float] = []
     cycle_cache: dict[int, int] = {}
     pypine: Pine = Pine()
@@ -36,19 +38,19 @@ class GameInterface:
         return self.pypine.read_int32(address)
 
     def _read8_batch(self, addresses: list[int]) -> list[int]:
-        self.cycle_reads_count += len(addresses)
+        self.cycle_batch_reads_count += 1
         return self.pypine.batch_read_int8(addresses)
 
     def _read16_batch(self, addresses: list[int]) -> list[int]:
-        self.cycle_reads_count += len(addresses)
+        self.cycle_batch_reads_count += 1
         return self.pypine.batch_read_int16(addresses)
 
     def _read32_batch(self, addresses: list[int]) -> list[int]:
-        self.cycle_reads_count += len(addresses)
+        self.cycle_batch_reads_count += 1
         return self.pypine.batch_read_int32(addresses)
 
     def _read_bytes(self, address: int, n: int) -> bytes:
-        self.cycle_reads_count += 1
+        self.cycle_batch_reads_count += 1
         return self.pypine.read_bytes(address, n)
 
     def _read_float(self, address: int) -> float:
@@ -56,7 +58,7 @@ class GameInterface:
         return unpack("f", self.pypine.read_bytes(address, 4))[0]
 
     def _read_string(self, address: int, n: int) -> str:
-        self.cycle_reads_count += 1
+        self.cycle_batch_reads_count += 1
         return self.pypine.read_string(address, n)
 
     def _write8(self, address: int, value: int):
@@ -72,19 +74,19 @@ class GameInterface:
         self.pypine.write_int32(address, value)
 
     def _write8_batch(self, operations: list[tuple[int, int]]):
-        self.cycle_writes_count += 1
+        self.cycle_batch_writes_count += 1
         self.pypine.batch_write_int8(operations)
 
     def _write16_batch(self, operations: list[tuple[int, int]]):
-        self.cycle_writes_count += 1
+        self.cycle_batch_writes_count += 1
         self.pypine.batch_write_int16(operations)
 
     def _write32_batch(self, operations: list[tuple[int, int]]):
-        self.cycle_writes_count += 1
+        self.cycle_batch_writes_count += 1
         self.pypine.batch_write_int32(operations)
 
     def _write_bytes(self, address: int, value: bytes):
-        self.cycle_writes_count += 1
+        self.cycle_batch_writes_count += 1
         self.pypine.write_bytes(address, value)
 
     def _write_float(self, address: int, value: float):
@@ -92,7 +94,7 @@ class GameInterface:
         self.pypine.write_float(address, value)
 
     def _write_string(self, address: int, value: str):
-        self.cycle_writes_count += 1
+        self.cycle_batch_writes_count += 1
         self.pypine.write_string(address, value)
 
     def connect_to_game(self):

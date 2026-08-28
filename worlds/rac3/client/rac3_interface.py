@@ -71,6 +71,7 @@ from worlds.rac3.constants.vendors.vendor import RAC3SHIPVENDOR, RAC3VENDOR, RAC
 from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION, PAL_SHIFTED_PLANETS, RAC3VERSION,
                                            VERSION_TO_BLACK_SCREEN_ORIGINAL_VALUE, jp_convert_address,
                                            jp_get_pause_physical_address, )
+from worlds.rac3.constants.wrench import RAC3WRENCH
 
 
 class Rac3Interface(GameInterface):
@@ -98,6 +99,7 @@ class Rac3Interface(GameInterface):
         starting_weapons: dict[str, int]
         bolt_and_xp_multiplier: int
         progressive_weapons: int
+        progressive_wrench: int
         armor_upgrade: int
         skill_points: int
         trophies: int
@@ -327,6 +329,7 @@ class Rac3Interface(GameInterface):
         self.options.starting_weapons = slot_data[RAC3OPTION.STARTING_WEAPONS]
         self.options.bolt_and_xp_multiplier = slot_data[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
         self.options.progressive_weapons = slot_data[RAC3OPTION.PROGRESSIVE_WEAPONS]
+        self.options.progressive_wrench = slot_data[RAC3OPTION.PROGRESSIVE_WRENCH]
         self.options.armor_upgrade = slot_data[RAC3OPTION.ARMOR_UPGRADE]
         self.options.skill_points = slot_data[RAC3OPTION.SKILL_POINTS]
         self.options.trophies = slot_data[RAC3OPTION.TROPHIES]
@@ -931,6 +934,8 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK].status = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK].status = 1
+            #case RAC3ITEM.PROGRESSIVE_WRENCH:
+            #    pass                        
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
             case RAC3ITEM.BOLTS:
@@ -1789,6 +1794,7 @@ class Rac3Interface(GameInterface):
         self.gadget_cycler()
         self.planet_cycler()
         self.weapon_cycler()
+        self.wrench_cycler()
         self.vidcomic_cycler()
         self.vidcomic_health_cycler()
         self.armor_cycler()
@@ -1966,6 +1972,36 @@ class Rac3Interface(GameInterface):
                                          self.last_used_5)
             else:
                 self.update_weapon_equip(self.last_used_3, self.last_used_3, self.last_used_4, self.last_used_5)
+
+    def wrench_cycler(self):
+        """Cycle through the wrench properties and update its state"""
+        if self.options.progressive_wrench:   
+            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
+            if self.planet != RAC3REGION.MENU and self.between_planets is False:
+                wrench_instruction = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
+                wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.UPGRADE_ID_OFFSET 
+                wrench_equip = RAC3WRENCH.get_equip_wrench_address(self.planet, self.current_game) + RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET
+                wrench_swing = RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) + RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET
+                target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench.status - 1]
+                if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
+                    self._read32(wrench_instruction) == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE):    
+                    if prog_wrench.status == 0:
+                        self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
+                        self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
+                        if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
+                            self._write8(RAC3STATUS.WRENCH_LEVEL, 0)                       
+                    if prog_wrench.status >= 1:
+                        if (self._read32(wrench_equip) == RAC3WRENCH.PATCHED_EQUIP_VALUE and
+                            self._read32(wrench_swing) == RAC3WRENCH.PATCHED_SWING_VALUE):
+                                self._write32(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
+                                self._write32(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
+                        for _ in range(7):
+                            self._write8(wrench_upgrade, target_id)
+                            wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
+                        if self.max_health < 15:
+                            self._write8(RAC3STATUS.WRENCH_LEVEL, target_id)   
+        else:      
+            return             
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):

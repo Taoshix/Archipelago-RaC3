@@ -166,6 +166,16 @@ class RAC3ITEMDATA:
         else:
             tags: list[str] = [RAC3ITEMTAG.VIDCOMIC]
         return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.progression, tags=tags)
+    
+    @staticmethod
+    def construct_wrench(idx: int,
+                           tag: list[str] | None = None):
+        """Construct a progressive OmniWrench item"""
+        if tag:
+            tags: list[str] = [*tag, RAC3ITEMTAG.PROG_WRENCH]
+        else:
+            tags: list[str] = [RAC3ITEMTAG.PROG_WRENCH]
+        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=tags)
 
     @staticmethod
     def construct_trap(idx: int,
@@ -227,7 +237,7 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.COMMANDO_SUIT: RAC3ITEMDATA.construct_unused(0x06),  # Unused
     RAC3ITEM.BOLT_GRABBER: RAC3ITEMDATA.construct_gadget(0x07, ItemClassification.useful),
     RAC3ITEM.LEVITATOR: RAC3ITEMDATA.construct_unused(0x08),  # Unused
-    RAC3ITEM.WRENCH: RAC3ITEMDATA.construct_unused(0x09, tags=[RAC3ITEMTAG.EQUIPABLE]),
+    RAC3ITEM.WRENCH: RAC3ITEMDATA.construct_wrench(0x09, [RAC3ITEMTAG.EQUIPABLE]),
     RAC3ITEM.BOMB_GLOVE: RAC3ITEMDATA.construct_unused(0x0A, 40, [RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),  # Unused
     RAC3ITEM.HYPERSHOT: RAC3ITEMDATA.construct_gadget(0x0B, ItemClassification.progression, [RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),
     RAC3ITEM.MORPH_O_RAY: RAC3ITEMDATA.construct_unused(0x0C, tags=[RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),  # Unused
@@ -378,8 +388,6 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.PLASMA_COIL_V2: RAC3ITEMDATA.construct_weapon_level(0xA0, 3000, 15, 8000),
     RAC3ITEM.LAVA_GUN_V2: RAC3ITEMDATA.construct_weapon_level(0xA1, 240, 150, 600),
     RAC3ITEM.MINI_TURRET_V2: RAC3ITEMDATA.construct_weapon_level(0xA2, 800, 10, 400),
-    RAC3ITEM.WRENCH_V2: RAC3ITEMDATA.construct_unused(0xA4),
-    RAC3ITEM.WRENCH_V3: RAC3ITEMDATA.construct_unused(0xA5),
     RAC3ITEM.BOUNCER_V2: RAC3ITEMDATA.construct_weapon_level(0xA6, 1400, 10, 2500),
     RAC3ITEM.SHIELD_CHARGER_V2: RAC3ITEMDATA.construct_weapon_level(0xA7, 100, 3, 2200),
     RAC3ITEM.MINI_TURRET_V3: RAC3ITEMDATA.construct_weapon_level(0xA8, 1000, 12, 1000),
@@ -412,11 +420,6 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.TESLA_BARRIER_V6: RAC3ITEMDATA.construct_weapon_level(0xC3, 300, 4, tags=[RAC3ITEMTAG.NGPLUS]),
     RAC3ITEM.TESLA_BARRIER_V7: RAC3ITEMDATA.construct_weapon_level(0xC4, 400, 5, 12000, [RAC3ITEMTAG.NGPLUS]),
     RAC3ITEM.TESLA_BARRIER_V8: RAC3ITEMDATA.construct_weapon_level(0xC5, 500, 5, 30000, [RAC3ITEMTAG.NGPLUS]),
-    RAC3ITEM.WRENCH_V4: RAC3ITEMDATA.construct_unused(0xC6),
-    RAC3ITEM.WRENCH_V5: RAC3ITEMDATA.construct_unused(0xC7),
-    RAC3ITEM.WRENCH_V6: RAC3ITEMDATA.construct_unused(0xC8),
-    RAC3ITEM.WRENCH_V7: RAC3ITEMDATA.construct_unused(0xC9),
-    RAC3ITEM.WRENCH_V8: RAC3ITEMDATA.construct_unused(0xCA),
     # Progressive
     RAC3ITEM.PROGRESSIVE_PLASMA_COIL: RAC3ITEMDATA.construct_rac2_prog(0xCB, ItemClassification.progression_skip_balancing),
     RAC3ITEM.PROGRESSIVE_LAVA_GUN: RAC3ITEMDATA.construct_rac2_prog(0xCC, ItemClassification.progression_skip_balancing),
@@ -449,6 +452,15 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
         RAC3ITEMDATA.construct_weapon_prog(0xDD, ItemClassification.progression_skip_balancing),
     RAC3ITEM.PROGRESSIVE_RY3N0:
         RAC3ITEMDATA.construct_weapon_prog(0xDE, ItemClassification.progression_skip_balancing, [RAC3ITEMTAG.NGPLUS]),
+    RAC3ITEM.PROGRESSIVE_WRENCH:
+        RAC3ITEMDATA.construct_wrench(0xDF, [RAC3ITEMTAG.PROGRESSIVE]),
+    RAC3ITEM.WRENCH_V2: RAC3ITEMDATA.construct_wrench(0xA4),
+    RAC3ITEM.WRENCH_V3: RAC3ITEMDATA.construct_wrench(0xA5),
+    RAC3ITEM.WRENCH_V4: RAC3ITEMDATA.construct_wrench(0xC6),
+    RAC3ITEM.WRENCH_V5: RAC3ITEMDATA.construct_wrench(0xC7),
+    RAC3ITEM.WRENCH_V6: RAC3ITEMDATA.construct_wrench(0xC8),
+    RAC3ITEM.WRENCH_V7: RAC3ITEMDATA.construct_wrench(0xC9),
+    RAC3ITEM.WRENCH_V8: RAC3ITEMDATA.construct_wrench(0xCA),
     # Infobots
     RAC3ITEM.VELDIN: RAC3ITEMDATA.construct_infobot(0xE1, ItemClassification.progression),
     RAC3ITEM.FLORANA: RAC3ITEMDATA.construct_infobot(0xE2, ItemClassification.progression),
@@ -539,6 +551,7 @@ infobot_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.INFOBOT)
 ngplus_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NGPLUS)
 non_prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NON_PROG_WEAPON)
 prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROG_WEAPON)
+prog_wrench_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROG_WRENCH)
 progressive_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROGRESSIVE)
 trap_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.TRAP)
 unused_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.UNUSED)
@@ -556,6 +569,7 @@ NAME_TO_PROG_DICT: dict[str, str] = dict(zip(non_prog_weapon_data.keys(), prog_w
 item_counts: dict[str, int] = {
     **dict.fromkeys(non_prog_weapon_data.keys(), 1),
     **dict.fromkeys(prog_weapon_data.keys(), 5),
+    **dict.fromkeys(prog_wrench_data.keys(), 5),
     **dict.fromkeys(gadget_data.keys(), 1),
     **dict.fromkeys(cheat_data.keys(), 1),
     RAC3ITEM.CLANK: 1,
@@ -569,6 +583,7 @@ item_counts: dict[str, int] = {
 ngplus_item_counts: dict[str, int] = {
     **dict.fromkeys(non_prog_weapon_data.keys(), 1),
     **dict.fromkeys(prog_weapon_data.keys(), 8),
+    **dict.fromkeys(prog_wrench_data.keys(), 8),    
     **dict.fromkeys(gadget_data.keys(), 1),
     **dict.fromkeys(cheat_data.keys(), 1),
     RAC3ITEM.CLANK: 1,
@@ -614,6 +629,7 @@ item_groups: dict[str, set[str]] = {
     RAC3ITEMTAG.NGPLUS: set(ngplus_data.keys()),
     RAC3ITEMTAG.NON_PROG_WEAPON: set(non_prog_weapon_data.keys()),
     RAC3ITEMTAG.PROG_WEAPON: set(prog_weapon_data.keys()),
+    RAC3ITEMTAG.PROG_WRENCH: set(prog_wrench_data.keys()),
     RAC3ITEMTAG.PROGRESSIVE: set(progressive_data.keys()),
     RAC3ITEMTAG.TRAP: set(trap_data.keys()),
     RAC3ITEMTAG.UNUSED: set(unused_data.keys()),

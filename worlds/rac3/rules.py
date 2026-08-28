@@ -88,6 +88,12 @@ def set_rules(world: "RaC3World"):
     if ngplus_enabled:
         progressive_requirement += 5 if world.options.ngplus_items.value else 4
 
+    progressive_wrench_requirement = 1
+    if world.options.progressive_wrench.value != 0:
+        progressive_wrench_requirement += 5 if world.options.ngplus_items.value else 4
+    else: progressive_wrench_requirement = 0
+
+
     region_rules_dict: dict[str, Callable] = {
 
         # Intro Florana
@@ -362,7 +368,8 @@ def set_rules(world: "RaC3World"):
                           and state.can_reach_location(RAC3LOCATION.NATION_WHIP_IT_GOOD, world.player),
 
         RAC3SKILLPOINT.NATION_BASH:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, progressive_wrench_requirement),
         RAC3LOCATION.NATION_MEET_COURTNEY:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
         RAC3LOCATION.NATION_INFOBOT_HOLOSTAR:
@@ -582,7 +589,8 @@ def set_rules(world: "RaC3World"):
         RAC3TBOLT.OBANI_GEMINI_2: lambda state: state.has(RAC3ITEM.REFRACTOR, world.player),
         RAC3LOCATION.OBANI_GEMINI_SKIDD: lambda state: state.has(RAC3ITEM.REFRACTOR, world.player),
 
-        # RAC3SKILLPOINT.BLACKWATER_BASH
+        RAC3SKILLPOINT.BLACKWATER_BASH:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, progressive_wrench_requirement),
         # RAC3LOCATION.BLACKWATER_CITY_RANGERS_1
         RAC3LOCATION.BLACKWATER_CITY_RANGERS_2:
             lambda state: state.can_reach_location(RAC3LOCATION.BLACKWATER_CITY_RANGERS_1, world.player),

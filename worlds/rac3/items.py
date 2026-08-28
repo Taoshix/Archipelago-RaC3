@@ -96,6 +96,10 @@ def create_itempool(world: "RaC3World") -> list[Item]:
         # Vidcomics option
         if RAC3ITEMTAG.VIDCOMIC in item_tags and not options.vidcomics.value:
             continue
+        if RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE in item_tags:
+            if not options.vidcomics.value:
+                continue
+            item_amount = options.bonus_vidcomic_health.value
 
         # Catch accidental duplicates
         if item_amount is None:

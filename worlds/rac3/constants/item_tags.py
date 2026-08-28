@@ -22,3 +22,4 @@ class RAC3ITEMTAG:
     CLANK = "Clank Packs"
     CHEAT = "Cheat Codes"
     QUICK_SELECTABLE = "Quick Selectable"
+    VIDCOMIC_HEALTH_UPGRADE = "VidComic Health Upgrade"

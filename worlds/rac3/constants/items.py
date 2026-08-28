@@ -255,6 +255,7 @@ class RAC3ITEM:
     MUSEUM = "Infobot: Insomniac Museum"
 
     LIGHTSABER_WRENCH = "Lightsaber Wrench"
+    BONUS_VIDCOMIC_HEALTH_UPGRADE = "Bonus VidComic Health Upgrade"
 
     TITANIUM_BOLT = "Titanium Bolt"
     WEAPON_XP = "Weapon Level-Up"

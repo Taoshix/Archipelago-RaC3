@@ -56,7 +56,9 @@ from worlds.rac3.constants.pause_state import RAC3PAUSESTATE
 from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERACTION
 from worlds.rac3.constants.player_type import PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
-from worlds.rac3.constants.region import (PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID, PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES, PLANETS_WITH_REFRACTOR_PUZZLES,
+from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
+                                          PLANET_VENDOR_OFFSET,
+                                          PLANETS_WITH_HACKER_PUZZLES, PLANETS_WITH_REFRACTOR_PUZZLES,
                                           PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION, REGION_TO_HACKER_DOOR_COUNT,
                                           RESPAWN_COORDS_OFFSET)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
@@ -133,6 +135,8 @@ class Rac3Interface(GameInterface):
         helpdesk: int
         weapon_level_locations: int
         vendor_access: int
+        bonus_vidcomic_health: int
+        vidcomic_health_upgrade_locations: int
 
     UnlockItem: dict[str, UnlockData] = None
     options = Options
@@ -361,6 +365,8 @@ class Rac3Interface(GameInterface):
         self.options.helpdesk = slot_data[RAC3OPTION.HELP_DESK]
         self.options.weapon_level_locations = slot_data[RAC3OPTION.WEAPON_LEVEL_LOCATIONS]
         self.options.vendor_access = slot_data[RAC3OPTION.VENDOR_ACCESS]
+        self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
+        self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES]
 
     ########################################
     # Called on Game and Server Connection #
@@ -488,7 +494,7 @@ class Rac3Interface(GameInterface):
 
     def load_save(self, save: dict[int, tuple[int, int]]):
         """Set the player's current values based on the server's save-data"""
-        if self.main_menu:
+        if self.check_main_menu():
             return
         logger.debug(f"Save data: {save}")
         defaults: dict[int, tuple[int, int]] = {data.ADDRESS: (data.TYPE, data.VALUE) for data in SAVE_DATA}
@@ -793,7 +799,7 @@ class Rac3Interface(GameInterface):
             self.pause_state = True if self.pause_state_value > RAC3PAUSESTATE.UNPAUSED else False
             self.pause_menu = bool(self._read8(pause_addr)) if pause_addr else False
             if self.current_game == RAC3VERSION.JP_ID:
-                if self.pause_state_value == RAC3PAUSESTATE.MINIGAME:
+                if self.pause_state_value != RAC3PAUSESTATE.PAUSED:
                     self.pause_menu = False
                 elif pause_addr and (jp_addr := jp_get_pause_physical_address(pause_addr, self.planet)) is not None:
                     self.pause_menu = bool(super()._read8(jp_addr))
@@ -823,9 +829,10 @@ class Rac3Interface(GameInterface):
             logger.error(f"Aborting homewarp, Unknown Planet: {self.planet}")
             return
         if planet_id not in PLANET_NAME_FROM_ID.keys():
-            # Invalid planet id, abort homewarp
-            logger.error(f"Aborting homewarp, Invalid Planet ID: {planet_id}")
-            return
+            if PLANET_NAME_FROM_ID[planet_id] in INVALID_PLANETS:
+                # Invalid planet id, abort homewarp
+                logger.error(f"Aborting homewarp, Invalid Planet: {PLANET_NAME_FROM_ID[planet_id]}, ID: {planet_id}")
+                return
         planet_data = RAC3_REGION_DATA_TABLE[self.planet]
         if planet_data.PLANET_TO_LOAD:
             self.homewarping = True
@@ -1478,6 +1485,9 @@ class Rac3Interface(GameInterface):
         """Determine if the current respawn coordinates should be overwritten to the ship coordinates"""
         if self.player_type in {RAC3PLAYERTYPE.CLANK, RAC3PLAYERTYPE.GIANT, RAC3PLAYERTYPE.QWARK}:
             return False
+        if self.current_game == RAC3VERSION.JP_ID and self.planet == RAC3REGION.HOLOSTAR_STUDIOS:
+            # Entrance coordinates on JP are at the ship instead of clank's trailer
+            return RAC3LOCATION.HOLOSTAR_RETURN_TO_SHIP in self.checked_locations
         match self.planet:
             case RAC3REGION.VELDIN | RAC3REGION.TYHRRANOSIS | RAC3REGION.ZELDRIN_STARPORT:
                 # Veldin: Problems with F-sector
@@ -1786,6 +1796,7 @@ class Rac3Interface(GameInterface):
         self.weapon_cycler()
         self.wrench_cycler()
         self.vidcomic_cycler()
+        self.vidcomic_health_cycler()
         self.armor_cycler()
         self.timer_cycler()
         self.cheat_cycler()
@@ -1844,14 +1855,8 @@ class Rac3Interface(GameInterface):
 
     def distance_to_moby(self, moby: int) -> float:
         """Calculate the distance from the player to the moby"""
-        if not moby:
+        if self.between_planets or not moby:
             return float("inf")
-        if not self.ratchet_moby:
-            self.ratchet_moby = self._read32(RAC3STATUS.RATCHET_MOBY_POINTER)
-            assert self.ratchet_moby, "Ratchet moby pointer is null"
-        assert self.ratchet_moby < moby < self.ratchet_moby + 0x00300000, \
-            (f"Moby {hex(moby)} not in the typical moby range ({hex(self.ratchet_moby)} - "
-             f"{hex(self.ratchet_moby + 0x00300000)})")
         player_pos = self.player_pos
         moby_pos = RAC3POSITIONDATA(
             self._read_float(moby + 0x10),
@@ -2037,6 +2042,21 @@ class Rac3Interface(GameInterface):
             value = 0 if index > prog_comic.status else 1
             self._write8(addr, value)
 
+    def vidcomic_health_cycler(self):
+        """Cycle through all vidcomic health upgrades and update their state"""
+        bonus_health_upgrades = self.UnlockItem[RAC3ITEM.BONUS_VIDCOMIC_HEALTH_UPGRADE].status
+        if not bonus_health_upgrades:
+            return
+
+        bits = set()
+        if bonus_health_upgrades >= 1:
+            bits.add(0x0)
+        if bonus_health_upgrades >= 2:
+            bits.add(0x6)
+        if bonus_health_upgrades >= 3:
+            bits.add(0x7)
+        self._write_bits(RAC3STATUS.VIDCOMIC_HEALTH_UPGRADES, bits)
+
     def armor_cycler(self):
         """Cycle through all armors and update their state"""
         addr = armor_data[RAC3ITEM.PROGRESSIVE_ARMOR]
@@ -2142,8 +2162,11 @@ class Rac3Interface(GameInterface):
                     target_level = 5
                 if target_level > 8 and self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0:
                     target_level = 8
+                # Todo: update the ryno special cases to handle any weapon
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
+                if weapon_name == RAC3ITEM.RY3N0 and self.weapon_levels.get(weapon_name, 1) > self.ryno:
+                    self.weapon_levels[weapon_name] = self.ryno
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL
                 prev_saved = self.weapon_levels.get(weapon_name, 1)
@@ -2191,6 +2214,8 @@ class Rac3Interface(GameInterface):
                         target_level = 1
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
+                if weapon_name == RAC3ITEM.RY3N0 and self.weapon_levels.get(weapon_name, 1) > self.ryno:
+                    self.weapon_levels[weapon_name] = self.ryno
                 # logger.debug(f"weapon: {weapon_name}, target: {target_level}")
                 target_id = UPGRADE_DICT[weapon_name][target_level - 1]
                 target_name = ITEM_NAME_FROM_ID[target_id]
@@ -2225,12 +2250,17 @@ class Rac3Interface(GameInterface):
                         self.last_hovered_weapon = weapon_name
                     else:
                         restore_level = self.weapon_levels.get(weapon_name, 1)
+                        if weapon_name == RAC3ITEM.RY3N0 and restore_level > self.ryno:
+                            self.weapon_levels[weapon_name] = self.ryno
+                            restore_level = self.ryno
                         self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
                                      UPGRADE_DICT[weapon_name][restore_level - 1])
             # restore last hovered weapon if we closed the vendor while it was hovering over it
             if (self.last_hovered_weapon != "" and self.vendor_type != RAC3VENDORTYPE.WEAPON
                 and self.pause_state_value != RAC3PAUSESTATE.WEAPON_UPGRADE):
                 restore_level = self.weapon_levels.get(self.last_hovered_weapon, 1)
+                if self.last_hovered_weapon == RAC3ITEM.RY3N0 and restore_level > self.ryno:
+                    restore_level = self.ryno
                 self._write8(non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
                              UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1])
                 self.last_hovered_weapon = ""

@@ -199,6 +199,8 @@ class RaC3World(World):
             option_list.append(RAC3OPTION.ARENA)
         if self.options.vidcomics.value == 0:
             option_list.append(RAC3OPTION.VIDCOMICS)
+        if self.options.vidcomic_health_upgrades.value == 0:
+            option_list.append(RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES)
         if self.options.vr_challenges.value == 0:
             option_list.append(RAC3OPTION.VR_CHALLENGES)
         if self.options.weapon_vendors.value == 0:
@@ -285,6 +287,8 @@ class RaC3World(World):
             RAC3OPTION.HELP_DESK: self.options.helpdesk.value,
             RAC3OPTION.WEAPON_LEVEL_LOCATIONS: self.options.weapon_level_locations.value,
             RAC3OPTION.VENDOR_ACCESS: self.options.vendor_access.value,
+            RAC3OPTION.BONUS_VIDCOMIC_HEALTH: self.options.bonus_vidcomic_health.value,
+            RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES: self.options.vidcomic_health_upgrades.value,
             RAC3OPTION.TOTAL_LOCATIONS: get_total_locations(self),
         }
 

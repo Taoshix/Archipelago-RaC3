@@ -947,6 +947,8 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK].status = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK].status = 1
+            case RAC3ITEM.CHARGE_BOOTS:
+                self._write8(RAC3STATUS.EQUIP_BOOTS, 0x1D)
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
             case RAC3ITEM.BOLTS:

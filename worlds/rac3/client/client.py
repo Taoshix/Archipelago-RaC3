@@ -161,6 +161,17 @@ class CommandProcessor(ClientCommandProcessor):
             else:
                 self.output("Death Link not found in slot_data. Please report this")
 
+    def _cmd_track_deaths(self):
+        """Toggles death count popup messages after every death."""
+        if not self.verify():
+            return
+        if isinstance(self.ctx, Rac3Context):
+            self.ctx.game_interface.track_deaths = not self.ctx.game_interface.track_deaths
+            self.output(f"Track Deaths set to {self.ctx.game_interface.track_deaths}")
+            self.ctx.game_interface.enqueue_notification(
+                f"{RAC3TEXTFORMATSTRING.WHITE}Track Deaths {'Enabled' if self.ctx.game_interface.track_deaths else 'Disabled'}",
+                RAC3BOXTHEME.DEATHLINK)
+
     def _cmd_respawn(self):
         """Teleports Ratchet back to the ship. If used in an unusual place, forces a respawn instead.
         You can also pause the game and hold Square on the pause menu to run this command from in-game."""

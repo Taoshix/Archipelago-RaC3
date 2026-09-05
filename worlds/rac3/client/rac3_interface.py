@@ -213,6 +213,7 @@ class Rac3Interface(GameInterface):
     stored_fillers: dict[str, int] = {}
     initial_fillers: dict[str, int] = {}
     last_hovered_weapon: str = ""
+    track_deaths: bool = False
     equipped_item: int = 0
     last_used_0: int = 0
     last_used_1: int = 0
@@ -1243,7 +1244,7 @@ class Rac3Interface(GameInterface):
         if self.is_reloading and not self.reloading_handled and not self.self_respawning:
             self.last_death_state = self.action
             self.died_in_vehicle = time.time() - self.last_in_vehicle_time < 1.5
-            self.died_from_softlock = self._read16(RAC3STATUS.SOFTLOCK_TIMER) >= 0xEF
+            self.died_from_softlock = self._read16(RAC3STATUS.SOFTLOCK_TIMER) >= 0xE0
             self.reloading_handled = True
             logger.debug(f"{self.player_type} is Respawning, death state: {self.last_death_state},"
                          f" death count: {self.last_death_count}, in vehicle? {self.died_in_vehicle}")
@@ -1261,6 +1262,8 @@ class Rac3Interface(GameInterface):
         """Checks the current game state to determine if the player is still alive, and if not then how they died"""
         if self.has_died:
             self.last_death_count = self.death_count
+            if self.track_deaths:
+                self.enqueue_notification(f"Death Counter: {self.death_count}", RAC3BOXTHEME.DEATHLINK)
             logger.debug("Death Detected! (death count increased)")
             is_clank = self.player_type == RAC3PLAYERTYPE.CLANK
             death = DEATH_FROM_ACTION.get(self.last_death_state, "ran out of nanotech.") if not is_clank else (

@@ -2,7 +2,7 @@
 
 ## What are the changes from the vanilla game?
 
-You can read about the changes [here](en_Ratchet%20and%20Clank%203.md#what-does-the-randomizer-change-from-the-vanilla-game)
+You can read about the changes [here](https://github.com/Taoshix/Archipelago-RaC3/blob/staging/worlds/rac3/docs/en_Ratchet%20and%20Clank%203.md#what-does-the-randomizer-change-from-the-vanilla-game)
 
 ## Which versions are supported?
 

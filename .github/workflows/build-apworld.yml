@@ -61,6 +61,7 @@ jobs:
         with:
           ref: ${{ steps.branch.outputs.branch }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Check if build should run (skip yml/md-only changes)
         id: changes
@@ -249,6 +250,7 @@ jobs:
         with:
           ref: ${{ needs.build.outputs.branch }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Download template artifact
         uses: actions/download-artifact@v4

@@ -213,6 +213,7 @@ class Rac3Interface(GameInterface):
     stored_fillers: dict[str, int] = {}
     initial_fillers: dict[str, int] = {}
     last_hovered_weapon: str = ""
+    track_deaths: bool = False
     equipped_item: int = 0
     last_used_0: int = 0
     last_used_1: int = 0
@@ -237,6 +238,15 @@ class Rac3Interface(GameInterface):
 
     def _read32(self, address: int) -> int:
         return super()._read32(self.address_convert(address))
+
+    def _read8_batch(self, addresses: list[int]) -> list[int]:
+        return super()._read8_batch([self.address_convert(address) for address in addresses])
+
+    def _read16_batch(self, addresses: list[int]) -> list[int]:
+        return super()._read16_batch([self.address_convert(address) for address in addresses])
+
+    def _read32_batch(self, addresses: list[int]) -> list[int]:
+        return super()._read32_batch([self.address_convert(address) for address in addresses])
 
     def _read_bytes(self, address: int, n: int) -> bytes:
         return super()._read_bytes(self.address_convert(address), n)
@@ -263,6 +273,15 @@ class Rac3Interface(GameInterface):
 
     def _write32(self, address: int, value: int):
         return super()._write32(self.address_convert(address), value)
+
+    def _write8_batch(self, operations: list[tuple[int, int]]):
+        return super()._write8_batch([(self.address_convert(addr), val) for addr, val in operations])
+
+    def _write16_batch(self, operations: list[tuple[int, int]]):
+        return super()._write16_batch([(self.address_convert(addr), val) for addr, val in operations])
+
+    def _write32_batch(self, operations: list[tuple[int, int]]):
+        return super()._write32_batch([(self.address_convert(addr), val) for addr, val in operations])
 
     def _write_bytes(self, address: int, value: bytes):
         return super()._write_bytes(self.address_convert(address), value)
@@ -448,8 +467,6 @@ class Rac3Interface(GameInterface):
         """Runs when loading into game from the main menu to update the player with filler items from the server"""
         if RAC3ITEMTAG.FILLER in RAC3_ITEM_DATA_TABLE[ITEM_FROM_AP_CODE[item]].TAGS:
             self.initial_fillers[ITEM_FROM_AP_CODE[item]] = self.initial_fillers.get(ITEM_FROM_AP_CODE[item], 0) + 1
-            if self.initial_fillers[ITEM_FROM_AP_CODE[item]] > 255:
-                self.initial_fillers[ITEM_FROM_AP_CODE[item]] = 255
 
     def process_offline_fillers(self, data_received: bool):
         """Process any filler items received while offline"""
@@ -931,6 +948,8 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK].status = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK].status = 1
+            case RAC3ITEM.CHARGE_BOOTS:
+                self._write8(RAC3STATUS.EQUIP_BOOTS, 0x1D)
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
             case RAC3ITEM.BOLTS:
@@ -1225,7 +1244,7 @@ class Rac3Interface(GameInterface):
         if self.is_reloading and not self.reloading_handled and not self.self_respawning:
             self.last_death_state = self.action
             self.died_in_vehicle = time.time() - self.last_in_vehicle_time < 1.5
-            self.died_from_softlock = self._read16(RAC3STATUS.SOFTLOCK_TIMER) >= 0xEF
+            self.died_from_softlock = self._read16(RAC3STATUS.SOFTLOCK_TIMER) >= 0xE0
             self.reloading_handled = True
             logger.debug(f"{self.player_type} is Respawning, death state: {self.last_death_state},"
                          f" death count: {self.last_death_count}, in vehicle? {self.died_in_vehicle}")
@@ -1234,6 +1253,9 @@ class Rac3Interface(GameInterface):
             self.has_died = self.death_count > self.last_death_count
             self.last_death_count = self.death_count
             self.reloading_handled = False
+            if self.has_died:
+                if self.track_deaths:
+                    self.enqueue_notification(f"{RAC3TEXTFORMATSTRING.NORMAL}Death Count: {RAC3TEXTFORMATSTRING.WHITE}{self.death_count}", RAC3BOXTHEME.DEATHLINK)
             logger.debug(f"{self.player_type} has Respawned, death count: {self.death_count}, has died?"
                          f" {self.has_died}")
         else:
@@ -1646,7 +1668,11 @@ class Rac3Interface(GameInterface):
 
     def write_vendor_inventory(self, inventory: list[RAC3VENDORSLOTDATA], vendor_type: RAC3VENDORTYPE):
         """Write a list of vendor slot data objects to the current planet's vendor inventory"""
-        self._write32(RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game), len(inventory))
+        operations8 = []
+        operations16 = []
+        operations32 = []
+        #self._write32(RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game), len(inventory))
+        operations32.append((RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game), len(inventory)))
         if len(inventory) == 0:
             start_address = RAC3VENDOR.get_vendor_property_address(self.planet, 0, self.current_game)
             match vendor_type:
@@ -1657,8 +1683,10 @@ class Rac3Interface(GameInterface):
                     string_key = (RAC3VENDOR.ALL_ITEMS_SOLD_OUT_LOC_KEY
                                   if self.has_checked_all_locations_with_tag(RAC3TAG.SHIP)
                                   else RAC3VENDOR.NO_ITEMS_AVAILABLE_LOC_KEY)
-                    self._write32(item_name_addr, self.vendor_string_pointers[string_key])
-                    self._write32(already_equipped_addr, 1)
+                    #self._write32(item_name_addr, self.vendor_string_pointers[string_key])
+                    #self._write32(already_equipped_addr, 1)
+                    operations32.append((item_name_addr, self.vendor_string_pointers[string_key]))
+                    operations32.append((already_equipped_addr, 1))
                 case _:
                     # clear out vendor slot memory
                     slot_size = VENDORTYPE_TO_SLOT_SIZE[vendor_type]
@@ -1668,18 +1696,18 @@ class Rac3Interface(GameInterface):
             for prop in slot_data.get_data():
                 match prop.size:
                     case 1:
-                        self._write8(RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
-                                                                                 VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game),
-                                     prop.value)
+                        operations8.append((RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
+                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game), prop.value))
                     case 2:
-                        self._write16(RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
-                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game),
-                                      prop.value)
+                        operations16.append((RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
+                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game), prop.value))
                     case 4:
-                        self._write32(RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
-                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game),
-                                      prop.value)
+                        operations32.append((RAC3VENDOR.get_vendor_item_property_address(self.planet, slot, prop.offset,
+                                                                                  VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game), prop.value))
         logger.debug(f"Wrote {len(inventory)} items to {vendor_type.name} vendor on planet {self.planet}")
+        self._write8_batch(operations8)
+        self._write16_batch(operations16)
+        self._write32_batch(operations32)
 
     def hovering_over_ammo(self) -> bool:
         """Check if the player is currently hovering over the max ammo item in a weapon vendor"""

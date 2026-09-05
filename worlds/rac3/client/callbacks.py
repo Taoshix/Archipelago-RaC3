@@ -358,10 +358,10 @@ async def handle_checked_locations(ctx: "Context") -> None:
 
 async def handle_deathlink(ctx: "Context") -> None:
     """Receive and send deathlink"""
-    if not ctx.death_link:
+    if not ctx.death_link and not ctx.game_interface.track_deaths:
         return
     ctx.game_interface.reload_check()
-    if time() - ctx.last_death_link > 10:
+    if time() - ctx.last_death_link > 10 and ctx.death_link:
         alive, message = ctx.game_interface.alive()
         if alive:
             if ctx.queued_deaths > 0:

@@ -168,9 +168,17 @@ class CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, Rac3Context):
             self.ctx.game_interface.track_deaths = not self.ctx.game_interface.track_deaths
             self.output(f"Track Deaths set to {self.ctx.game_interface.track_deaths}")
+            if self.ctx.game_interface.track_deaths:
+                status_msg = (
+                    f"{RAC3TEXTFORMATSTRING.WHITE}Enabled.\n"
+                    f"The number of deaths will appear every time you die.\n"
+                    f"You have already died {RAC3TEXTFORMATSTRING.WHITE}{self.ctx.game_interface.death_count} "
+                    f"{RAC3TEXTFORMATSTRING.NORMAL}times."
+                )
+            else:
+                status_msg = "Disabled."
             self.ctx.game_interface.enqueue_notification(
-                f"{RAC3TEXTFORMATSTRING.WHITE}Track Deaths {'Enabled' if self.ctx.game_interface.track_deaths else 'Disabled'}",
-                RAC3BOXTHEME.DEATHLINK)
+                f"{RAC3TEXTFORMATSTRING.NORMAL}Death Tracker {status_msg}", RAC3BOXTHEME.DEATHLINK)
 
     def _cmd_respawn(self):
         """Teleports Ratchet back to the ship. If used in an unusual place, forces a respawn instead.

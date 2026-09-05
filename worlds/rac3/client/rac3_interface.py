@@ -1253,6 +1253,9 @@ class Rac3Interface(GameInterface):
             self.has_died = self.death_count > self.last_death_count
             self.last_death_count = self.death_count
             self.reloading_handled = False
+            if self.has_died:
+                if self.track_deaths:
+                    self.enqueue_notification(f"{RAC3TEXTFORMATSTRING.NORMAL}Death Count: {RAC3TEXTFORMATSTRING.WHITE}{self.death_count}", RAC3BOXTHEME.DEATHLINK)
             logger.debug(f"{self.player_type} has Respawned, death count: {self.death_count}, has died?"
                          f" {self.has_died}")
         else:
@@ -1262,8 +1265,6 @@ class Rac3Interface(GameInterface):
         """Checks the current game state to determine if the player is still alive, and if not then how they died"""
         if self.has_died:
             self.last_death_count = self.death_count
-            if self.track_deaths:
-                self.enqueue_notification(f"Death Counter: {self.death_count}", RAC3BOXTHEME.DEATHLINK)
             logger.debug("Death Detected! (death count increased)")
             is_clank = self.player_type == RAC3PLAYERTYPE.CLANK
             death = DEATH_FROM_ACTION.get(self.last_death_state, "ran out of nanotech.") if not is_clank else (

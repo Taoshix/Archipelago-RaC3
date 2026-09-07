@@ -17,4 +17,4 @@ class BonusVidComicHealthUpgrades(Range):
     display_name = RAC3OPTION.BONUS_VIDCOMIC_HEALTH
     range_start = 0
     range_end = 3
-    default = 0
+    default = 3

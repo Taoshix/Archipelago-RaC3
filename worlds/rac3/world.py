@@ -209,7 +209,7 @@ class RaC3World(World):
             option_list.append(RAC3OPTION.ARMOR_VENDOR)
         if self.options.ship_vendor.value == 0:
             option_list.append(RAC3OPTION.SHIP_VENDOR)
-        if self.options.weapon_level_locations.value == 0:
+        if not self.options.weapon_level_locations.value:
             option_list.append(RAC3OPTION.WEAPON_LEVEL_LOCATIONS)
         if self.options.sewer_crystals.value < 3:
             option_list.append(RAC3OPTION.SEWER_CRYSTALS)

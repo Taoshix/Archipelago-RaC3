@@ -559,7 +559,7 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                     return True  # Skip all armor upgrade locations if armor upgrades are disabled
             case RAC3TAG.WEAPON_LEVEL:
                 if all(key not in loc for key in options.weapon_level_locations.value):
-                    return True  # Skip all weapon level locations if weapon levels are disabled
+                    return True  # Skip all weapon level locations that were not selected by the player
                 if options.ngplus_items.value == 0 and ("RY3N0" in loc or "V6" in loc or "V7" in loc or "V8" in loc):
                     return True  # Skip all weapon level locations that are V6 or higher if NG+ items are disabled
                 if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False) and "Shield Charger" in loc:

@@ -18,4 +18,4 @@ class WeaponLevels(OptionSet):
     valid_keys = frozenset({
         "V2", "V3", "V4", "V5", "V6", "V7", "V8"
     })
-    default = frozenset({"V2", "V3", "V4", "V5"})
+    default = frozenset({"V2", "V3", "V4", "V5", "V6", "V7", "V8"})

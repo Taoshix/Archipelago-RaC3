@@ -69,4 +69,4 @@ This section is for players who want to host a solo or multiplayer game.
 
 For common issues, check the [FAQ](https://github.com/Taoshix/Archipelago-RaC3/blob/staging/worlds/rac3/docs/frequently_asked_questions_Rac3_en.md).
 
-If you need further help, join the [Archipelago Discord](https://discord.gg/archipelago) and visit the `[PS2] Ratchet and Clank 3: Up Your Arsenal` thread in the `future-game-design` forum channel (located at the bottom).
+If you need further help, join the [Archipelago Discord](https://discord.gg/archipelago) and visit the `#ratchet-and-clank-3` channel under the `Custom Games N-Z` channel category.

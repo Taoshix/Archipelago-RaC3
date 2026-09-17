@@ -51,3 +51,4 @@ class RAC3OPTION:
     VENDOR_ACCESS = "Vendor Access"
     BONUS_VIDCOMIC_HEALTH = "Bonus VidComic Health Upgrades"
     VIDCOMIC_HEALTH_UPGRADES = "VidComic Health Upgrade Locations"
+    WEAPON_MODS = "Weapon Mods"

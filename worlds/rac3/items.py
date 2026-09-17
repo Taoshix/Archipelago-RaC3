@@ -93,6 +93,14 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 continue
             item_amount = options.bonus_vidcomic_health.value
 
+        # Weapon Mod option
+        if RAC3ITEMTAG.WEAPON_MOD in item_tags:
+            if options.weapon_mods.value != options.weapon_mods.option_individual_mods:
+                continue
+        elif RAC3ITEMTAG.WEAPON_MODPACK in item_tags:
+            if options.weapon_mods.value != options.weapon_mods.option_modpack:
+                continue
+
         # Catch accidental duplicates
         if item_amount is None:
             rac3_logger.warning(f"{name} has an incorrect amount count")

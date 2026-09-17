@@ -41,7 +41,8 @@ from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INST
                                                PATCH_INSTRUCTION_TO_NAME, PATCH_INSTRUCTION_TO_PLANET,
                                                PATCHED_INSTRUCTIONS, RAC3INSTRUCTION)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
-from worlds.rac3.constants.items import QUICK_SELECT_LIST, RAC3ITEM, UPGRADE_DICT
+from worlds.rac3.constants.items import (QUICK_SELECT_LIST, RAC3ITEM, UPGRADE_DICT, WEAPON_TO_WEAPON_MODPACK,
+                                         WEAPON_MOD_TO_WEAPON)
 from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION
 from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
@@ -98,6 +99,7 @@ class Rac3Interface(GameInterface):
         starting_weapons: dict[str, int]
         bolt_and_xp_multiplier: int
         progressive_weapons: int
+        weapon_mods: int
         armor_upgrade: int
         skill_points: int
         trophies: int
@@ -346,6 +348,7 @@ class Rac3Interface(GameInterface):
         self.options.starting_weapons = slot_data[RAC3OPTION.STARTING_WEAPONS]
         self.options.bolt_and_xp_multiplier = slot_data[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
         self.options.progressive_weapons = slot_data[RAC3OPTION.PROGRESSIVE_WEAPONS]
+        self.options.weapon_mods = slot_data[RAC3OPTION.WEAPON_MODS]
         self.options.armor_upgrade = slot_data[RAC3OPTION.ARMOR_UPGRADE]
         self.options.skill_points = slot_data[RAC3OPTION.SKILL_POINTS]
         self.options.trophies = slot_data[RAC3OPTION.TROPHIES]
@@ -434,6 +437,7 @@ class Rac3Interface(GameInterface):
         self.gadget_cycler()
         self.planet_cycler()
         self.weapon_cycler()
+        self.weapon_mod_cycler()
         self.vidcomic_cycler()
         self.armor_cycler()
         self.timer_cycler()
@@ -1817,6 +1821,7 @@ class Rac3Interface(GameInterface):
         self.gadget_cycler()
         self.planet_cycler()
         self.weapon_cycler()
+        self.weapon_mod_cycler()
         self.vidcomic_cycler()
         self.vidcomic_health_cycler()
         self.armor_cycler()
@@ -1994,6 +1999,34 @@ class Rac3Interface(GameInterface):
                                          self.last_used_5)
             else:
                 self.update_weapon_equip(self.last_used_3, self.last_used_3, self.last_used_4, self.last_used_5)
+
+    def weapon_mod_cycler(self):
+        """Cycle through all weapon mods and update their state"""
+        # modpacks (all 3 unlocked when the modpack is unlocked)
+        if self.options.weapon_mods == 1:
+            for weapon_name, data in non_prog_weapon_data.items():
+                mod_addr = data.MOD_ADDRESS
+                modpack = WEAPON_TO_WEAPON_MODPACK.get(weapon_name)
+                if self.UnlockItem[weapon_name].status and self.UnlockItem[modpack].status:
+                    self._write_bits(mod_addr, {1, 3, 5})
+                else:
+                    self._write8(mod_addr, 0)
+
+        # individual mods
+        elif self.options.weapon_mods == 2:
+            for weapon_name, data in non_prog_weapon_data.items():
+                mod_addr = data.MOD_ADDRESS
+                if self.UnlockItem[weapon_name].status:
+                    mod_bits = {1, 3, 5}
+                    unlocked_mod_bits = {
+                        bit for mod_name, (weapon, bit) in WEAPON_MOD_TO_WEAPON.items()
+                        if weapon == weapon_name and self.UnlockItem[mod_name].status
+                    }
+                    locked_mod_bits = mod_bits - unlocked_mod_bits
+                    self._write_bits(mod_addr, unlocked_mod_bits)
+                    self._unwrite_bits(mod_addr, locked_mod_bits)
+                else:
+                    self._write8(mod_addr, 0)
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):

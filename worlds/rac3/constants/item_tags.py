@@ -22,3 +22,5 @@ class RAC3ITEMTAG:
     CHEAT = "Cheat Codes"
     QUICK_SELECTABLE = "Quick Selectable"
     VIDCOMIC_HEALTH_UPGRADE = "VidComic Health Upgrade"
+    WEAPON_MOD = "Weapon Mod"
+    WEAPON_MODPACK = "Weapon Modpack"

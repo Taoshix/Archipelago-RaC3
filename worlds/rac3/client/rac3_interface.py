@@ -20,7 +20,7 @@ from worlds.rac3.constants.data.address import RAC3ADDRESSDATA, SAVE_DATA
 from worlds.rac3.constants.data.item import (armor_data, cheat_data, equipable_data, gadget_data, infobot_data,
                                              ITEM_FROM_AP_CODE, ITEM_NAME_FROM_ID, non_prog_weapon_data,
                                              PROG_TO_NAME_DICT, quick_selectable_data, RAC3_ITEM_DATA_TABLE,
-                                             timer_to_status, vidcomic_data)
+                                             item_to_status, vidcomic_data)
 from worlds.rac3.constants.data.location import (LOCATION_FROM_AP_CODE, LOCATION_TO_INFOBOT_FLAG,
                                                  RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA, REGION_TO_INFOBOT_LOCATION)
 from worlds.rac3.constants.data.position import RAC3POSITIONDATA
@@ -1857,6 +1857,8 @@ class Rac3Interface(GameInterface):
                     self.UnlockItem[name].unlock_delay += 1
             else:
                 self._write8(addr, 0)
+                if item_to_status.get(name, None) is not None:
+                    self._write8(item_to_status[name], 0)
 
     def should_cycle_gadgets(self) -> bool:
         """Check if it's safe to cycle gadgets used to ensure gadgets can respawn without the cycler interfering"""
@@ -2105,7 +2107,7 @@ class Rac3Interface(GameInterface):
                 _name = name
             if time.time() < _time:
                 if _name == name:
-                    status = timer_to_status[name]
+                    status = item_to_status[name]
                     match status:
                         case RAC3STATUS.BLACK_SCREEN:
                             self._write16(status, 0)

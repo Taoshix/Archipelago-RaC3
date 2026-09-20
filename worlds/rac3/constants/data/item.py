@@ -703,7 +703,7 @@ item_table: dict[str, RAC3ITEMDATA] = {
     **vidcomic_health_data,
 }
 default_starting_weapons: dict[str, int] = dict.fromkeys(non_prog_weapon_data.keys(), 1)
-timer_to_status: dict[str, int] = {
+item_to_status: dict[str, int] = {
     RAC3ITEM.LOCK_TRAP: RAC3STATUS.WEAPON_LOCK,
     RAC3ITEM.MIRROR_TRAP: RAC3STATUS.MIRROR_UNIVERSE,
     RAC3ITEM.BLACK_SCREEN_TRAP: RAC3STATUS.BLACK_SCREEN,
@@ -711,6 +711,7 @@ timer_to_status: dict[str, int] = {
     RAC3ITEM.INVISIBLE_TRAP: RAC3STATUS.INVISIBLE,
     RAC3ITEM.DISARM_TRAP: RAC3STATUS.DISARM,
     RAC3ITEM.WRENCH_ONLY_TRAP: RAC3STATUS.WRENCH_ONLY,
+    RAC3ITEM.LIGHTSABER_WRENCH: RAC3STATUS.WRENCH_REPLACEMENT_CHEAT,
 }
 
 item_groups: dict[str, set[str]] = {

@@ -81,16 +81,13 @@ class Rac3Interface(GameInterface):
     class UnlockData:
         """Data structure for tracking if items should be unlocked and if they are now being unlocked"""
         status: int
-        unlock_delay: int
 
         def __init__(self,
-                     status: int = 0,
-                     unlock_delay: int = 0):
+                     status: int = 0):
             self.status = status
-            self.unlock_delay = unlock_delay
 
         def __repr__(self):
-            return f"{{ status: {self.status}, unlock_delay: {self.unlock_delay} }}"
+            return f"{{ status: {self.status} }}"
 
     @dataclass
     class Options:
@@ -1850,15 +1847,9 @@ class Rac3Interface(GameInterface):
         for name in gadget_data.keys():
             addr = gadget_data[name].UNLOCK_ADDRESS
             if self.UnlockItem[name].status:
-                if self.UnlockItem[name].unlock_delay:
-                    self._write8(addr, 1)
-                    self.UnlockItem[name].unlock_delay = 0
-                else:
-                    self.UnlockItem[name].unlock_delay += 1
+                self._write8(addr, 1)
             else:
                 self._write8(addr, 0)
-                if item_to_status.get(name, None) is not None:
-                    self._write8(item_to_status[name], 0)
 
     def should_cycle_gadgets(self) -> bool:
         """Check if it's safe to cycle gadgets used to ensure gadgets can respawn without the cycler interfering"""
@@ -1941,10 +1932,7 @@ class Rac3Interface(GameInterface):
             planet = RAC3_REGION_DATA_TABLE[PLANET_FROM_INFOBOT[name]]
             if self.UnlockItem[name].status:
                 addr = RAC3_SHIP_DATA_TABLE[SHIP_SLOTS[self.UnlockItem[name].status - 1]].SLOT_ADDRESS
-                if self.UnlockItem[name].unlock_delay:
-                    self._write8(addr, planet.ID)
-                else:
-                    self.UnlockItem[name].unlock_delay += 1
+                self._write8(addr, planet.ID)
         for number, slot in enumerate(SHIP_SLOTS):
             self.ship_slot_limit = self.UnlockItem[RAC3SHIPSLOT.SLOT_0].status
             if number >= self.ship_slot_limit:
@@ -1966,11 +1954,7 @@ class Rac3Interface(GameInterface):
             unlock_addr = non_prog_weapon_data[name].UNLOCK_ADDRESS
             ammo_addr = non_prog_weapon_data[name].AMMO_ADDRESS
             if self.UnlockItem[name].status:
-                if self.UnlockItem[name].unlock_delay:
-                    self._write8(unlock_addr, 1)
-                    self.UnlockItem[name].unlock_delay = 0
-                else:
-                    self.UnlockItem[name].unlock_delay += 1
+                self._write8(unlock_addr, 1)
                 if name == RAC3ITEM.RY3N0:
                     _xp = self._read32(RAC3_ITEM_DATA_TABLE[name].XP_ADDRESS)
                     threshold_id = UPGRADE_DICT[name][self.ryno - 1]
@@ -2060,12 +2044,6 @@ class Rac3Interface(GameInterface):
                 self._write8(addr, 1)
                 continue
 
-            unlock_delay_count = 1
-            if comic.unlock_delay < unlock_delay_count:
-                comic.unlock_delay += 1
-                continue
-            comic.unlock_delay = 0
-
             value = 0 if index > prog_comic.status else 1
             self._write8(addr, value)
 
@@ -2091,11 +2069,8 @@ class Rac3Interface(GameInterface):
         current_armor_value = self._read8(addr.UNLOCK_ADDRESS)
 
         if current_armor_value != armor.status:
-            armor.unlock_delay += 1
-            if armor.unlock_delay > 1:
-                self._write8(addr.UNLOCK_ADDRESS, armor.status)
-                self._write8(RAC3STATUS.HELMET, armor.status)
-                armor.unlock_delay = 0
+            self._write8(addr.UNLOCK_ADDRESS, armor.status)
+            self._write8(RAC3STATUS.HELMET, armor.status)
 
     def timer_cycler(self):
         """Cycle through the timer dictionary, check their duration, and handle their effects"""
@@ -2315,11 +2290,7 @@ class Rac3Interface(GameInterface):
             self._write8(RAC3STATUS.NO_CLANK, 1)
         # No special case:
         else:
-            if self.UnlockItem[RAC3ITEM.CLANK].unlock_delay:
-                self._write8(RAC3STATUS.NO_CLANK, 0)
-                self.UnlockItem[RAC3ITEM.CLANK].unlock_delay = 0
-            else:
-                self.UnlockItem[RAC3ITEM.CLANK].unlock_delay += 1
+            self._write8(RAC3STATUS.NO_CLANK, 0)
         if self.UnlockItem[RAC3ITEM.HELI_PACK].status:
             if self.UnlockItem[RAC3ITEM.THRUSTER_PACK].status:
                 if not self.unfreeze_packs:
@@ -2367,13 +2338,11 @@ class Rac3Interface(GameInterface):
         for name in cheat_data.keys():
             addr = cheat_data[name].UNLOCK_ADDRESS
             if self.UnlockItem[name].status:
-                if self.UnlockItem[name].unlock_delay:
-                    self._write8(addr, 1)
-                    self.UnlockItem[name].unlock_delay = 0
-                else:
-                    self.UnlockItem[name].unlock_delay += 1
+                self._write8(addr, 1)
             else:
                 self._write8(addr, 0)
+                if item_to_status.get(name, None) is not None:
+                    self._write8(item_to_status[name], 0)
 
     def patch_cycler(self):
         """Apply runtime instruction patches based on current planet."""

@@ -53,7 +53,7 @@ from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
 from worlds.rac3.constants.moby_flag import (BOLT_CRANK_TO_REGION, HACKER_PUZZLE_TO_DOOR_IDS, HACKER_PUZZLE_TO_REGION,
                                              REFRACTOR_PUZZLE_TO_REGION, TYHRRANOID_PUZZLE_TO_REGION)
 from worlds.rac3.constants.options import RAC3OPTION
-from worlds.rac3.constants.pause_state import RAC3PAUSESTATE
+from worlds.rac3.constants.game_state import RAC3GAMESTATE
 from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERACTION
 from worlds.rac3.constants.player_type import PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
@@ -151,8 +151,8 @@ class Rac3Interface(GameInterface):
     action_type: int = RAC3ACTIONTYPE.STATIONARY
     prev_action: int = RAC3PLAYERACTION.IDLE
     pause_menu: bool = False
-    pause_state: bool = False
-    pause_state_value: RAC3PAUSESTATE = RAC3PAUSESTATE.INVALID
+    pausing_game_state: bool = False
+    game_state_value: RAC3GAMESTATE = RAC3GAMESTATE.INVALID
     inputs: int = RAC3INPUT.NOTHING
     health: int = 100
     max_health: int = 10
@@ -683,7 +683,7 @@ class Rac3Interface(GameInterface):
 
     def vendor_check(self) -> RAC3VENDORTYPE | None:
         """Returns the current vendor type if the vendor is open, else None"""
-        if self.pause_state_value == RAC3PAUSESTATE.VENDOR and self.planet in PLANET_VENDOR_OFFSET.keys():
+        if self.game_state_value == RAC3GAMESTATE.VENDOR and self.planet in PLANET_VENDOR_OFFSET.keys():
             self.last_in_vendor_time = time.time()
             self.vendor_cursor_pos = self._read32(
                 RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.CURSOR_OFFSET, self.current_game))
@@ -808,26 +808,26 @@ class Rac3Interface(GameInterface):
         planet_data = RAC3_REGION_DATA_TABLE[self.planet]
         if planet_data:
             pause_addr = planet_data.PAUSE_ADDRESS
-            pause_state = self._read8(RAC3STATUS.PAUSE_STATE + planet_data.PLANET_SPECIAL_OFFSET)
-            self.pause_state_value = RAC3PAUSESTATE(
-                pause_state) if pause_state <= 9 and pause_state != 1 else RAC3PAUSESTATE.INVALID
-            self.pause_state = True if self.pause_state_value > RAC3PAUSESTATE.UNPAUSED else False
+            game_state = self._read8(RAC3STATUS.GAME_STATE + planet_data.PLANET_SPECIAL_OFFSET)
+            self.game_state_value = RAC3GAMESTATE(
+                game_state) if game_state <= 9 and game_state != 1 else RAC3GAMESTATE.INVALID
+            self.pausing_game_state = True if self.game_state_value > RAC3GAMESTATE.UNPAUSED else False
             self.pause_menu = bool(self._read8(pause_addr)) if pause_addr else False
             if self.current_game == RAC3VERSION.JP_ID:
-                if self.pause_state_value != RAC3PAUSESTATE.PAUSED:
+                if self.game_state_value != RAC3GAMESTATE.PAUSED:
                     self.pause_menu = False
                 elif pause_addr and (jp_addr := jp_get_pause_physical_address(pause_addr, self.planet)) is not None:
                     self.pause_menu = bool(super()._read8(jp_addr))
         else:
             # Unknown planet, assume paused to be safe
             self.pause_menu = True
-            self.pause_state_value = RAC3PAUSESTATE.PAUSED
-            self.pause_state = True
+            self.game_state_value = RAC3GAMESTATE.PAUSED
+            self.pausing_game_state = True
 
     def check_latches(self):
         """Check specific latched states need to be reset"""
         if self.homewarping:
-            if self.pause_state_value != RAC3PAUSESTATE.PLANET_CHANGE:
+            if self.game_state_value != RAC3GAMESTATE.PLANET_CHANGE:
                 self.homewarping = False
         if self.self_respawning:
             if not self.is_reloading:
@@ -856,7 +856,7 @@ class Rac3Interface(GameInterface):
                 self._write8(RAC3STATUS.SEWERS_VISITED, 1)
             self._write8(planet_data.PLANET_TO_LOAD, planet_id)
             self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PLANET_LOAD, 1)
-            self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PAUSE_STATE, RAC3PAUSESTATE.PLANET_CHANGE)
+            self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.GAME_STATE, RAC3GAMESTATE.PLANET_CHANGE)
             logger.debug(f"Player home-warped from {self.planet}")
         else:
             logger.warning(f"Couldn't find warp data to leave planet: {self.planet}")
@@ -1001,7 +1001,7 @@ class Rac3Interface(GameInterface):
                 valid_weapons = self.get_valid_weapon_level_ups()
                 if valid_weapons:
                     selected_weapon = choice(valid_weapons)
-                    if self.pause_state_value == RAC3PAUSESTATE.WEAPON_UPGRADE:
+                    if self.game_state_value == RAC3GAMESTATE.WEAPON_UPGRADE:
                         self.delayed_weapon_levelups.append(selected_weapon)
                     else:
                         self.weapon_level_up(selected_weapon)
@@ -1286,7 +1286,7 @@ class Rac3Interface(GameInterface):
     def can_be_killed(self) -> bool:
         """Checks if the player can be killed based on the current game state."""
         current_time = time.time()
-        if (self.pause_state
+        if (self.pausing_game_state
             or self.inside_hacker_puzzle
             or (self.action_type == RAC3ACTIONTYPE.PLAYER_MOVEMENT_LOCKED and not self.vehicle)
             or self.action_type == RAC3ACTIONTYPE.IN_CUTSCENE):
@@ -1747,7 +1747,7 @@ class Rac3Interface(GameInterface):
 
         vendor_scouting = self.options.scout_vendors
 
-        if self.pause_state_value != RAC3PAUSESTATE.VENDOR or not vendor_scouting:
+        if self.game_state_value != RAC3GAMESTATE.VENDOR or not vendor_scouting:
             return None
 
         vendor_type = self.vendor_type
@@ -2039,7 +2039,7 @@ class Rac3Interface(GameInterface):
             if (index == 2
                 and self.planet == RAC3REGION.ANNIHILATION_NATION
                 and self.is_location_checked(RAC3_LOCATION_DATA_TABLE[RAC3LOCATION.NATION_HEAT_STREET].AP_CODE)
-                and self.pause_state_value != RAC3PAUSESTATE.PAUSED
+                and self.game_state_value != RAC3GAMESTATE.PAUSED
                 and comic.status == 0):
                 self._write8(addr, 1)
                 continue
@@ -2194,7 +2194,7 @@ class Rac3Interface(GameInterface):
                         self._write8(weapon_data.LEVEL_ADDRESS, target_id)
             # restore last hovered weapon if we closed the vendor while it was hovering over it
             if (self.last_hovered_weapon != "" and self.vendor_type != RAC3VENDORTYPE.WEAPON
-                and self.pause_state_value != RAC3PAUSESTATE.WEAPON_UPGRADE):
+                and self.game_state_value != RAC3GAMESTATE.WEAPON_UPGRADE):
                 restore_level = self.weapon_levels.get(self.last_hovered_weapon, 1)
                 self._write8(non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
                              UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1])
@@ -2227,7 +2227,7 @@ class Rac3Interface(GameInterface):
                 self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS, target_id)
                 self.weapon_levels[weapon_name] = target_level
         else:
-            if self.delayed_weapon_levelups and self.pause_state_value != RAC3PAUSESTATE.WEAPON_UPGRADE:
+            if self.delayed_weapon_levelups and self.game_state_value != RAC3GAMESTATE.WEAPON_UPGRADE:
                 for weapon_name in self.delayed_weapon_levelups:
                     valid_weapons = self.get_valid_weapon_level_ups()
                     if weapon_name in valid_weapons:
@@ -2259,7 +2259,7 @@ class Rac3Interface(GameInterface):
                                      UPGRADE_DICT[weapon_name][restore_level - 1])
             # restore last hovered weapon if we closed the vendor while it was hovering over it
             if (self.last_hovered_weapon != "" and self.vendor_type != RAC3VENDORTYPE.WEAPON
-                and self.pause_state_value != RAC3PAUSESTATE.WEAPON_UPGRADE):
+                and self.game_state_value != RAC3GAMESTATE.WEAPON_UPGRADE):
                 restore_level = self.weapon_levels.get(self.last_hovered_weapon, 1)
                 if self.last_hovered_weapon == RAC3ITEM.RY3N0 and restore_level > self.ryno:
                     restore_level = self.ryno
@@ -2297,7 +2297,7 @@ class Rac3Interface(GameInterface):
                     self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
                 self.unfreeze_packs = True
             else:
-                if self.pause_state_value == RAC3PAUSESTATE.PAUSED:
+                if self.game_state_value == RAC3GAMESTATE.PAUSED:
                     self._write8(RAC3STATUS.PACK_EQUIP, 3)  # Set pack freeze
                 else:
                     self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
@@ -2735,7 +2735,7 @@ class Rac3Interface(GameInterface):
         current_time = time.time()
         tyhrranoid_game = (self.player_type == RAC3PLAYERTYPE.TYHRRANOID and self.action ==
                            RAC3PLAYERACTION.TYHRRANOID_MINIGAME)
-        paused = ((self.pause_state and self.pause_state_value != RAC3PAUSESTATE.QUICK_SELECT)
+        paused = ((self.pausing_game_state and self.game_state_value != RAC3GAMESTATE.QUICK_SELECT)
                   or self.between_planets
                   or (current_time - self.last_in_vendor_time) < 0.25)
         self._write32(RAC3MESSAGEBOX.HIDDEN_AND_PAUSED,

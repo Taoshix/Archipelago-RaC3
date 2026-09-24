@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from CommonClient import logger
 from NetUtils import ClientStatus
 from worlds.rac3.client.message import ClientMessage
-from worlds.rac3.client.texthelper import colorize_item_name, get_sent_item_message
+from worlds.rac3.client.texthelper import colorize_item_name, get_sent_item_message, remove_accents
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.data.region import RAC3_REGION_DATA_TABLE
 from worlds.rac3.constants.data.vendorslot import (ITEM_TO_ARMOR_VENDOR_LOCATION, ITEM_TO_WEAPON_VENDOR_LOCATION,
@@ -285,7 +285,7 @@ async def handle_codecave(ctx: "Context") -> None:
             else:
                 player_name = ctx.player_names.get(net_item.player, "???")
                 string = f"{player_name}'s {item_name}"
-            location_data.append((loc_key, string))
+            location_data.append((loc_key, remove_accents(string)))
 
     if location_data:
         ctx.game_interface.setup_code_cave(location_data)

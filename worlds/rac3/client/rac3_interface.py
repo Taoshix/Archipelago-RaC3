@@ -546,7 +546,7 @@ class Rac3Interface(GameInterface):
         if self.options.ngplus_start:
             self._write8(RAC3STATUS.SEEN_NGPLUS_POPUP, 1)
 
-    def setup_code_cave(self, location_data):
+    def setup_code_cave(self, location_data: list[tuple[str, str]]):
         """Write item data to the code cave in order to be used later by vendors"""
         self.vendor_string_pointers = {}
         offset = 0x10

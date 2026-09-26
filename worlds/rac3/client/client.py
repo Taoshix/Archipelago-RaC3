@@ -161,6 +161,25 @@ class CommandProcessor(ClientCommandProcessor):
             else:
                 self.output("Death Link not found in slot_data. Please report this")
 
+    def _cmd_track_deaths(self):
+        """Toggles death count popup messages after every death."""
+        if not self.verify():
+            return
+        if isinstance(self.ctx, Rac3Context):
+            self.ctx.game_interface.track_deaths = not self.ctx.game_interface.track_deaths
+            self.output(f"Track Deaths set to {self.ctx.game_interface.track_deaths}")
+            if self.ctx.game_interface.track_deaths:
+                status_msg = (
+                    f"{RAC3TEXTFORMATSTRING.WHITE}Enabled.\n"
+                    f"The number of deaths will appear every time you die.\n"
+                    f"You have already died {RAC3TEXTFORMATSTRING.WHITE}{self.ctx.game_interface.death_count} "
+                    f"{RAC3TEXTFORMATSTRING.NORMAL}times."
+                )
+            else:
+                status_msg = "Disabled."
+            self.ctx.game_interface.enqueue_notification(
+                f"{RAC3TEXTFORMATSTRING.NORMAL}Death Tracker {status_msg}", RAC3BOXTHEME.DEATHLINK)
+
     def _cmd_respawn(self):
         """Teleports Ratchet back to the ship. If used in an unusual place, forces a respawn instead.
         You can also pause the game and hold Square on the pause menu to run this command from in-game."""
@@ -242,20 +261,14 @@ class CommandProcessor(ClientCommandProcessor):
                 self.output("No level specified. Provide an integer ID or region name.")
                 return
 
-            arg = args[0]
-            # If the argument is already an int, call directly
-            if isinstance(arg, int):
-                self.ctx.game_interface.homewarp(arg)
-                return
-
-            # Try to parse as integer string first
+            arg = " ".join(args).strip()
             try:
                 level_id = int(arg)
                 self.ctx.game_interface.homewarp(level_id)
                 return
             except ValueError:
-                # Not an integer string — treat as a region key/name and look up its ID (case-insensitive)
-                key = str(arg).strip()
+                # Not an integer string, so try to look it up in the region data table
+                key = arg.strip()
                 region = RAC3_REGION_DATA_TABLE.get(key)
                 if region is None:
                     lower_key = key.lower()
@@ -359,6 +372,8 @@ class Rac3Context(CommonContext):
     data_package: int = 0
     data_received: bool = False
     save_data: dict[int, tuple[int, int]] = {}
+    last_saved: float = 0.0
+    skip_save_cooldown: bool = False
 
     def __init__(self, server_address: str, password: str):
         super().__init__(server_address, password)

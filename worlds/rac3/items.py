@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification
 from worlds.rac3.constants.data.item import (goal_data, infobot_data, item_counts, item_table, NAME_TO_PROG_DICT,
-                                             ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, RAC3ITEMDATA)
+                                             ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, vidcomic_health_data,
+                                             RAC3ITEMDATA)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -93,11 +94,19 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 continue
             item_amount = options.bonus_vidcomic_health.value
 
+        # Weapon Mod option
+        if RAC3ITEMTAG.WEAPON_MOD in item_tags:
+            if options.weapon_mods.value != options.weapon_mods.option_individual_mods:
+                continue
+        elif RAC3ITEMTAG.WEAPON_MODPACK in item_tags:
+            if options.weapon_mods.value != options.weapon_mods.option_modpack:
+                continue
+
         # Catch accidental duplicates
         if item_amount is None:
             rac3_logger.warning(f"{name} has an incorrect amount count")
         else:
-            if item_amount > 1 and name not in progressive_data.keys():
+            if item_amount > 1 and name not in progressive_data and name not in vidcomic_health_data:
                 rac3_logger.warning(f"multiple copies of {name} added to the item pool")
             itempool += create_multiple_items(world, name, item_amount, item_type)
 

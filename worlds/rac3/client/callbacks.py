@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from CommonClient import logger
 from NetUtils import ClientStatus
 from worlds.rac3.client.message import ClientMessage
-from worlds.rac3.client.texthelper import colorize_item_name, get_sent_item_message
+from worlds.rac3.client.texthelper import colorize_item_name, get_sent_item_message, remove_accents
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.data.region import RAC3_REGION_DATA_TABLE
 from worlds.rac3.constants.data.vendorslot import (ITEM_TO_ARMOR_VENDOR_LOCATION, ITEM_TO_WEAPON_VENDOR_LOCATION,
@@ -33,8 +33,7 @@ if TYPE_CHECKING:
 async def pcsx2_sync_task(ctx: "Context"):
     """Connects to PCSX2 and loops through update functions until the connection is closed."""
     logger.info(f"Starting {RAC3OPTION.GAME_TITLE_FULL} Connector")
-    version_dots = RAC3OPTION.VERSION_NUMBER.count(".")
-    if version_dots >= 3 or "dev" in RAC3OPTION.VERSION_NUMBER:
+    if "-dev" in RAC3OPTION.VERSION_NUMBER or RAC3OPTION.VERSION_NUMBER.count(".") >= 3:
         logger.warning("\nYou are using a development build of the RaC3 Archipelago Randomizer!\n"
                        "There may be bugs present and features that have not been tested fully.\n"
                        "These builds are meant for testing and bug reporting purposes "
@@ -205,13 +204,18 @@ async def _handle_game_ready(ctx: "Context") -> None:
         if not ctx.main_menu:
             ctx.game_interface.cycle_reads_count = 0
             ctx.game_interface.cycle_writes_count = 0
+            ctx.game_interface.cycle_batch_reads_count = 0
+            ctx.game_interface.cycle_batch_writes_count = 0
             ctx.game_interface.cycle_cache.clear()
             current_time = time()
             await update(ctx)
             after_time = time()
             elapsed = after_time - current_time
-            logger.debug(f"Update cycle took {elapsed:.5f} seconds (Reads: {ctx.game_interface.cycle_reads_count}, "
-                         f"Writes: {ctx.game_interface.cycle_writes_count})")
+            if "-dev" in RAC3OPTION.VERSION_NUMBER or RAC3OPTION.VERSION_NUMBER.count(".") >= 3: # Is dev build
+                logger.debug(f"Update cycle took {elapsed:.5f} seconds (Reads: {ctx.game_interface.cycle_reads_count} "
+                            f"(Batch: {ctx.game_interface.cycle_batch_reads_count}), "
+                            f"Writes: {ctx.game_interface.cycle_writes_count} "
+                            f"(Batch: {ctx.game_interface.cycle_batch_writes_count}))")
             # logger.debug(f"Data Package: {ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, 'Empty')}")
             ctx.game_interface.cycle_times.append(elapsed)
             if len(ctx.game_interface.cycle_times) > 100:
@@ -281,7 +285,7 @@ async def handle_codecave(ctx: "Context") -> None:
             else:
                 player_name = ctx.player_names.get(net_item.player, "???")
                 string = f"{player_name}'s {item_name}"
-            location_data.append((loc_key, string))
+            location_data.append((loc_key, remove_accents(string)))
 
     if location_data:
         ctx.game_interface.setup_code_cave(location_data)
@@ -341,6 +345,7 @@ async def handle_checked_locations(ctx: "Context") -> None:
     if new_checks:
         real_checks = list(await ctx.check_locations(new_checks))
         ctx.locations_checked.update(real_checks)
+        ctx.skip_save_cooldown = True
         for location in real_checks:
             net_item = ctx.locations_info.get(location, None)
             if net_item is not None and net_item.player != ctx.slot:
@@ -353,10 +358,10 @@ async def handle_checked_locations(ctx: "Context") -> None:
 
 async def handle_deathlink(ctx: "Context") -> None:
     """Receive and send deathlink"""
-    if not ctx.death_link:
+    if not ctx.death_link and not ctx.game_interface.track_deaths:
         return
     ctx.game_interface.reload_check()
-    if time() - ctx.last_death_link > 10:
+    if time() - ctx.last_death_link > 10 and ctx.death_link:
         alive, message = ctx.game_interface.alive()
         if alive:
             if ctx.queued_deaths > 0:
@@ -483,9 +488,12 @@ async def handle_save(ctx: "Context") -> None:
         local_save = ctx.game_interface.update_save()
         # logger.debug(f"local_save : {local_save}")
         # logger.debug(f"server_save: {ctx.save_data}")
-        if not (local_save == ctx.save_data):
+        current_time = time()
+        if not (local_save == ctx.save_data) and (current_time - ctx.last_saved > 20 or ctx.skip_save_cooldown):
             logger.debug("Sending new save data to server")
+            ctx.last_saved = current_time
             ctx.data_received = False
+            ctx.skip_save_cooldown = False
             ctx.save_data = local_save
             await ctx.send_msgs([ClientMessage.update_save(ctx.uuid, local_save)])
     else:

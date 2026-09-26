@@ -1,11 +1,12 @@
-"""This module defines the possible pause states that can be read from memory"""
+"""This module defines the possible game states that can be read from memory"""
 from enum import IntEnum
 
 
-class RAC3PAUSESTATE(IntEnum):
-    """Context for how the game has been paused"""
+class RAC3GAMESTATE(IntEnum):
+    """Enum for the possible game states in single player of rac3"""
     INVALID = -1
     UNPAUSED = 0
+    MOVIE = 1
     CUTSCENE = 2
     PAUSED = 3
     QUICK_SELECT = 4

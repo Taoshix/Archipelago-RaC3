@@ -103,7 +103,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 continue
 
         # Catch accidental duplicates
-        if item_amount is None:
+        if item_amount < 0:
             rac3_logger.warning(f"{name} has an incorrect amount count")
         else:
             if item_amount > 1 and name not in progressive_data and name not in vidcomic_health_data:

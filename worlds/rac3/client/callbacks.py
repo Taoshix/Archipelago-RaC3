@@ -299,9 +299,9 @@ async def handle_codecave(ctx: "Context") -> None:
 
 
 async def handle_intro_skip(ctx: "Context") -> None:
-    if ctx.slot_data is None:
     """Checks if the intro skip option is enabled, then skips veldin and sets required story/mission flags
     :param ctx: RAC3 context class"""
+    if ctx.slot_data is None or ctx.slot is None:
         return
     if (ctx.slot_data[RAC3OPTION.SHORTCUTS].get(RAC3SHORTCUTS.VELDIN_SKIP, False)
         and ctx.current_planet == RAC3REGION.VELDIN and not ctx.game_interface.homewarping):
@@ -338,9 +338,9 @@ async def handle_received_items(ctx: "Context") -> None:
 
 
 async def handle_checked_locations(ctx: "Context") -> None:
-    if ctx.slot_data is None:
     """Check for new locations collected, send these to the AP server
     :param ctx: RAC3 context class"""
+    if ctx.slot_data is None or ctx.slot is None:
         return
 
     # logger.info(f"{ctx.server_locations}")
@@ -393,9 +393,9 @@ async def handle_deathlink(ctx: "Context") -> None:
 
 
 async def handle_check_goal(ctx: "Context") -> None:
-    if ctx.slot_data is None:
     """Checks if the goal is completed
     :param ctx: RAC3 context class"""
+    if ctx.slot_data is None or ctx.slot is None:
         return
 
     victory_code = ctx.game_interface.get_victory_code()
@@ -405,9 +405,9 @@ async def handle_check_goal(ctx: "Context") -> None:
 
 
 async def handle_planet_changed(ctx: "Context") -> None:
-    if ctx.slot_data is None:
     """Checks if the player is changing planet
     :param ctx: RAC3 context class"""
+    if ctx.slot_data is None or ctx.slot is None:
         return
     # Player visits a new planet/region
     if ctx.game_interface.new_planet:
@@ -490,11 +490,11 @@ async def handle_vendors(ctx: "Context") -> None:
 
 
 async def handle_sequence_break(ctx: "Context") -> None:
-    if ctx.slot_data is None:
     """
     Undoes the flags for infobot locations when sequence breaking if you haven't checked the corresponding location yet
     :param ctx: RAC3 context class
     """
+    if ctx.slot_data is None or ctx.slot is None:
         return
     ctx.game_interface.sequence_break()
 

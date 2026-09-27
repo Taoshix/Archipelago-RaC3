@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification
 from worlds.rac3.constants.data.item import (goal_data, infobot_data, item_counts, item_table, NAME_TO_PROG_DICT,
-                                             ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, vidcomic_health_data,
-                                             RAC3ITEMDATA)
+                                             ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, RAC3ITEMDATA,
+                                             vidcomic_health_data)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -117,7 +117,12 @@ def create_itempool(world: "RaC3World") -> list[Item]:
 
 def create_multiple_items(world: "RaC3World", name: str, count: int = 1,
                           item_type: ItemClassification = ItemClassification.progression) -> list[Item]:
-    """Returns a list containing multiple copies of an item requested"""
+    """Returns a list containing multiple copies of an item requested
+    :param world: Current world object
+    :param name: Item Name
+    :param count: Item Count
+    :param item_type: Item Classification
+    """
     data: RAC3ITEMDATA = item_table[name]
     itemlist: list[Item] = []
 
@@ -128,7 +133,10 @@ def create_multiple_items(world: "RaC3World", name: str, count: int = 1,
 
 
 def create_item(world: "RaC3World", name: str) -> Item:
-    """Returns a new instance of an Item"""
+    """Returns a new instance of an Item
+    :param world: Current world object
+    :param name: Item Name
+    """
     data = item_table.get(name, goal_data.get(name))
     if data is None:
         raise KeyError(f"{name} not found in item_table")
@@ -148,7 +156,7 @@ def get_filler_selection(world: "RaC3World") -> list[str]:
     return [name for name, count in frequencies.items() for _ in range(count)]
 
 
-def process_start_inventory(world: "RaC3World"):
+def process_start_inventory(world: "RaC3World") -> None:
     """Process the player's starting inventory options to account settings and convert items if needed"""
     if not world.options.progressive_weapons.value:
         for item in PROG_TO_NAME_DICT.keys():
@@ -346,7 +354,7 @@ def remove_dead_starting_planets(world: "RaC3World", current_planet_list: list[s
         RAC3ITEM.MUSEUM,
         RAC3ITEM.OBANI_DRACO,
         RAC3ITEM.QWARKS_HIDEOUT,
-        RAC3ITEM.COMMAND_CENTER
+        RAC3ITEM.COMMAND_CENTER,
     ]
 
     # If Rangers are disabled or only the optional missions are enabled, Aridia and Blackwater City are unreachable

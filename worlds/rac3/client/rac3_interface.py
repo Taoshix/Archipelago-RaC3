@@ -908,7 +908,7 @@ class Rac3Interface(GameInterface):
         if name in WEAPON_TO_WEAPON_MODPACK.values():
             self.UnlockItem[name] = WEAPONMOD.ALL
         if name in WEAPON_MOD_TO_WEAPON:
-            self.UnlockItem[WEAPON_TO_WEAPON_MODPACK[WEAPON_MOD_TO_WEAPON[name][0]]] += WEAPON_MOD_TO_WEAPON[name][1]
+            self.UnlockItem[WEAPON_TO_WEAPON_MODPACK[WEAPON_MOD_TO_WEAPON[name][0]]] |= WEAPON_MOD_TO_WEAPON[name][1]
         match name:
             case RAC3ITEM.HACKER:
                 self.puzzle_cycler(name, RAC3SPEEDUPS.HACKER, "opened_the_hacker_doors",

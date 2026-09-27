@@ -21,6 +21,13 @@ class RAC3SHORTCUTDATA:
                  items: list[list[str]] | None = None,
                  flag: list[tuple[int, int]] | None = None,
                  visit: list[str] | None = None):
+        """
+        :param planet: Region name of location of shortcut
+        :param items: Items required to reach the destination of the shortcut
+        :param flag: Local Flag address associated with the shortcut
+        :param visit: Region name of the visit flag to be set when the shortcut is performed
+        :rtype: RAC3SHORTCUTDATA
+        """
         self.PLANET = planet
         self.ITEMS = items
         self.FLAG_ADDRESSES = flag

@@ -13,7 +13,11 @@ class RAC3ADDRESSDATA:
     TYPE: CHECKTYPE
     VALUE: int
 
-    def __init__(self, data: tuple[int, CHECKTYPE, int]):
+    def __init__(self, data: tuple[int, CHECKTYPE, int] = (0, CHECKTYPE.SKIP, 0)):
+        """Memory Address data
+        :param data:
+        :rtype: RAC3ADDRESSDATA
+        """
         self.ADDRESS, self.TYPE, self.VALUE = data
 
 

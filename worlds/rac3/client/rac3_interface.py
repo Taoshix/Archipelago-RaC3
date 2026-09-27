@@ -306,11 +306,9 @@ class Rac3Interface(GameInterface):
 
         return self._write8(address, write)
 
-    def address_convert(self, address: int):
+    def address_convert(self, address: int | str) -> int:
         """Address conversion from str to int, and for version correction (with US/JP/EU)"""
-        _addr = address
-        if isinstance(address, str):
-            _addr = int(address, 0)
+        _addr = int(address, 0) if isinstance(address, str) else address
         if (0x001DC7C0 <= _addr <= 0x00300000
             and self.planet in PAL_SHIFTED_PLANETS
             and self.current_game == RAC3VERSION.EU_ID):

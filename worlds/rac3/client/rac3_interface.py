@@ -1158,27 +1158,27 @@ class Rac3Interface(GameInterface):
         # TODO: Implement a distance based checktype
         if location == RAC3LOCATION.OBANI_GEMINI_SKIDD and self.planet == RAC3REGION.OBANI_GEMINI:
             current_pos = self.player_pos
-            skidd_pos = RAC3POSITIONDATA(201.2, 364, 296.8)
+            skidd_pos = RAC3POSITIONDATA(201.2, 364.0, 296.8)
             return (
-                abs(current_pos.X - skidd_pos.X) < 8
-                and abs(current_pos.Y - skidd_pos.Y) < 8
-                and abs(current_pos.Z - skidd_pos.Z) < 5
+                abs(current_pos.X - skidd_pos.X) < 8.0
+                and abs(current_pos.Y - skidd_pos.Y) < 8.0
+                and abs(current_pos.Z - skidd_pos.Z) < 5.0
             )
         if location == RAC3LOCATION.PHOENIX_MEET_SASHA and self.planet == RAC3REGION.STARSHIP_PHOENIX:
             current_pos = self.player_pos
-            sasha_pos = RAC3POSITIONDATA(157, 362, 118)
+            sasha_pos = RAC3POSITIONDATA(157.0, 362.0, 118.0)
             return (
-                abs(current_pos.X - sasha_pos.X) < 8
-                and abs(current_pos.Y - sasha_pos.Y) < 8
-                and abs(current_pos.Z - sasha_pos.Z) < 5
+                abs(current_pos.X - sasha_pos.X) < 8.0
+                and abs(current_pos.Y - sasha_pos.Y) < 8.0
+                and abs(current_pos.Z - sasha_pos.Z) < 5.0
             )
         if location == RAC3LOCATION.HIDEOUT_FIND_QWARK and self.planet == RAC3REGION.QWARKS_HIDEOUT:
             current_pos = self.player_pos
-            qwark_pos = RAC3POSITIONDATA(306, 298, 109)
+            qwark_pos = RAC3POSITIONDATA(306.0, 298.0, 109.0)
             return (
-                abs(current_pos.X - qwark_pos.X) < 5
-                and abs(current_pos.Y - qwark_pos.Y) < 5
-                and abs(current_pos.Z - qwark_pos.Z) < 5
+                abs(current_pos.X - qwark_pos.X) < 5.0
+                and abs(current_pos.Y - qwark_pos.Y) < 5.0
+                and abs(current_pos.Z - qwark_pos.Z) < 5.0
             )
         if location == RAC3LOCATION.ARIDIA_RANGERS_5 and self.options.speedups.get(RAC3SPEEDUPS.MISSIONS, False):
             if self._read8(MISSION_COUNTS[location]) > 1:  # Aridia final mission needs special checks

@@ -107,7 +107,7 @@ class Rac3Interface(GameInterface):
         nanotech_limitation: int
         weapon_vendors: int
         filler_weight: dict[str, int]
-        one_hp_challenge: int
+        one_hp_challenge: dict[str, int]
         clank_options: int
         ship_vendor: int
         armor_vendor: int
@@ -163,7 +163,6 @@ class Rac3Interface(GameInterface):
     notification_merge_count: int = 1
     message_display: bool = False
     ship_slot_limit: int = 0
-    one_hp_challenge: dict[str, int] = None
     pda_vendor: int = 0
     last_in_vehicle_time: float = 0.0
     last_in_vendor_time: float = 0.0
@@ -328,7 +327,6 @@ class Rac3Interface(GameInterface):
     def proc_option(self, slot_data: dict[str, Any]):
         """Process slot option data received when connecting to the server"""
         logger.debug(f"Processing options: {slot_data}")
-        self.one_hp_challenge = slot_data[RAC3OPTION.ONE_HP_CHALLENGE]
         self.options.start_inventory_from_pool = slot_data[RAC3OPTION.START_INVENTORY_FROM_POOL]
         self.options.starting_weapons = slot_data[RAC3OPTION.STARTING_WEAPONS]
         self.options.bolt_and_xp_multiplier = slot_data[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
@@ -2350,11 +2348,11 @@ class Rac3Interface(GameInterface):
                 character = RAC3PLAYERTYPE.RATCHET
 
             # Apply patches if one HP challenge is enabled for Ratchet.
-            if self.one_hp_challenge.get(character, False) and character == RAC3PLAYERTYPE.RATCHET:
+            if self.options.one_hp_challenge.get(character, False) and character == RAC3PLAYERTYPE.RATCHET:
                 for instruction in planet_patches:
                     self.safe_patch_instruction(instruction)
             # Restore original instructions if one HP challenge is not enabled for Ratchet.
-            elif not self.one_hp_challenge.get(character, False):
+            elif not self.options.one_hp_challenge.get(character, False):
                 for instruction in planet_patches:
                     self.safe_patch_instruction(instruction, restore=True)
             return
@@ -2409,7 +2407,7 @@ class Rac3Interface(GameInterface):
         if character == RAC3PLAYERTYPE.TYHRRANOID:
             character = RAC3PLAYERTYPE.RATCHET  # Treat Tyhrranoid as Ratchet for one HP challenge
         # Check for one HP challenge for current character
-        if self.one_hp_challenge.get(character, False):
+        if self.options.one_hp_challenge.get(character, False):
             if character == RAC3PLAYERTYPE.GIANT:
                 if self._read32(RAC3STATUS.GIANT_CLANK_HEALTH) > 1:
                     self._write32(RAC3STATUS.GIANT_CLANK_HEALTH, 1)
@@ -2423,7 +2421,7 @@ class Rac3Interface(GameInterface):
                     self._write8(RAC3STATUS.NANOPAK_HEALTH, 0)
 
         # Vehicle one HP challenge is independent of player_type
-        if self.vehicle and self.one_hp_challenge.get(RAC3PLAYERTYPE.VEHICLE, False):
+        if self.vehicle and self.options.one_hp_challenge.get(RAC3PLAYERTYPE.VEHICLE, False):
             health_addr = self._read32(self._read32(self.vehicle + 0x68))
             max_health = self._read32(self._read32(self.vehicle + 0x68) + 0x34)
             target_health = max_health * 0.01

@@ -358,6 +358,20 @@ class CommandProcessor(ClientCommandProcessor):
             self.output(f"Input Address: {hex(input_address)} Translated Address: {hex(translated_address)} "
                         f"Offset: {hex(translated_address - input_address)}")
 
+    def _cmd_update_speed(self, *args: str) -> None:
+        """Update the refresh speed of the client"""
+        if not self.verify(1):
+            return
+        if isinstance(self.ctx, Rac3Context):
+            if not args:
+                self.output("Please type a number after the command")
+                return
+            if int(args[0]) not in range(1, 61):
+                self.output(f"Please type a valid number between 1 and 60")
+                return
+            self.ctx.fps = 1 / float(args[0])
+            self.output(f"Client update set to every {self.ctx.fps}s")
+
 
 class Rac3Context(CommonContext):
     """Class for handling server connection with the game client"""
@@ -389,6 +403,7 @@ class Rac3Context(CommonContext):
     save_data: dict[int, tuple[int, int]] = {}
     last_saved: float = 0.0
     skip_save_cooldown: bool = False
+    fps: float = 0.1
 
     def __init__(self, server_address: str, password: str):
         """

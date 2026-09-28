@@ -2018,8 +2018,9 @@ class Rac3Interface(GameInterface):
             _operations = []
             for weapon_name, data in non_prog_weapon_data.items():
                 modpack = WEAPON_TO_WEAPON_MODPACK.get(weapon_name, "")
-                if self.UnlockItem[weapon_name] and self.UnlockItem[modpack]:
+                if self.UnlockItem[weapon_name]: 
                     _operations.append((data.MOD_ADDRESS, self.UnlockItem.get(modpack, 0)))
+
             self._write8_batch(_operations)
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,

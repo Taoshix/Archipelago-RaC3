@@ -834,15 +834,17 @@ class Rac3Interface(GameInterface):
                 # Invalid planet id, abort homewarp
                 logger.error(f"Aborting homewarp, Invalid Planet: {PLANET_NAME_FROM_ID[planet_id]}, ID: {planet_id}")
                 return
+        _operations = []
         planet_data = RAC3_REGION_DATA_TABLE[self.planet]
         if planet_data.PLANET_TO_LOAD:
             self.homewarping = True
             # Ensure the player is not softlocked from entering the sewers
             if self.planet == RAC3REGION.AQUATOS_BASE:
-                self._write8(RAC3STATUS.SEWERS_VISITED, 1)
-            self._write8(planet_data.PLANET_TO_LOAD, planet_id)
-            self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PLANET_LOAD, 1)
-            self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.GAME_STATE, RAC3GAMESTATE.PLANET_CHANGE)
+                _operations.append((RAC3STATUS.SEWERS_VISITED, 1))
+            _operations.append((planet_data.PLANET_TO_LOAD, planet_id))
+            _operations.append((planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PLANET_LOAD, 1))
+            _operations.append((planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.GAME_STATE, RAC3GAMESTATE.PLANET_CHANGE))
+            self._write8_batch(_operations)
             logger.debug(f"Player home-warped from {self.planet}")
         else:
             logger.warning(f"Couldn't find warp data to leave planet: {self.planet}")
@@ -1127,15 +1129,18 @@ class Rac3Interface(GameInterface):
     def update_equip(self, name: str):
         """Equip the most recently collected weapon/gadget, update recent uses"""
         if quick_selectable_data[name].ID:
+            _operations = []
             if name in equipable_data.keys():
-                self._write8(RAC3STATUS.LAST_USED_2, self.last_used_1)
-                self._write8(RAC3STATUS.LAST_USED_1, self.last_used_0)
-                self._write8(RAC3STATUS.LAST_USED_0, equipable_data[name].ID)
-                self._write8(RAC3STATUS.EQUIPPED, equipable_data[name].ID)
+                _operations.append((RAC3STATUS.LAST_USED_2, self.last_used_1))
+                _operations.append((RAC3STATUS.LAST_USED_1, self.last_used_0))
+                _operations.append((RAC3STATUS.LAST_USED_0, equipable_data[name].ID))
+                _operations.append((RAC3STATUS.EQUIPPED, equipable_data[name].ID))
             for slot in QUICK_SELECT_LIST:
                 if not self._read8(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS):
-                    self._write8(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS, quick_selectable_data[name].ID)
+                    _operations.append((RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS, quick_selectable_data[name].ID))
                     break
+
+            self._write8_batch(_operations)
 
     ###################
     # Check Locations #
@@ -1473,11 +1478,13 @@ class Rac3Interface(GameInterface):
 
     def write_input(self, button: RAC3INPUT):
         """Send the game button inputs"""
+        _operations = []
         left_shifted = (button & 0x00FF) << 8
         right_shifted = button >> 8
         bitmasked = RAC3INPUT.MASK ^ (left_shifted | right_shifted)
-        self._write16(RAC3STATUS.WRITE_INPUT_1, bitmasked)
-        self._write16(RAC3STATUS.WRITE_INPUT_2, bitmasked)
+        _operations.append((RAC3STATUS.WRITE_INPUT_1, bitmasked))
+        _operations.append((RAC3STATUS.WRITE_INPUT_2, bitmasked))
+        self._write16_batch(_operations)
 
     def teleport_to_ship(self):
         """Handle respawning the player, to their ship if available, otherwise to the most recent checkpoint"""
@@ -1673,7 +1680,7 @@ class Rac3Interface(GameInterface):
     def write_vendor_inventory(self, inventory: list[RAC3VENDORSLOTDATA], vendor_type: RAC3VENDORTYPE):
         """Write a list of vendor slot data objects to the current planet's vendor inventory"""
         _operations8 = []
-        operations16 = []
+        _operations16 = []
         _operations32 = [
             (RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game),
              len(inventory))]
@@ -1706,7 +1713,7 @@ class Rac3Interface(GameInterface):
                             self.planet, slot, prop.offset, VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game)
                             , prop.value))
                     case 2:
-                        operations16.append((RAC3VENDOR.get_vendor_item_property_address(
+                        _operations16.append((RAC3VENDOR.get_vendor_item_property_address(
                             self.planet, slot, prop.offset, VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game)
                             , prop.value))
                     case 4:
@@ -1715,7 +1722,7 @@ class Rac3Interface(GameInterface):
                             , prop.value))
         logger.debug(f"Wrote {len(inventory)} items to {vendor_type.name} vendor on planet {self.planet}")
         self._write8_batch(_operations8)
-        self._write16_batch(operations16)
+        self._write16_batch(_operations16)
         self._write32_batch(_operations32)
 
     def hovering_over_ammo(self) -> bool:

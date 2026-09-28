@@ -2909,6 +2909,7 @@ class Rac3Interface(GameInterface):
         _operations32.append((RAC3MESSAGEBOX.TIMER, _time))
         _operations32.append((RAC3MESSAGEBOX.TEXT_POINTER, RAC3MESSAGEBOX.MESSAGE))
         _operations32.append((RAC3MESSAGEBOX.BOX_WIDTH, width))
+        self._write32_batch(_operations32)
         self._write_bytes(RAC3MESSAGEBOX.MESSAGE, msg_bytes)
         self._write_float(self._read32(RAC3MESSAGEBOX.VISIBLE_POINTER), 1.0)
 

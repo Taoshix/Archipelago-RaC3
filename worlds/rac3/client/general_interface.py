@@ -1,6 +1,7 @@
 """This module provides an interface for connecting to a pcsx2 game"""
-
-from struct import unpack
+from enum import Enum
+from struct import unpack, pack
+from typing import Any
 
 from CommonClient import logger
 from worlds.rac3.constants.other_ratchets import GAME_ID_TO_OTHER_RATCHET
@@ -10,6 +11,16 @@ from worlds.rac3.pypine import Pine
 
 class GameInterface:
     """Base class for connecting with a pcsx2 game"""
+
+    class DataType(Enum):
+        """Enum class for data types"""
+        INT8 = 1
+        INT16 = 2
+        INT32 = 3
+        BYTES = 4
+        FLOAT = 5
+        STRING = 6
+
     current_game: str = "None"
     game_id_error: str | None = None
     is_connecting: bool = False
@@ -21,6 +32,7 @@ class GameInterface:
     cycle_times: list[float] = []
     cycle_cache: dict[int, int] = {}
     pypine: Pine = Pine()
+    write_batcher: dict[tuple[int, DataType], Any] = {}
 
     def __init__(self) -> None:
         pass
@@ -61,41 +73,38 @@ class GameInterface:
         self.cycle_batch_reads_count += 1
         return self.pypine.read_string(address, n)
 
-    def _write8(self, address: int, value: int):
-        self.cycle_writes_count += 1
-        self.pypine.write_int8(address, value)
+    def _read_bits(self, address: int) -> set[int]:
+        bits: set[int] = set()
+        value = self._read8(address)
+        for i in range(8):
+            if value & (1 << i):
+                bits.add(i)
+        return bits
 
-    def _write16(self, address: int, value: int):
-        self.cycle_writes_count += 1
-        self.pypine.write_int16(address, value)
-
-    def _write32(self, address: int, value: int):
-        self.cycle_writes_count += 1
-        self.pypine.write_int32(address, value)
-
-    def _write8_batch(self, operations: list[tuple[int, int]]):
-        self.cycle_batch_writes_count += 1
-        self.pypine.batch_write_int8(operations)
-
-    def _write16_batch(self, operations: list[tuple[int, int]]):
-        self.cycle_batch_writes_count += 1
-        self.pypine.batch_write_int16(operations)
-
-    def _write32_batch(self, operations: list[tuple[int, int]]):
-        self.cycle_batch_writes_count += 1
-        self.pypine.batch_write_int32(operations)
-
-    def _write_bytes(self, address: int, value: bytes):
-        self.cycle_batch_writes_count += 1
-        self.pypine.write_bytes(address, value)
-
-    def _write_float(self, address: int, value: float):
-        self.cycle_writes_count += 1
-        self.pypine.write_float(address, value)
-
-    def _write_string(self, address: int, value: str):
-        self.cycle_batch_writes_count += 1
-        self.pypine.write_string(address, value)
+    def batch_write(self):
+        """Send all the stashed writes to pypine"""
+        batch: list[tuple[Pine.DataSize, int, bytes]] = []
+        for address, operation, value in self.write_batcher.items():
+            match operation:
+                case self.DataType.INT8:
+                    batch.append((self.pypine.DataSize.INT8, address, value.to_bytes(1, "little")))
+                case self.DataType.INT16:
+                    batch.append((self.pypine.DataSize.INT16, address, value.to_bytes(2, "little")))
+                case self.DataType.INT32:
+                    batch.append((self.pypine.DataSize.INT32, address, value.to_bytes(4, "little")))
+                case self.DataType.BYTES:
+                    batch.extend([(size, chunk, value[chunk - address:chunk - address + size]) for size, chunk in
+                                  self.pypine._chunks(address, len(value))])
+                case self.DataType.FLOAT:
+                    batch.append((self.pypine.DataSize.INT32, address, pack("<f", value)))
+                case self.DataType.STRING:
+                    data = value.encode("ascii") + b'\x00'
+                    batch.extend([(size, chunk, data[chunk - address:chunk - address + size]) for size, chunk in
+                                  self.pypine._chunks(address, len(data))])
+                case _:
+                    logger.warning(f"Unknown write operation: {self.DataType(operation)}, "
+                                   f"with address+value: {address}, {value}")
+        self.pypine.batch_write(batch)
 
     def connect_to_game(self):
         """Initializes the connection to PCSX2 and verifies it is connected to the right game"""
@@ -103,12 +112,12 @@ class GameInterface:
         logger.debug("Begin attempting emulator connection...")
         try:
             self.pypine.connect()
-        except Pine.ConnectionError:
+        except self.pypine.ConnectionError:
             self.is_connecting = False
             self.emulator_connected = False
             logger.debug("No Connection to PCSX2 Emulator")
             return
-        except Pine.DuplicateConnectionError:
+        except self.pypine.DuplicateConnectionError:
             self.is_connecting = False
             self.emulator_connected = False
             logger.warning("Duplicate connection to PCSX2 Emulator detected")

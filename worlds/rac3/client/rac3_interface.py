@@ -243,45 +243,28 @@ class Rac3Interface(GameInterface):
     def _read_string(self, address, n) -> str:
         return super()._read_string(self.address_convert(address), n)
 
-    def _read_bits(self, address: int) -> set[int]:
-        bits: set[int] = set()
-        value = self._read8(address)
-        for i in range(8):
-            if value & (1 << i):
-                bits.add(i)
-        return bits
-
     def _write8(self, address: int, value: int):
-        return super()._write8(self.address_convert(address), value)
+        return self.write_batcher.update({(self.address_convert(address), self.DataType.INT8): value})
 
     def _write16(self, address: int, value: int):
-        return super()._write16(self.address_convert(address), value)
+        return self.write_batcher.update({(self.address_convert(address), self.DataType.INT16): value})
 
     def _write32(self, address: int, value: int):
-        return super()._write32(self.address_convert(address), value)
-
-    def _write8_batch(self, operations: list[tuple[int, int]]):
-        return super()._write8_batch([(self.address_convert(addr), val) for addr, val in operations])
-
-    def _write16_batch(self, operations: list[tuple[int, int]]):
-        return super()._write16_batch([(self.address_convert(addr), val) for addr, val in operations])
-
-    def _write32_batch(self, operations: list[tuple[int, int]]):
-        return super()._write32_batch([(self.address_convert(addr), val) for addr, val in operations])
+        return self.write_batcher.update({(self.address_convert(address), self.DataType.INT32): value})
 
     def _write_bytes(self, address: int, value: bytes):
-        return super()._write_bytes(self.address_convert(address), value)
+        return self.write_batcher.update({(self.address_convert(address), self.DataType.BYTES): value})
 
     def _write_float(self, address: int, value: float):
-        return super()._write_float(self.address_convert(address), value)
+        return self.write_batcher.update({(self.address_convert(address), self.DataType.FLOAT): value})
 
     def _write_string(self, address: int, value: str):
-        return super()._write_string(self.address_convert(address), value)
+        return self.write_batcher.update({(self.address_convert(address), self.DataType.STRING): value})
 
     def _write_bits(self, address: int, value: set[int]):
         bits = self._read_bits(address)
         if value.issubset(bits):
-            return None
+            return
         bits |= value
         write: int = 0
         for bit in bits:
@@ -289,13 +272,13 @@ class Rac3Interface(GameInterface):
                 write += 1 << bit
             else:
                 raise ValueError(f"Invalid bit position {bit}")
-
-        return self._write8(address, write)
+        self._write8(address, write)
+        return
 
     def _unwrite_bits(self, address: int, value: set[int]):
         bits = self._read_bits(address)
         if value.isdisjoint(bits):
-            return None
+            return
         bits -= value
         write: int = 0
         for bit in bits:
@@ -303,8 +286,8 @@ class Rac3Interface(GameInterface):
                 write += 1 << bit
             else:
                 raise ValueError(f"Invalid bit position {bit}")
-
-        return self._write8(address, write)
+        self._write8(address, write)
+        return
 
     def address_convert(self, address: int | str) -> int:
         """Address conversion from str to int, and for version correction (with US/JP/EU)"""
@@ -834,17 +817,15 @@ class Rac3Interface(GameInterface):
                 # Invalid planet id, abort homewarp
                 logger.error(f"Aborting homewarp, Invalid Planet: {PLANET_NAME_FROM_ID[planet_id]}, ID: {planet_id}")
                 return
-        _operations = []
         planet_data = RAC3_REGION_DATA_TABLE[self.planet]
         if planet_data.PLANET_TO_LOAD:
             self.homewarping = True
             # Ensure the player is not softlocked from entering the sewers
             if self.planet == RAC3REGION.AQUATOS_BASE:
-                _operations.append((RAC3STATUS.SEWERS_VISITED, 1))
-            _operations.append((planet_data.PLANET_TO_LOAD, planet_id))
-            _operations.append((planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PLANET_LOAD, 1))
-            _operations.append((planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.GAME_STATE, RAC3GAMESTATE.PLANET_CHANGE))
-            self._write8_batch(_operations)
+                self._write8(RAC3STATUS.SEWERS_VISITED, 1)
+            self._write8(planet_data.PLANET_TO_LOAD, planet_id)
+            self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PLANET_LOAD, 1)
+            self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.GAME_STATE, RAC3GAMESTATE.PLANET_CHANGE)
             logger.debug(f"Player home-warped from {self.planet}")
         else:
             logger.warning(f"Couldn't find warp data to leave planet: {self.planet}")
@@ -1129,18 +1110,15 @@ class Rac3Interface(GameInterface):
     def update_equip(self, name: str):
         """Equip the most recently collected weapon/gadget, update recent uses"""
         if quick_selectable_data[name].ID:
-            _operations = []
             if name in equipable_data.keys():
-                _operations.append((RAC3STATUS.LAST_USED_2, self.last_used_1))
-                _operations.append((RAC3STATUS.LAST_USED_1, self.last_used_0))
-                _operations.append((RAC3STATUS.LAST_USED_0, equipable_data[name].ID))
-                _operations.append((RAC3STATUS.EQUIPPED, equipable_data[name].ID))
+                self._write8(RAC3STATUS.LAST_USED_2, self.last_used_1)
+                self._write8(RAC3STATUS.LAST_USED_1, self.last_used_0)
+                self._write8(RAC3STATUS.LAST_USED_0, equipable_data[name].ID)
+                self._write8(RAC3STATUS.EQUIPPED, equipable_data[name].ID)
             for slot in QUICK_SELECT_LIST:
                 if not self._read8(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS):
-                    _operations.append((RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS, quick_selectable_data[name].ID))
+                    self._write8(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS, quick_selectable_data[name].ID)
                     break
-
-            self._write8_batch(_operations)
 
     ###################
     # Check Locations #
@@ -1478,13 +1456,11 @@ class Rac3Interface(GameInterface):
 
     def write_input(self, button: RAC3INPUT):
         """Send the game button inputs"""
-        _operations = []
         left_shifted = (button & 0x00FF) << 8
         right_shifted = button >> 8
         bitmasked = RAC3INPUT.MASK ^ (left_shifted | right_shifted)
-        _operations.append((RAC3STATUS.WRITE_INPUT_1, bitmasked))
-        _operations.append((RAC3STATUS.WRITE_INPUT_2, bitmasked))
-        self._write16_batch(_operations)
+        self._write16(RAC3STATUS.WRITE_INPUT_1, bitmasked)
+        self._write16(RAC3STATUS.WRITE_INPUT_2, bitmasked)
 
     def teleport_to_ship(self):
         """Handle respawning the player, to their ship if available, otherwise to the most recent checkpoint"""
@@ -1679,13 +1655,8 @@ class Rac3Interface(GameInterface):
 
     def write_vendor_inventory(self, inventory: list[RAC3VENDORSLOTDATA], vendor_type: RAC3VENDORTYPE):
         """Write a list of vendor slot data objects to the current planet's vendor inventory"""
-        _operations8 = []
-        _operations16 = []
-        _operations32 = [
-            (RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game),
-             len(inventory))]
-        # self._write32(RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET,
-        #                                                      self.current_game), len(inventory))
+        self._write32(RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET,
+                                                             self.current_game), len(inventory))
         if len(inventory) == 0:
             start_address = RAC3VENDOR.get_vendor_property_address(self.planet, 0, self.current_game)
             match vendor_type:
@@ -1698,8 +1669,8 @@ class Rac3Interface(GameInterface):
                                   else RAC3VENDOR.NO_ITEMS_AVAILABLE_LOC_KEY)
                     # self._write32(item_name_addr, self.vendor_string_pointers[string_key])
                     # self._write32(already_equipped_addr, 1)
-                    _operations32.append((item_name_addr, self.vendor_string_pointers[string_key]))
-                    _operations32.append((already_equipped_addr, 1))
+                    self._write32(item_name_addr, self.vendor_string_pointers[string_key])
+                    self._write32(already_equipped_addr, 1)
                 case _:
                     # clear out vendor slot memory
                     slot_size = VENDORTYPE_TO_SLOT_SIZE[vendor_type]
@@ -1709,21 +1680,18 @@ class Rac3Interface(GameInterface):
             for prop in slot_data.get_data():
                 match prop.size:
                     case 1:
-                        _operations8.append((RAC3VENDOR.get_vendor_item_property_address(
+                        self._write8(RAC3VENDOR.get_vendor_item_property_address(
                             self.planet, slot, prop.offset, VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game)
-                            , prop.value))
+                            , prop.value)
                     case 2:
-                        _operations16.append((RAC3VENDOR.get_vendor_item_property_address(
+                        self._write16(RAC3VENDOR.get_vendor_item_property_address(
                             self.planet, slot, prop.offset, VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game)
-                            , prop.value))
+                            , prop.value)
                     case 4:
-                        _operations32.append((RAC3VENDOR.get_vendor_item_property_address(
+                        self._write32(RAC3VENDOR.get_vendor_item_property_address(
                             self.planet, slot, prop.offset, VENDORTYPE_TO_SLOT_SIZE[vendor_type], self.current_game)
-                            , prop.value))
+                            , prop.value)
         logger.debug(f"Wrote {len(inventory)} items to {vendor_type.name} vendor on planet {self.planet}")
-        self._write8_batch(_operations8)
-        self._write16_batch(_operations16)
-        self._write32_batch(_operations32)
 
     def hovering_over_ammo(self) -> bool:
         """Check if the player is hovering over the max ammo item in a weapon vendor"""
@@ -1859,11 +1827,9 @@ class Rac3Interface(GameInterface):
             self.respawn_gadgets()
             return
 
-        _operations = []
         for name in gadget_data.keys():
             addr = gadget_data[name].UNLOCK_ADDRESS
-            _operations.append((addr, 1 if self.UnlockItem[name] else 0))
-        self._write8_batch(_operations)
+            self._write8(addr, 1 if self.UnlockItem[name] else 0)
 
     def should_cycle_gadgets(self) -> bool:
         """Check if it's safe to cycle gadgets used to ensure gadgets can respawn without the cycler interfering"""
@@ -1915,53 +1881,45 @@ class Rac3Interface(GameInterface):
 
     def respawn_gadgets(self):
         """Respawn gadget if the associated location isn't checked but the gadget is unlocked through AP"""
-        _operations = []
         if (self.UnlockItem[RAC3ITEM.REFRACTOR]
             and RAC3LOCATION.MARCADIA_REFRACTOR not in self.checked_locations
             and self.planet == RAC3REGION.MARCADIA):
-            _operations.append((gadget_data[RAC3ITEM.REFRACTOR].UNLOCK_ADDRESS, 0))
+            self._write8(gadget_data[RAC3ITEM.REFRACTOR].UNLOCK_ADDRESS, 0)
 
         if (self.UnlockItem[RAC3ITEM.CHARGE_BOOTS]
             and RAC3LOCATION.DAXX_CHARGE_BOOTS not in self.checked_locations
             and self.planet == RAC3REGION.DAXX):
-            _operations.append((gadget_data[RAC3ITEM.CHARGE_BOOTS].UNLOCK_ADDRESS, 0))
+            self._write8(gadget_data[RAC3ITEM.CHARGE_BOOTS].UNLOCK_ADDRESS, 0)
 
         if (self.UnlockItem[RAC3ITEM.NANO_PAK]
             and RAC3LOCATION.CRASH_SITE_NANO_PAK not in self.checked_locations
             and self.planet == RAC3REGION.CRASH_SITE):
-            _operations.append((gadget_data[RAC3ITEM.NANO_PAK].UNLOCK_ADDRESS, 0))
+            self._write8(gadget_data[RAC3ITEM.NANO_PAK].UNLOCK_ADDRESS, 0)
 
         if ((self.UnlockItem[RAC3ITEM.BOLT_GRABBER] or self.UnlockItem[RAC3ITEM.BOX_BREAKER])
             and RAC3LOCATION.ZELDRIN_STARPORT_BOLT_GRABBER not in self.checked_locations
             and self.planet == RAC3REGION.ZELDRIN_STARPORT):
-            _operations.append((gadget_data[RAC3ITEM.BOLT_GRABBER].UNLOCK_ADDRESS, 0))
-            _operations.append((gadget_data[RAC3ITEM.BOX_BREAKER].UNLOCK_ADDRESS, 0))
+            self._write8(gadget_data[RAC3ITEM.BOLT_GRABBER].UNLOCK_ADDRESS, 0)
+            self._write8(gadget_data[RAC3ITEM.BOX_BREAKER].UNLOCK_ADDRESS, 0)
         if (self.UnlockItem[RAC3ITEM.PDA]
             and RAC3LOCATION.HIDEOUT_PDA not in self.checked_locations
             and self.planet == RAC3REGION.QWARKS_HIDEOUT):
-            _operations.append((gadget_data[RAC3ITEM.PDA].UNLOCK_ADDRESS, 0))
-
-        self._write8_batch(_operations)
+            self._write8(gadget_data[RAC3ITEM.PDA].UNLOCK_ADDRESS, 0)
 
     def planet_cycler(self):
         """Handles unlocking planets if their "infobot" has been collected"""
-        _operations = []
         for name in infobot_data.keys():
             planet = RAC3_REGION_DATA_TABLE[PLANET_FROM_INFOBOT[name]]
             if self.UnlockItem[name]:
                 addr = RAC3_SHIP_DATA_TABLE[SHIP_SLOTS[self.UnlockItem[name] - 1]].SLOT_ADDRESS
-                _operations.append((addr, planet.ID))
+                self._write8(addr, planet.ID)
         for number, slot in enumerate(SHIP_SLOTS):
             self.ship_slot_limit = self.UnlockItem[RAC3SHIPSLOT.SLOT_0]
             if number >= self.ship_slot_limit:
-                _operations.append((RAC3_SHIP_DATA_TABLE[slot].SLOT_ADDRESS, 0))
-
-        self._write8_batch(_operations)
+                self._write8(RAC3_SHIP_DATA_TABLE[slot].SLOT_ADDRESS, 0)
 
     def weapon_cycler(self):
         """Interval update function: Check unlock/lock status of weapons"""
-        _operations8 = []
-        _operations32 = []
         # If in vendor, lock all non-progressive weapons to allow second unlock address to work properly
         if (self.vendor_type == RAC3VENDORTYPE.WEAPON and not self.hovering_over_ammo()
             and not self.hovering_over_mega()):
@@ -1969,29 +1927,25 @@ class Rac3Interface(GameInterface):
             for name in non_prog_weapon_data.keys():
                 if name in weapons_to_remove:
                     unlock_addr = non_prog_weapon_data[name].UNLOCK_ADDRESS
-                    _operations8.append((unlock_addr, 0))
-            self._write8_batch(_operations8)
+                    self._write8(unlock_addr, 0)
             return
 
         for name in non_prog_weapon_data.keys():
             unlock_addr = non_prog_weapon_data[name].UNLOCK_ADDRESS
             ammo_addr = non_prog_weapon_data[name].AMMO_ADDRESS
             if self.UnlockItem[name]:
-                _operations8.append((unlock_addr, 1))
+                self._write8(unlock_addr, 1)
                 if name == RAC3ITEM.RY3N0:
                     _xp = self._read32(RAC3_ITEM_DATA_TABLE[name].XP_ADDRESS)
                     threshold_id = UPGRADE_DICT[name][self.ryno - 1]
                     threshold_xp = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[threshold_id]].XP_THRESHOLD
                     if _xp > threshold_xp:
-                        _operations32.append((RAC3_ITEM_DATA_TABLE[name].XP_ADDRESS, threshold_xp))
-                        _operations8.append((RAC3_ITEM_DATA_TABLE[name].LEVEL_ADDRESS, threshold_id))
+                        self._write32(RAC3_ITEM_DATA_TABLE[name].XP_ADDRESS, threshold_xp)
+                        self._write8(RAC3_ITEM_DATA_TABLE[name].LEVEL_ADDRESS, threshold_id)
             else:
                 # Prevent the player from using locked weapons and levelling them to accidentally break vendors
-                _operations8.append((unlock_addr, 0))
-                _operations32.append((ammo_addr, 0))
-
-        self._write8_batch(_operations8)
-        self._write32_batch(_operations32)
+                self._write8(unlock_addr, 0)
+                self._write32(ammo_addr, 0)
 
         if self.equipped_item > 1 and self.UnlockItem[ITEM_NAME_FROM_ID[self.equipped_item]] == 0:
             if self.last_used_1 == 0:
@@ -2015,31 +1969,26 @@ class Rac3Interface(GameInterface):
     def weapon_mod_cycler(self):
         """Cycle through all weapon mods and update their state"""
         if self.options.weapon_mods >= 1:
-            _operations = []
             for weapon_name, data in non_prog_weapon_data.items():
                 modpack = WEAPON_TO_WEAPON_MODPACK.get(weapon_name, "")
-                if self.UnlockItem[weapon_name]: 
-                    _operations.append((data.MOD_ADDRESS, self.UnlockItem.get(modpack, 0)))
-
-            self._write8_batch(_operations)
+                if self.UnlockItem[weapon_name]:
+                    self._write8(data.MOD_ADDRESS, self.UnlockItem.get(modpack, 0))
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):
         """Writes new values to the player's last used item history"""
-        _operations = []
+
         if equip is not None:
-            _operations.append((RAC3STATUS.EQUIPPED, equip))
+            self._write8(RAC3STATUS.EQUIPPED, equip)
         if last_0 is not None:
-            _operations.append((RAC3STATUS.LAST_USED_0, last_0))
+            self._write8(RAC3STATUS.LAST_USED_0, last_0)
         if last_1 is not None:
-            _operations.append((RAC3STATUS.LAST_USED_1, last_1))
+            self._write8(RAC3STATUS.LAST_USED_1, last_1)
         if last_2 is not None:
-            _operations.append((RAC3STATUS.LAST_USED_2, last_2))
-        self._write8_batch(_operations)
+            self._write8(RAC3STATUS.LAST_USED_2, last_2)
 
     def vidcomic_cycler(self):
         """Cycle through all vidcomics and update their state"""
-        _operations = []
         prog_comic = self.UnlockItem[RAC3ITEM.PROGRESSIVE_VIDCOMIC]
         for index, name in enumerate(vidcomic_data.keys()):
             comic = self.UnlockItem[name]
@@ -2053,13 +2002,11 @@ class Rac3Interface(GameInterface):
                 and self.is_location_checked(RAC3_LOCATION_DATA_TABLE[RAC3LOCATION.NATION_HEAT_STREET].AP_CODE)
                 and self.game_state_value != RAC3GAMESTATE.PAUSED
                 and comic == 0):
-                _operations.append((addr, 1))
+                self._write8(addr, 1)
                 continue
 
             value = 0 if index > prog_comic else 1
-            _operations.append((addr, value))
-
-        self._write8_batch(_operations)
+            self._write8(addr, value)
 
     def vidcomic_health_cycler(self):
         """Cycle through all vidcomic health upgrades and update their state"""
@@ -2164,8 +2111,6 @@ class Rac3Interface(GameInterface):
         hovering over ammo, in which case set to base level.
         - Handles both progressive and non-progressive weapon logic, including syncing XP and level addresses in memory.
         """
-        _operations8 = []
-        _operations32 = []
         progressive_weapon_mode = self.options.progressive_weapons
         if self.options.weapon_level_locations and progressive_weapon_mode == 2:
             progressive_weapon_mode = 1  # Force manual levelling if weapon level locations are enabled
@@ -2193,23 +2138,23 @@ class Rac3Interface(GameInterface):
                 if self.vendor_type == RAC3VENDORTYPE.WEAPON:
                     if self.read_weapon_vendor_slot_data(self.vendor_cursor_pos).item_id.value == RAC3_ITEM_DATA_TABLE[
                         weapon_name].ID and not self.hovering_over_ammo() and not self.hovering_over_mega():
-                        _operations8.append((weapon_data.LEVEL_ADDRESS, RAC3_ITEM_DATA_TABLE[weapon_name].ID))
+                        self._write8(weapon_data.LEVEL_ADDRESS, RAC3_ITEM_DATA_TABLE[weapon_name].ID)
                         self.last_hovered_weapon = weapon_name
                     else:
                         restore_level = self.weapon_levels.get(weapon_name, 1)
-                        _operations8.append((weapon_data.LEVEL_ADDRESS, UPGRADE_DICT[weapon_name][restore_level - 1]))
+                        self._write8(weapon_data.LEVEL_ADDRESS, UPGRADE_DICT[weapon_name][restore_level - 1])
                 else:
                     target_id = UPGRADE_DICT[weapon_name][target_level - 1]
                     target_xp = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[target_id]].XP_THRESHOLD
                     if current_level >= target_level:
-                        _operations32.append((weapon_data.XP_ADDRESS, target_xp))
-                        _operations8.append((weapon_data.LEVEL_ADDRESS, target_id))
+                        self._write32(weapon_data.XP_ADDRESS, target_xp)
+                        self._write8(weapon_data.LEVEL_ADDRESS, target_id)
             # restore last hovered weapon if we closed the vendor while it was hovering over it
             if (self.last_hovered_weapon != "" and self.vendor_type != RAC3VENDORTYPE.WEAPON
                 and self.game_state_value != RAC3GAMESTATE.WEAPON_UPGRADE):
                 restore_level = self.weapon_levels.get(self.last_hovered_weapon, 1)
-                _operations8.append((non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
-                                    UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1]))
+                self._write8(non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
+                             UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1])
                 self.last_hovered_weapon = ""
 
         # Automatic weapon levelling for progressive weapons
@@ -2235,8 +2180,8 @@ class Rac3Interface(GameInterface):
                 target_name = ITEM_NAME_FROM_ID[target_id]
                 target_xp = RAC3_ITEM_DATA_TABLE[target_name].XP_THRESHOLD
                 # logger.debug(f"{target_name}, id: {target_id}, xp:{target_xp}")
-                _operations32.append((non_prog_weapon_data[weapon_name].XP_ADDRESS, target_xp))
-                _operations8.append((non_prog_weapon_data[weapon_name].LEVEL_ADDRESS, target_id))
+                self._write32(non_prog_weapon_data[weapon_name].XP_ADDRESS, target_xp)
+                self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS, target_id)
                 self.weapon_levels[weapon_name] = target_level
         else:
             if self.delayed_weapon_levelups and self.game_state_value != RAC3GAMESTATE.WEAPON_UPGRADE:
@@ -2259,32 +2204,28 @@ class Rac3Interface(GameInterface):
                         weapon_name].ID and not self.hovering_over_ammo() and not self.hovering_over_mega():
 
                         # Temporarily set the vendor-focused weapon to its base/display id
-                        _operations8.append((non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
-                                     RAC3_ITEM_DATA_TABLE[weapon_name].ID))
+                        self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
+                                     RAC3_ITEM_DATA_TABLE[weapon_name].ID)
                         self.last_hovered_weapon = weapon_name
                     else:
                         restore_level = self.weapon_levels.get(weapon_name, 1)
                         if weapon_name == RAC3ITEM.RY3N0 and restore_level > self.ryno:
                             self.weapon_levels[weapon_name] = self.ryno
                             restore_level = self.ryno
-                        _operations8.append((non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
-                                     UPGRADE_DICT[weapon_name][restore_level - 1]))
+                        self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS,
+                                     UPGRADE_DICT[weapon_name][restore_level - 1])
             # restore last hovered weapon if we closed the vendor while it was hovering over it
             if (self.last_hovered_weapon != "" and self.vendor_type != RAC3VENDORTYPE.WEAPON
                 and self.game_state_value != RAC3GAMESTATE.WEAPON_UPGRADE):
                 restore_level = self.weapon_levels.get(self.last_hovered_weapon, 1)
                 if self.last_hovered_weapon == RAC3ITEM.RY3N0 and restore_level > self.ryno:
                     restore_level = self.ryno
-                _operations8.append((non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
-                             UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1]))
+                self._write8(non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
+                             UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1])
                 self.last_hovered_weapon = ""
-
-        self._write8_batch(_operations8)
-        self._write32_batch(_operations32)
 
     def verify_quick_select_and_last_used(self):
         """Check each slot in quick select and held item history, reset if that item has not been collected yet."""
-        _operations = []
         _slots = [RAC3STATUS.LAST_USED_0, RAC3STATUS.LAST_USED_1, RAC3STATUS.LAST_USED_2, RAC3STATUS.EQUIPPED]
         for slot in QUICK_SELECT_LIST:
             _slots.append(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS)
@@ -2294,8 +2235,7 @@ class Rac3Interface(GameInterface):
                 name = ITEM_NAME_FROM_ID[idx]
                 if not self.UnlockItem[name]:
                     # Not unlocked, but set
-                    _operations.append((addr, 0))
-        self._write8_batch(_operations)
+                    self._write8(addr, 0)
 
     def clank_cycler(self):
         """Checks the current state to see if clank needs to be disabled"""
@@ -2352,14 +2292,11 @@ class Rac3Interface(GameInterface):
 
     def cheat_cycler(self):
         """Handles unlocking cheats such as the lightsaber wrench cheat"""
-        _operations = []
         for name in cheat_data.keys():
             addr = cheat_data[name].UNLOCK_ADDRESS
-            _operations.append((addr, 1 if self.UnlockItem[name] else 0))
+            self._write8(addr, 1 if self.UnlockItem[name] else 0)
             if not self.UnlockItem[name] and name in item_to_status:
-                _operations.append((item_to_status[name], 0))
-
-        self._write8_batch(_operations)
+                self._write8(item_to_status[name], 0)
 
     def patch_cycler(self):
         """Apply runtime instruction patches based on current planet."""
@@ -2418,13 +2355,11 @@ class Rac3Interface(GameInterface):
     def process_delayed_things_cycler(self):
         """Process delayed things such as debt traps"""
         if not self.near_pda_vendor():
-            _operations = []
             for _ in range(self.delayed_debt_trap_count):
                 bolts = self._read32(RAC3STATUS.BOLTS)
                 new_bolts = bolts * 0.92
-                _operations.append((RAC3STATUS.BOLTS, int(new_bolts)))
+                self._write32(RAC3STATUS.BOLTS, int(new_bolts))
             self.delayed_debt_trap_count = 0
-            self._write32_batch(_operations)
         # Add any other things we need to delay and process here
 
     def health_cycler(self):
@@ -2720,11 +2655,9 @@ class Rac3Interface(GameInterface):
         if self.pda_vendor == 0:
             logger.error("PDA Vendor not found, cannot reset")
             return
-        _operations = []
-        _operations.append((self.pda_vendor + 0x7C, 1))  # Put PDA back in vendor
-        _operations.append((self.pda_vendor + 0x94, 0))  # Set bought flag to 0
-        _operations.append((self.pda_vendor + 0x20, 1))  # Reset interaction state
-        self._write8_batch(_operations)
+        self._write8(self.pda_vendor + 0x7C, 1)  # Put PDA back in vendor
+        self._write8(self.pda_vendor + 0x94, 0)  # Set bought flag to 0
+        self._write8(self.pda_vendor + 0x20, 1)  # Reset interaction state
 
     def enqueue_notification(self,
                              message_or_notification: str | RAC3NOTIFICATION,
@@ -2898,7 +2831,6 @@ class Rac3Interface(GameInterface):
                    box_theme: int = RAC3BOXTHEME.DEFAULT,
                    _time: int = 0x168) -> None:
         """Update the contents of the current pop-up message"""
-        _operations32 = []
         if _time < 0:
             _time = 0
         curr_addr = RAC3MESSAGEBOX.MESSAGE
@@ -2907,17 +2839,16 @@ class Rac3Interface(GameInterface):
             msg_bytes += line
             # self._write_bytes(curr_addr, line)
             # Write pointer to this line at pointer_addr + 4*idx
-            _operations32.append((RAC3MESSAGEBOX.TEXT_POINTER + 4 * idx, curr_addr))
+            self._write32(RAC3MESSAGEBOX.TEXT_POINTER + 4 * idx, curr_addr)
             # Move to next address after this string
             curr_addr += len(line)
-        _operations32.append((RAC3MESSAGEBOX.NUM_LINES, len(msg_list)))
+        self._write32(RAC3MESSAGEBOX.NUM_LINES, len(msg_list))
         width = longest_line_length
         self.write_messagebox_theme(box_theme)
 
-        _operations32.append((RAC3MESSAGEBOX.TIMER, _time))
-        _operations32.append((RAC3MESSAGEBOX.TEXT_POINTER, RAC3MESSAGEBOX.MESSAGE))
-        _operations32.append((RAC3MESSAGEBOX.BOX_WIDTH, width))
-        self._write32_batch(_operations32)
+        self._write32(RAC3MESSAGEBOX.TIMER, _time)
+        self._write32(RAC3MESSAGEBOX.TEXT_POINTER, RAC3MESSAGEBOX.MESSAGE)
+        self._write32(RAC3MESSAGEBOX.BOX_WIDTH, width)
         self._write_bytes(RAC3MESSAGEBOX.MESSAGE, msg_bytes)
         self._write_float(self._read32(RAC3MESSAGEBOX.VISIBLE_POINTER), 1.0)
 

@@ -156,7 +156,7 @@ class RaC3World(World):
             own_location_count)
         excluded_count = self.get_excluded_count()
         filler_count = own_location_count - item_count
-        if item_count > placement_location_count:
+        if item_count > placement_location_count and not self.using_ut:
             self.handle_not_enough_locations(item_count - placement_location_count)
 
         self.multiworld.itempool.extend(itempool)

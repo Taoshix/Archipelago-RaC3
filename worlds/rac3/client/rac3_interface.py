@@ -1844,7 +1844,7 @@ class Rac3Interface(GameInterface):
 
     def near_pda_vendor(self) -> bool:
         """Check if we are near the PDA Vendor"""
-        if self.planet == RAC3REGION.QWARKS_HIDEOUT and self.distance_to_moby(self.pda_vendor) < 15.0:
+        if self.planet == RAC3REGION.QWARKS_HIDEOUT and self.distance_to_moby_squared(self.pda_vendor) < 225.0:  # 15^2
             # In case the PDA vendor bugs out and doesn't play the cutscene
             if (self._read32(PLANET_LOAD_OFFSET[
                                  self.planet] + RAC3STATUS.PLANET_BOLT_DIFFERENCE_BASE) & 0x80000000  # ie is negative
@@ -1866,6 +1866,20 @@ class Rac3Interface(GameInterface):
                     (player_pos.Y - moby_pos.Y) ** 2 +
                     (player_pos.Z - moby_pos.Z) ** 2) ** 0.5
         return distance
+
+    def distance_to_moby_squared(self, moby: int) -> float:
+        """Calculate the squared distance from the player to the moby"""
+        if self.between_planets or not moby:
+            return float("inf")
+        player_pos = self.player_pos
+        moby_pos = RAC3POSITIONDATA(
+            self._read_float(moby + 0x10),
+            self._read_float(moby + 0x14),
+            self._read_float(moby + 0x18))
+        distance_squared = ((player_pos.X - moby_pos.X) ** 2 +
+                            (player_pos.Y - moby_pos.Y) ** 2 +
+                            (player_pos.Z - moby_pos.Z) ** 2)
+        return distance_squared
 
     @deprecated("Unused")
     def get_checked_locations_by_tag(self, tag: str) -> list[str]:
@@ -2644,10 +2658,8 @@ class Rac3Interface(GameInterface):
         # If Ratchet has the PDA but has not checked the PDA location, reset the vendor if close
         if (self.UnlockItem[RAC3ITEM.PDA] == 1 and
             not self.is_location_checked(RAC3_LOCATION_DATA_TABLE[RAC3LOCATION.HIDEOUT_PDA].AP_CODE)):
-            distance = self.distance_to_moby(self.pda_vendor)
-            logger.debug(f"Ratchet has PDA and PDA location unchecked, distance to PDA Vendor: {distance:.2f}")
-            if distance < 12.0:
-                logger.debug(f"Ratchet is close to PDA Vendor (Distance: {distance:.2f}), resetting vendor")
+            distance_squared = self.distance_to_moby_squared(self.pda_vendor)
+            if distance_squared < 144.0: # 12^2
                 self.reset_pda_vendor()
 
     def reset_pda_vendor(self):

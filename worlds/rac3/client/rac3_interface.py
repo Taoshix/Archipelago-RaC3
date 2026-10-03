@@ -301,6 +301,15 @@ class Rac3Interface(GameInterface):
 
         return _addr
 
+    def _staged_or_read8(self, address: int, cached_value: int | None = None) -> int:
+        """Check if a value is staged to be written, and return that value if so, otherwise read the value from memory"""
+        pending = self.write_batcher.get((self.address_convert(address), self.DataType.INT8))
+        if pending is not None:
+            return pending
+        if cached_value is not None:
+            return cached_value
+        return self._read8(address)
+
     ###############################
     # Called on Server Connection #
     ###############################
@@ -1107,17 +1116,21 @@ class Rac3Interface(GameInterface):
                 return False
         return True
 
+    # TODO: Make this more elegant in terms of how it checks for the next available quick select slot
     def update_equip(self, name: str):
         """Equip the most recently collected weapon/gadget, update recent uses"""
         if quick_selectable_data[name].ID:
             if name in equipable_data.keys():
-                self._write8(RAC3STATUS.LAST_USED_2, self.last_used_1)
-                self._write8(RAC3STATUS.LAST_USED_1, self.last_used_0)
+                last_used_0 = self._staged_or_read8(RAC3STATUS.LAST_USED_0, self.last_used_0)
+                last_used_1 = self._staged_or_read8(RAC3STATUS.LAST_USED_1, self.last_used_1)
+                self._write8(RAC3STATUS.LAST_USED_2, last_used_1)
+                self._write8(RAC3STATUS.LAST_USED_1, last_used_0)
                 self._write8(RAC3STATUS.LAST_USED_0, equipable_data[name].ID)
                 self._write8(RAC3STATUS.EQUIPPED, equipable_data[name].ID)
             for slot in QUICK_SELECT_LIST:
-                if not self._read8(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS):
-                    self._write8(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS, quick_selectable_data[name].ID)
+                slot_address = RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS
+                if not self._staged_or_read8(slot_address):
+                    self._write8(slot_address, quick_selectable_data[name].ID)
                     break
 
     ###################

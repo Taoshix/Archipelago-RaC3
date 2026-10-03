@@ -260,6 +260,7 @@ async def update(ctx: "Context") -> None:
     # Save to the server
     await handle_save(ctx)
     # logger.info(f"Update is called")
+    ctx.game_interface.batch_write()
 
 
 async def handle_codecave(ctx: "Context") -> None:

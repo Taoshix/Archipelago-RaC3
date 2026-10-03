@@ -84,7 +84,7 @@ class GameInterface:
     def batch_write(self):
         """Send all the stashed writes to pypine"""
         batch: list[tuple[Pine.DataSize, int, bytes]] = []
-        for address, operation, value in self.write_batcher.items():
+        for (address, operation), value in self.write_batcher.items():
             match operation:
                 case self.DataType.INT8:
                     batch.append((self.pypine.DataSize.INT8, address, value.to_bytes(1, "little")))
@@ -105,6 +105,7 @@ class GameInterface:
                     logger.warning(f"Unknown write operation: {self.DataType(operation)}, "
                                    f"with address+value: {address}, {value}")
         self.pypine.batch_write(batch)
+        self.write_batcher.clear()
 
     def connect_to_game(self):
         """Initializes the connection to PCSX2 and verifies it is connected to the right game"""

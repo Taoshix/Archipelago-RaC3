@@ -203,6 +203,7 @@ async def _handle_game_ready(ctx: "Context") -> None:
             logger.info("Adding Speedups...")
             ctx.game_interface.speedup_setup()
             logger.info("Game READY!")
+            ctx.game_interface.batch_write()
 
         if not ctx.main_menu:
             ctx.game_interface.cycle_reads_count = 0

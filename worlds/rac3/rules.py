@@ -271,23 +271,28 @@ def set_rules(world: "RaC3World"):
                           and state.has_all([RAC3ITEM.HACKER, RAC3ITEM.HYPERSHOT], world.player),
         RAC3TBOLT.PHOENIX_VID_COMIC_1: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
         RAC3LOCATION.PHOENIX_VID_COMIC_1_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
-        RAC3LOCATION.PHOENIX_VID_COMIC_1_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
+        RAC3LOCATION.PHOENIX_VID_COMIC_1_HEALTH_UPGRADE:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
         RAC3SKILLPOINT.PHOENIX_COMIC_1: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 1),
         RAC3TBOLT.PHOENIX_VID_COMIC_2: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
         RAC3LOCATION.PHOENIX_VID_COMIC_2_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
-        RAC3LOCATION.PHOENIX_VID_COMIC_2_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
+        RAC3LOCATION.PHOENIX_VID_COMIC_2_HEALTH_UPGRADE:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
         RAC3SKILLPOINT.PHOENIX_COMIC_2: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 2),
         RAC3TBOLT.PHOENIX_VID_COMIC_3: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 3),
         RAC3LOCATION.PHOENIX_VID_COMIC_3_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 3),
-        RAC3LOCATION.PHOENIX_VID_COMIC_3_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 3),
+        RAC3LOCATION.PHOENIX_VID_COMIC_3_HEALTH_UPGRADE:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 3),
         RAC3SKILLPOINT.PHOENIX_COMIC_3: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 3),
         RAC3TBOLT.PHOENIX_VID_COMIC_4: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 4),
         RAC3LOCATION.PHOENIX_VID_COMIC_4_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 4),
-        RAC3LOCATION.PHOENIX_VID_COMIC_4_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 4),
+        RAC3LOCATION.PHOENIX_VID_COMIC_4_HEALTH_UPGRADE:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 4),
         RAC3SKILLPOINT.PHOENIX_COMIC_4: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 4),
         RAC3TBOLT.PHOENIX_VID_COMIC_5: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 5),
         RAC3LOCATION.PHOENIX_VID_COMIC_5_CLEAR: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 5),
-        RAC3LOCATION.PHOENIX_VID_COMIC_5_HEALTH_UPGRADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 5),
+        RAC3LOCATION.PHOENIX_VID_COMIC_5_HEALTH_UPGRADE:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 5),
         RAC3SKILLPOINT.PHOENIX_COMIC_5: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 5),
         RAC3SKILLPOINT.PHOENIX_ARCADE: lambda state: state.has(RAC3ITEM.PROGRESSIVE_VIDCOMIC, world.player, 5),
         RAC3TROPHY.PHOENIX_TITANIUM_COLLECTOR:
@@ -681,8 +686,8 @@ def set_rules(world: "RaC3World"):
                                           RAC3ITEM.FLUX_RIFLE, RAC3ITEM.ANNIHILATOR,
                                           RAC3ITEM.RY3N0, RAC3ITEM.SUCK_CANNON,
                                           RAC3ITEM.DISC_BLADE, RAC3ITEM.PLASMA_COIL], world.player)
-                           or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 2 
-                                        if progressive_requirement == 1 else progressive_requirement)
+                           or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player,
+                                        2 if progressive_requirement == 1 else progressive_requirement)
                            or state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, progressive_requirement)
                            or state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, progressive_requirement)
                            or state.has(RAC3ITEM.PROGRESSIVE_RY3N0, world.player, progressive_requirement)

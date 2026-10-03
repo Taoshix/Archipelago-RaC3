@@ -42,6 +42,7 @@ from worlds.rac3.options.vidcomic_health_options import VidComicHealthUpgrades
 from worlds.rac3.options.vidcomics_options import VidComics
 from worlds.rac3.options.vr_challenges_options import VRChallenges
 from worlds.rac3.options.weapon_level_options import WeaponLevels
+from worlds.rac3.options.weapon_mods_options import WeaponMods
 from worlds.rac3.options.weapon_vendors_options import WeaponVendors
 
 
@@ -62,6 +63,7 @@ class RaC3Options(PerGameCommonOptions):
     starting_weapons: StartingWeapons
     bolt_and_xp_multiplier: BoltAndXPMultiplier
     progressive_weapons: ProgressiveWeapons
+    weapon_mods: WeaponMods
     armor_upgrade: ArmorUpgrade
     filler_weight: FillerWeight
     traps_enabled: EnableTraps
@@ -117,6 +119,7 @@ rac3_option_groups = [
         StartingWeapons,
         NGPlusItems,
         ProgressiveWeapons,
+        WeaponMods,
         ArmorUpgrade,
         BonusVidComicHealthUpgrades,
         ClankOptions,
@@ -165,6 +168,7 @@ slot_data_options: list[str] = [
     RAC3OPTION.STARTING_WEAPONS,
     RAC3OPTION.BOLT_AND_XP_MULTIPLIER,
     RAC3OPTION.PROGRESSIVE_WEAPONS,
+    RAC3OPTION.WEAPON_MODS,
     RAC3OPTION.NGPLUS_ITEMS,
     RAC3OPTION.NGPLUS_START,
     RAC3OPTION.ARMOR_UPGRADE,

@@ -104,6 +104,7 @@ class GameInterface:
                 case _:
                     logger.warning(f"Unknown write operation: {self.DataType(operation)}, "
                                    f"with address+value: {address}, {value}")
+        self.cycle_batch_writes_count += len(batch)
         self.pypine.batch_write(batch)
         self.write_batcher.clear()
 

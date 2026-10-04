@@ -162,6 +162,7 @@ async def _handle_game_ready(ctx: "Context") -> None:
             await ctx.send_msgs([ClientMessage.status_update(ClientStatus.CLIENT_PLAYING)])
             logger.info("Starting game...")
             ctx.game_interface.reset_file()
+            ctx.game_interface.batch_write()
             logger.info("Old state removed!")
             logger.info("Checking for items...")
             logger.debug(f"Data Package: {ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, 'Empty')}")

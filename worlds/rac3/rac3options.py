@@ -103,7 +103,7 @@ class RaC3Options(PerGameCommonOptions):
 
 
 rac3_option_groups = [
-    OptionGroup("Generic Options", [
+    OptionGroup("Game Options", [
         ProgressionBalancing,
         Accessibility,
         DeathLink,

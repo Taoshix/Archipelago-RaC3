@@ -30,12 +30,39 @@ class GameInterface:
     cycle_batch_reads_count: int = 0
     cycle_batch_writes_count: int = 0
     cycle_times: list[float] = []
-    cycle_cache: dict[int, int] = {}
     pypine: Pine = Pine()
     write_batcher: dict[tuple[int, DataType], Any] = {}
 
     def __init__(self) -> None:
         pass
+
+    @staticmethod
+    def bits_to_value(bits: set[int]) -> int:
+        """Converts a set of bits into its integer value representation
+
+        :param bits: Set object, members of this set indicate which ordered bits are flipped, first bit is order ``0``
+        :return: Integer value
+        """
+        value: int = 0
+        for bit in bits:
+            if 0 <= bit <= 7:
+                value += 1 << bit
+            else:
+                raise ValueError(f"Invalid bit position {bit}")
+        return value
+
+    @staticmethod
+    def value_to_bits(value: int) -> set[int]:
+        """Decomposes an integer value into its bit representation, returned as a set object.
+
+        :param value: Integer value
+        :return: Set object, members of this set indicate which ordered bits are flipped, first bit is order ``0``
+        """
+        bits: set[int] = set()
+        for i in range(8):
+            if value & (1 << i):
+                bits.add(i)
+        return bits
 
     def _read8(self, address: int) -> int:
         self.cycle_reads_count += 1
@@ -72,14 +99,6 @@ class GameInterface:
     def _read_string(self, address: int, n: int) -> str:
         self.cycle_batch_reads_count += 1
         return self.pypine.read_string(address, n)
-
-    def _read_bits(self, address: int) -> set[int]:
-        bits: set[int] = set()
-        value = self._read8(address)
-        for i in range(8):
-            if value & (1 << i):
-                bits.add(i)
-        return bits
 
     def batch_write(self):
         """Send all the stashed writes to pypine"""

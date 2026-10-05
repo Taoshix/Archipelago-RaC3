@@ -12,7 +12,7 @@ from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.items import (create_item, create_itempool, get_filler_selection, process_start_inventory,
                                starting_planets, starting_weapons)
-from worlds.rac3.locations import get_level_locations, get_location_names, get_total_locations, location_groups
+from worlds.rac3.locations import get_region_locations, get_location_names, get_total_locations, location_groups
 from worlds.rac3.rac3options import RaC3Options
 from worlds.rac3.regions import create_regions, get_nanotech_locations, get_regions
 from worlds.rac3.rules import set_rules
@@ -45,7 +45,7 @@ class RaC3World(World):
     tracker_world: ClassVar = tracker_world
 
     for region in get_regions():
-        location_name_groups[region] = get_level_locations(region)
+        location_name_groups[region] = get_region_locations(region)
 
     options_dataclass = RaC3Options
     web = RaC3Web()

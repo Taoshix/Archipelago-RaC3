@@ -217,25 +217,25 @@ class Rac3Interface(GameInterface):
     #####################
 
     def _read8(self, address: int) -> int:
-        address = self.address_convert(address)
-        pending = self.write_batcher.get((address, self.DataType.INT8))
+        _address = self.address_convert(address)
+        pending: int | None = self.write_batcher.get((_address, self.DataType.INT8))
         if pending is not None:
             return pending
-        return super()._read8(address)
+        return super()._read8(_address)
 
     def _read16(self, address: int) -> int:
-        address = self.address_convert(address)
-        pending = self.write_batcher.get((address, self.DataType.INT16))
+        _address = self.address_convert(address)
+        pending: int | None = self.write_batcher.get((_address, self.DataType.INT16))
         if pending is not None:
             return pending
-        return super()._read16(address)
+        return super()._read16(_address)
 
     def _read32(self, address: int) -> int:
-        address = self.address_convert(address)
-        pending = self.write_batcher.get((address, self.DataType.INT32))
+        _address = self.address_convert(address)
+        pending: int | None = self.write_batcher.get((_address, self.DataType.INT32))
         if pending is not None:
             return pending
-        return super()._read32(address)
+        return super()._read32(_address)
 
     def _read8_batch(self, addresses: list[int]) -> list[int]:
         return super()._read8_batch([self.address_convert(address) for address in addresses])

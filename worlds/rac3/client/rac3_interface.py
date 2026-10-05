@@ -1148,8 +1148,15 @@ class Rac3Interface(GameInterface):
         loc_data: RAC3LOCATIONDATA = RAC3_LOCATION_DATA_TABLE[location]
         if not loc_data:
             return False
-        if self.weapon_demo:
+        if self.weapon_demo:  # Prevent sending weapon purchases by testing a weapon in VR
             return RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS
+        if (self.options.weapon_level_locations and
+            self.options.progressive_weapons and
+            RAC3TAG.WEAPONS in loc_data.TAGS):
+            weapon_id = loc_data.CHECK_ADDRESS[0].VALUE
+            weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[weapon_id]].LEVEL
+            weapon_name = [name for name, ids in UPGRADE_DICT.items() if ids == weapon_id][0]
+            return weapon_level <= self.weapon_levels[weapon_name]  # Prevent weapon over-levelling from sending
         # TODO: Implement a distance based checktype
         if location == RAC3LOCATION.OBANI_GEMINI_SKIDD and self.planet == RAC3REGION.OBANI_GEMINI:
             current_pos = self.player_pos

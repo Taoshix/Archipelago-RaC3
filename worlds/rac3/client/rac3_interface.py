@@ -16,7 +16,7 @@ from worlds.rac3.client.texthelper import (ITEM_TO_ORIGINAL_STRING_POINTER_OFFSE
 from worlds.rac3.constants.action_type import ACTION_TYPE_NAMES, RAC3ACTIONTYPE
 from worlds.rac3.constants.check_type import CHECKTYPE
 from worlds.rac3.constants.cutscene_flag import RAC3CUTSCENEFLAG
-from worlds.rac3.constants.data.address import RAC3ADDRESSDATA, SAVE_DATA
+from worlds.rac3.constants.data.address import SAVE_DATA
 from worlds.rac3.constants.data.item import (armor_data, cheat_data, equipable_data, gadget_data, infobot_data,
                                              ITEM_FROM_AP_CODE, ITEM_NAME_FROM_ID, item_to_status, non_prog_weapon_data,
                                              PROG_TO_NAME_DICT, quick_selectable_data, RAC3_ITEM_DATA_TABLE,
@@ -273,31 +273,30 @@ class Rac3Interface(GameInterface):
     def _write_string(self, address: int, value: str):
         return self.write_batcher.update({(self.address_convert(address), self.DataType.STRING): value})
 
-    def _write_bits(self, address: int, value: set[int]):
-        bits = self._read_bits(address)
-        if value.issubset(bits):
+    def _read_bits(self, address: int) -> set[int]:
+        value = self._read8(address)
+        bits = self.value_to_bits(value)
+        return bits
+
+    def _write_bits(self, data: tuple[int, set[int] | int]):
+        address, value = data
+        _value: set[int] = {value} if isinstance(value, int) else value
+        bits: set[int] = self._read_bits(address)
+        if _value.issubset(bits):
             return
-        bits |= value
-        write: int = 0
-        for bit in bits:
-            if 0 <= bit <= 7:
-                write += 1 << bit
-            else:
-                raise ValueError(f"Invalid bit position {bit}")
+        bits |= _value
+        write = self.bits_to_value(bits)
         self._write8(address, write)
         return
 
-    def _unwrite_bits(self, address: int, value: set[int]):
-        bits = self._read_bits(address)
-        if value.isdisjoint(bits):
+    def _unwrite_bits(self, data: tuple[int, set[int] | int]):
+        address, value = data
+        _value: set[int] = {value} if isinstance(value, int) else value
+        bits: set[int] = self._read_bits(address)
+        if _value.isdisjoint(bits):
             return
-        bits -= value
-        write: int = 0
-        for bit in bits:
-            if 0 <= bit <= 7:
-                write += 1 << bit
-            else:
-                raise ValueError(f"Invalid bit position {bit}")
+        bits -= _value
+        write = self.bits_to_value(bits)
         self._write8(address, write)
         return
 
@@ -433,8 +432,8 @@ class Rac3Interface(GameInterface):
             for check in location.CHECK_ADDRESS:
                 if check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT:
                     checks.setdefault(check.ADDRESS, set()).add(check.VALUE)
-        for address, value in checks.items():
-            self._unwrite_bits(address, value)
+        for bits in checks.items():
+            self._unwrite_bits(bits)
 
     def important_items(self, item: int, us: str, location: int):
         """Runs when loading into game from the main menu to update the player with important items from the server,
@@ -483,8 +482,8 @@ class Rac3Interface(GameInterface):
             for check in loc_data.CHECK_ADDRESS:
                 if check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT:
                     checks.setdefault(check.ADDRESS, set()).add(check.VALUE)
-        for address, value in checks.items():
-            self._write_bits(address, value)
+        for bits in checks.items():
+            self._write_bits(bits)
         return output
 
     def load_save(self, save: dict[int, tuple[int, int]]):
@@ -560,11 +559,10 @@ class Rac3Interface(GameInterface):
             self._write8(RAC3_REGION_DATA_TABLE[RAC3REGION.HOLOSTAR_STUDIOS_CLANK].VISIT_ADDRESS, 1)
         if self.options.speedups.get(RAC3SPEEDUPS.BOLT_CRANK, False):
             for check in BOLT_CRANK_TO_REGION.keys():
-                self._write_bits(check[0], {check[1]})
+                self._write_bits(check)
 
         if self.options.speedups.get(RAC3SPEEDUPS.MISSIONS, False):
-            self._write_bits(RAC3PROGRESSFLAG.ARIDIA_5TH_MISSION_COMPLETE[0],
-                             {RAC3PROGRESSFLAG.ARIDIA_5TH_MISSION_COMPLETE[1]})  # Aridia final mission access
+            self._write_bits(RAC3PROGRESSFLAG.ARIDIA_5TH_MISSION_COMPLETE)  # Aridia final mission access
             for loc, addr in MISSION_COUNTS.items():
                 if RAC3_LOCATION_DATA_TABLE[loc].REGION not in [RAC3REGION.STARSHIP_PHOENIX,
                                                                 RAC3REGION.ANNIHILATION_NATION]:
@@ -1188,48 +1186,23 @@ class Rac3Interface(GameInterface):
             return False
         check_all: bool = True
         for check in loc_data.CHECK_ADDRESS:
+            value_to_check = 0
             match check.TYPE & CHECKTYPE.SIZE:
+                case CHECKTYPE.SKIP:
+                    continue
                 case CHECKTYPE.BIT:
                     check_all &= check.VALUE in self._read_bits(check.ADDRESS)
+                    continue
                 case CHECKTYPE.BYTE:
-                    value_to_check = self.cycle_cache.get(check.ADDRESS, None)
-                    if value_to_check is None:
-                        value_to_check = self._read8(check.ADDRESS)
-                        self.cycle_cache[check.ADDRESS] = value_to_check
-                    check_all &= self.compare(value_to_check, check)
+                    value_to_check = self._read8(check.ADDRESS)
                 case CHECKTYPE.SHORT:
-                    value_to_check = self.cycle_cache.get(check.ADDRESS, None)
-                    if value_to_check is None:
-                        value_to_check = self._read16(check.ADDRESS)
-                        self.cycle_cache[check.ADDRESS] = value_to_check
-                    check_all &= self.compare(value_to_check, check)
+                    value_to_check = self._read16(check.ADDRESS)
                 case CHECKTYPE.INT:
-                    value_to_check = self.cycle_cache.get(check.ADDRESS, None)
-                    if value_to_check is None:
-                        value_to_check = self._read32(check.ADDRESS)
-                        self.cycle_cache[check.ADDRESS] = value_to_check
-                    check_all &= self.compare(value_to_check, check)
+                    value_to_check = self._read32(check.ADDRESS)
+            check_all &= check.check_condition(value_to_check)
         if check_all:
             self.checked_locations.add(location)
         return check_all
-
-    @staticmethod
-    def compare(value: int, check: RAC3ADDRESSDATA) -> bool:
-        """Compares a value using the checktype provided in data"""
-        match check.TYPE & CHECKTYPE.SIGN:
-            case CHECKTYPE.EQ:
-                return value == check.VALUE
-            case CHECKTYPE.NEQ:
-                return value != check.VALUE
-            case CHECKTYPE.GT:
-                return value > check.VALUE
-            case CHECKTYPE.LT:
-                return value < check.VALUE
-            case CHECKTYPE.GE:
-                return value >= check.VALUE
-            case CHECKTYPE.LE:
-                return value <= check.VALUE
-        return False
 
     #############
     # Deathlink #
@@ -2058,7 +2031,7 @@ class Rac3Interface(GameInterface):
             bits.add(0x6)
         if bonus_health_upgrades >= 3:
             bits.add(0x7)
-        self._write_bits(RAC3STATUS.VIDCOMIC_HEALTH_UPGRADES, bits)
+        self._write_bits((RAC3STATUS.VIDCOMIC_HEALTH_UPGRADES, bits))
 
     def armor_cycler(self):
         """Cycle through all armors and update their state"""
@@ -2463,34 +2436,34 @@ class Rac3Interface(GameInterface):
                         # if self.tyhrra_dropship < 1 and self.short_pause:
                         #     self.tyhrra_dropship += 1
                         #     # logger.debug("Set Tyhrranosis Dropship")
-                        #     self._write_bits(data.FLAG_ADDRESSES[0][0], {data.FLAG_ADDRESSES[0][1]})
+                        #     self._write_bits(data.FLAG_ADDRESSES[0])
                         # elif self.tyhrra_dropship == 1 and self.short_pause:
                         #     self.tyhrra_dropship += 1
                         #     # logger.debug("UnSet Tyhrranosis Dropship")
-                        #     self._unwrite_bits(data.FLAG_ADDRESSES[0][0], {data.FLAG_ADDRESSES[0][1]})
+                        #     self._unwrite_bits(data.FLAG_ADDRESSES[0])
                         # continue
                     if name == RAC3SHORTCUTS.METROPOLIS_DROPSHIP and data.FLAG_ADDRESSES is not None:
                         # logger.debug(f"Pause state: {self.pause_state_value}, latch state: {self.metro_dropship}")
                         if self.metro_dropship < 1 and self.short_pause:
                             self.metro_dropship += 1
-                            self._write_bits(data.FLAG_ADDRESSES[0][0], {data.FLAG_ADDRESSES[0][1]})
+                            self._write_bits(data.FLAG_ADDRESSES[0])
                             # logger.debug("Set Metro Dropship")
                         elif self.metro_dropship == 1 and self.short_pause:
                             self.metro_dropship += 1
-                            self._unwrite_bits(data.FLAG_ADDRESSES[0][0], {data.FLAG_ADDRESSES[0][1]})
+                            self._unwrite_bits(data.FLAG_ADDRESSES[0])
                             # logger.debug("UnSet Metro Dropship")
                         continue
                     # Todo: check for the player opening the final door
                     if name == RAC3SHORTCUTS.HOLOSTAR_TELEPORTER and data.FLAG_ADDRESSES is not None:
                         if self.holo_teleport == 0 and self.short_pause:
                             self.holo_teleport += 1
-                            self._write_bits(data.FLAG_ADDRESSES[0][0], {data.FLAG_ADDRESSES[0][1]})
+                            self._write_bits(data.FLAG_ADDRESSES[0])
                             logger.debug("Set Holostar Teleporter")
                         elif self.holo_teleport == 1 and self.holo_door > 1 and 278.0 < self._read_float(
                             RESPAWN_COORDS_OFFSET[self.planet] + RAC3STATUS.RESPAWN_BASE + 4) < 279:
                             logger.debug("Trigger Holostar Cutscene")
                             self.holo_teleport += 1
-                            self._unwrite_bits(data.FLAG_ADDRESSES[0][0], {data.FLAG_ADDRESSES[0][1]})
+                            self._unwrite_bits(data.FLAG_ADDRESSES[0])
                             self.force_respawn()
                         continue
                     # all other shortcuts
@@ -2499,8 +2472,8 @@ class Rac3Interface(GameInterface):
                         _write: dict[int, set[int]] = {}
                         for check in data.FLAG_ADDRESSES:
                             _write.setdefault(check[0], set()).add(check[1])
-                        for address, flag in _write.items():
-                            self._write_bits(address, flag)
+                        for bits in _write.items():
+                            self._write_bits(bits)
                     if data.VISIT_ADDRESSES is not None and not self.visited_planets.issuperset(data.VISIT_ADDRESSES):
                         for address in data.VISIT_ADDRESSES:
                             self._write8(RAC3_REGION_DATA_TABLE[address].VISIT_ADDRESS, 1)
@@ -2525,7 +2498,7 @@ class Rac3Interface(GameInterface):
                         self.tyhrra_intro = 1
                         self.force_respawn()
 
-                    self._write_bits(check[0], {check[1]})
+                    self._write_bits(check)
         # if self.options.speedups.get(RAC3SPEEDUPS.MISSIONS, False):
         #     for check, region in RANGER_TO_REGION.items():
         #         if self.planet in region:
@@ -2561,8 +2534,8 @@ class Rac3Interface(GameInterface):
             if bit in checks.get(address, []):
                 continue
             checks.setdefault(address, set()).add(bit)
-        for address, check in checks.items():
-            self._write_bits(address, check)
+        for bits in checks.items():
+            self._write_bits(bits)
 
         # Open doors if all are resolved
         if (self.planet in PLANETS_WITH_HACKER_PUZZLES
@@ -2594,8 +2567,8 @@ class Rac3Interface(GameInterface):
         if already:
             self.__setattr__(check, True)
         else:
-            for address, bits in checks.items():
-                self._write_bits(address, bits)
+            for bits in checks.items():
+                self._write_bits(bits)
 
     def find_moby_by_id_traversal(self, target_id: int) -> int:
         """Traverse the moby linked list on the current planet to find a moby with the given ID and return its
@@ -2682,7 +2655,7 @@ class Rac3Interface(GameInterface):
         if (self.UnlockItem[RAC3ITEM.PDA] == 1 and
             not self.is_location_checked(RAC3_LOCATION_DATA_TABLE[RAC3LOCATION.HIDEOUT_PDA].AP_CODE)):
             distance_squared = self.distance_to_moby_squared(self.pda_vendor)
-            if distance_squared < 144.0: # 12^2
+            if distance_squared < 144.0:  # 12^2
                 self.reset_pda_vendor()
 
     def reset_pda_vendor(self):

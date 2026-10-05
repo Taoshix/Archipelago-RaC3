@@ -217,13 +217,25 @@ class Rac3Interface(GameInterface):
     #####################
 
     def _read8(self, address: int) -> int:
-        return super()._read8(self.address_convert(address))
+        address = self.address_convert(address)
+        pending = self.write_batcher.get((address, self.DataType.INT8))
+        if pending is not None:
+            return pending
+        return super()._read8(address)
 
     def _read16(self, address: int) -> int:
-        return super()._read16(self.address_convert(address))
+        address = self.address_convert(address)
+        pending = self.write_batcher.get((address, self.DataType.INT16))
+        if pending is not None:
+            return pending
+        return super()._read16(address)
 
     def _read32(self, address: int) -> int:
-        return super()._read32(self.address_convert(address))
+        address = self.address_convert(address)
+        pending = self.write_batcher.get((address, self.DataType.INT32))
+        if pending is not None:
+            return pending
+        return super()._read32(address)
 
     def _read8_batch(self, addresses: list[int]) -> list[int]:
         return super()._read8_batch([self.address_convert(address) for address in addresses])
@@ -300,33 +312,6 @@ class Rac3Interface(GameInterface):
             _addr = jp_convert_address(_addr, self.planet)
 
         return _addr
-
-    def _staged_or_read8(self, address: int, cached_value: int | None = None) -> int:
-        """Check for a staged 8-bit write before reading the value from memory."""
-        pending = self.write_batcher.get((self.address_convert(address), self.DataType.INT8))
-        if pending is not None:
-            return pending
-        if cached_value is not None:
-            return cached_value
-        return self._read8(address)
-
-    def _staged_or_read16(self, address: int, cached_value: int | None = None) -> int:
-        """Check for a staged 16-bit write before reading the value from memory."""
-        pending = self.write_batcher.get((self.address_convert(address), self.DataType.INT16))
-        if pending is not None:
-            return pending
-        if cached_value is not None:
-            return cached_value
-        return self._read16(address)
-
-    def _staged_or_read32(self, address: int, cached_value: int | None = None) -> int:
-        """Check for a staged 32-bit write before reading the value from memory."""
-        pending = self.write_batcher.get((self.address_convert(address), self.DataType.INT32))
-        if pending is not None:
-            return pending
-        if cached_value is not None:
-            return cached_value
-        return self._read32(address)
 
     ###############################
     # Called on Server Connection #
@@ -953,18 +938,18 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
             case RAC3ITEM.BOLTS:
-                bolt = self._staged_or_read32(RAC3STATUS.BOLTS)
+                bolt = self._read32(RAC3STATUS.BOLTS)
                 bolt_pack = min(200000, max(30000, int(bolt * 0.2)))
                 new_bolts = bolt + bolt_pack
                 if new_bolts > 0x7FFFFFFF:
                     new_bolts = 0x7FFFFFFF
                 self._write32(RAC3STATUS.BOLTS, new_bolts)
-                bolt_packs = self._staged_or_read32(RAC3STATUS.BOLT_PACKS)
+                bolt_packs = self._read32(RAC3STATUS.BOLT_PACKS)
                 if bolt_packs < 0x7FFFFFFF:
                     bolt_packs += 1
                 self._write32(RAC3STATUS.BOLT_PACKS, bolt_packs)
             case RAC3ITEM.INFERNO_MODE:
-                timer = self._staged_or_read32(RAC3STATUS.INFERNO_TIMER)
+                timer = self._read32(RAC3STATUS.INFERNO_TIMER)
                 new_timer = timer + 1000 + randint(1, 100)
                 if new_timer > 0x7FFFFFFF:
                     new_timer = 0x7FFFFFFF
@@ -980,19 +965,19 @@ class Rac3Interface(GameInterface):
                         key = name + str(_time)
                     self.timers[key] = _time
                     self.bolt_and_xp_multiplier_value += 1
-                jackpot_packs = self._staged_or_read32(RAC3STATUS.JACKPOT_PACKS)
+                jackpot_packs = self._read32(RAC3STATUS.JACKPOT_PACKS)
                 if jackpot_packs < 0x7FFFFFFF:
                     jackpot_packs += 1
                 self._write32(RAC3STATUS.JACKPOT_PACKS, jackpot_packs)
             case RAC3ITEM.NANOTECH_XP:
                 if not self.nanotech_exp:
-                    self.nanotech_exp = self._staged_or_read32(RAC3STATUS.NANOTECH_EXP)
+                    self.nanotech_exp = self._read32(RAC3STATUS.NANOTECH_EXP)
                 nanotech_gain = min(200000, max(20000, int(self.nanotech_exp * 0.15)))
                 self.nanotech_exp += nanotech_gain
                 if self.nanotech_exp > 0x7FFFFFFF:
                     self.nanotech_exp = 0x7FFFFFFF
                 self._write32(RAC3STATUS.NANOTECH_EXP, self.nanotech_exp)
-                nanotech_exp_packs = self._staged_or_read32(RAC3STATUS.NANOTECH_EXP_PACKS)
+                nanotech_exp_packs = self._read32(RAC3STATUS.NANOTECH_EXP_PACKS)
                 if nanotech_exp_packs < 0x7FFFFFFF:
                     nanotech_exp_packs += 1
                 self._write32(RAC3STATUS.NANOTECH_EXP_PACKS, nanotech_exp_packs)
@@ -1004,7 +989,7 @@ class Rac3Interface(GameInterface):
                         self.delayed_weapon_levelups.append(selected_weapon)
                     else:
                         self.weapon_level_up(selected_weapon)
-                weapon_level_packs = self._staged_or_read32(RAC3STATUS.WEAPON_LEVEL_PACKS)
+                weapon_level_packs = self._read32(RAC3STATUS.WEAPON_LEVEL_PACKS)
                 if weapon_level_packs < 0x7FFFFFFF:
                     weapon_level_packs += 1
                 self._write32(RAC3STATUS.WEAPON_LEVEL_PACKS, weapon_level_packs)
@@ -1062,7 +1047,7 @@ class Rac3Interface(GameInterface):
                 # Losing bolts near pda vendor triggers failsafe for the pda vendor location,
                 # so we need to delay the debt trap until the player is away from the pda vendor
                 if not self.near_pda_vendor():
-                    bolts = self._staged_or_read32(RAC3STATUS.BOLTS)
+                    bolts = self._read32(RAC3STATUS.BOLTS)
                     new_bolts = bolts * 0.92
                     self._write32(RAC3STATUS.BOLTS, int(new_bolts))
                 else:
@@ -1081,7 +1066,7 @@ class Rac3Interface(GameInterface):
         for weapon_name, weapon_data in non_prog_weapon_data.items():
             if self.UnlockItem[weapon_name]:
                 level = max(
-                    RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self._staged_or_read8(weapon_data.LEVEL_ADDRESS)]].LEVEL,
+                    RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self._read8(weapon_data.LEVEL_ADDRESS)]].LEVEL,
                     self.weapon_levels.get(weapon_name, 1))
                 if level == 5:
                     continue  # people should buy NG+ mega variant instead of getting them for free
@@ -1097,7 +1082,7 @@ class Rac3Interface(GameInterface):
     def weapon_level_up(self, weapon_name: str):
         """Level up a weapon from xp reward"""
         weapon_data = non_prog_weapon_data[weapon_name]
-        current_id = self._staged_or_read8(weapon_data.LEVEL_ADDRESS)
+        current_id = self._read8(weapon_data.LEVEL_ADDRESS)
         current_name = ITEM_NAME_FROM_ID[current_id]
         current_level = max(RAC3_ITEM_DATA_TABLE[current_name].LEVEL, self.weapon_levels.get(weapon_name, 1))
         max_level = 8 if self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0 else 5
@@ -1139,15 +1124,15 @@ class Rac3Interface(GameInterface):
         """Equip the most recently collected weapon/gadget, update recent uses"""
         if quick_selectable_data[name].ID:
             if name in equipable_data.keys():
-                last_used_0 = self._staged_or_read8(RAC3STATUS.LAST_USED_0, self.last_used_0)
-                last_used_1 = self._staged_or_read8(RAC3STATUS.LAST_USED_1, self.last_used_1)
+                last_used_0 = self._read8(RAC3STATUS.LAST_USED_0)
+                last_used_1 = self._read8(RAC3STATUS.LAST_USED_1)
                 self._write8(RAC3STATUS.LAST_USED_2, last_used_1)
                 self._write8(RAC3STATUS.LAST_USED_1, last_used_0)
                 self._write8(RAC3STATUS.LAST_USED_0, equipable_data[name].ID)
                 self._write8(RAC3STATUS.EQUIPPED, equipable_data[name].ID)
             for slot in QUICK_SELECT_LIST:
                 slot_address = RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS
-                if not self._staged_or_read8(slot_address):
+                if not self._read8(slot_address):
                     self._write8(slot_address, quick_selectable_data[name].ID)
                     break
 

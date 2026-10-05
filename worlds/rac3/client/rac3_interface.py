@@ -1081,7 +1081,7 @@ class Rac3Interface(GameInterface):
         for weapon_name, weapon_data in non_prog_weapon_data.items():
             if self.UnlockItem[weapon_name]:
                 level = max(
-                    RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self._read8(weapon_data.LEVEL_ADDRESS)]].LEVEL,
+                    RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self._staged_or_read8(weapon_data.LEVEL_ADDRESS)]].LEVEL,
                     self.weapon_levels.get(weapon_name, 1))
                 if level == 5:
                     continue  # people should buy NG+ mega variant instead of getting them for free
@@ -1097,7 +1097,7 @@ class Rac3Interface(GameInterface):
     def weapon_level_up(self, weapon_name: str):
         """Level up a weapon from xp reward"""
         weapon_data = non_prog_weapon_data[weapon_name]
-        current_id = self._read8(weapon_data.LEVEL_ADDRESS)
+        current_id = self._staged_or_read8(weapon_data.LEVEL_ADDRESS)
         current_name = ITEM_NAME_FROM_ID[current_id]
         current_level = max(RAC3_ITEM_DATA_TABLE[current_name].LEVEL, self.weapon_levels.get(weapon_name, 1))
         max_level = 8 if self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0 else 5

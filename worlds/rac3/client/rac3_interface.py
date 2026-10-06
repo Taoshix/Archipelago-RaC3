@@ -369,7 +369,7 @@ class Rac3Interface(GameInterface):
     def init(self):
         """Initialise values once the game and server are both connected"""
         # Unlock state variables/ArmorUpgrade variable
-        self.UnlockItem = {name: 0 for name in ITEM_FROM_AP_CODE.values()}
+        self.UnlockItem = dict.fromkeys(ITEM_FROM_AP_CODE.values(), 0)
         if self.UnlockItem is not None:
             self.UnlockItem.update({RAC3SHIPSLOT.SLOT_0: 0})
             logger.debug(f"UnlockItem dict:{self.UnlockItem.keys()}")
@@ -461,8 +461,8 @@ class Rac3Interface(GameInterface):
                 logger.debug(f"Processing {diff} offline filler items for {item}")
                 for _ in range(diff):
                     self.item_received(RAC3_ITEM_DATA_TABLE[item].AP_CODE, None, None, 0)
-                notification_message += (f'Received {RAC3TEXTFORMATSTRING.GREEN}{diff}x {RAC3TEXTFORMATSTRING.WHITE}'
-                                         f'{item} {RAC3TEXTFORMATSTRING.NORMAL}while offline\n')
+                notification_message += (f"Received {RAC3TEXTFORMATSTRING.GREEN}{diff}x {RAC3TEXTFORMATSTRING.WHITE}"
+                                         f"{item} {RAC3TEXTFORMATSTRING.NORMAL}while offline\n")
             else:
                 logger.debug(f"No new offline filler items for {item} (stored: {stored_count}, current: {count})")
         self.stored_fillers = self.initial_fillers.copy()
@@ -1153,7 +1153,7 @@ class Rac3Interface(GameInterface):
             RAC3TAG.WEAPONS in loc_data.TAGS):
             weapon_id = loc_data.CHECK_ADDRESS[0].VALUE
             weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[weapon_id]].LEVEL
-            weapon_name = [name for name, ids in UPGRADE_DICT.items() if ids == weapon_id][0]
+            weapon_name = next(name for name, ids in UPGRADE_DICT.items() if ids == weapon_id)
             return weapon_level <= self.weapon_levels[weapon_name]  # Prevent weapon over-levelling from sending
         # TODO: Implement a distance based checktype
         if location == RAC3LOCATION.OBANI_GEMINI_SKIDD and self.planet == RAC3REGION.OBANI_GEMINI:

@@ -117,7 +117,7 @@ class GameInterface:
                 case self.DataType.FLOAT:
                     batch.append((self.pypine.DataSize.INT32, address, pack("<f", value)))
                 case self.DataType.STRING:
-                    data = value.encode("ascii") + b'\x00'
+                    data = value.encode("ascii") + b"\x00"
                     batch.extend([(size, chunk, data[chunk - address:chunk - address + size]) for size, chunk in
                                   self.pypine._chunks(address, len(data))])
                 case _:
@@ -219,7 +219,7 @@ class GameInterface:
                     self.current_game = "None"
                     other_ratchet_game = GAME_ID_TO_OTHER_RATCHET.get(game_id)
                     if other_ratchet_game is not None:
-                        logger.warning(f"Connected to {other_ratchet_game} instead of Ratchet and Clank 3!\n" +
+                        logger.warning(f"Connected to {other_ratchet_game} instead of Ratchet and Clank 3!\n"
                                        "This client is for Ratchet and Clank 3 only, please load the correct Ratchet "
                                        "game to play.")
                     else:

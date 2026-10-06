@@ -208,7 +208,7 @@ class CommandProcessor(ClientCommandProcessor):
                 self.output("Please type a number after the command")
                 return
             if int(args[0]) not in range(1, 6):
-                self.output(f"Please type a valid number")
+                self.output("Please type a valid number")
                 return
             self.ctx.game_interface.ryno = int(args[0])
             self.output(f"RY3NO max upgrade set to Lv{args[0]}")
@@ -261,7 +261,7 @@ class CommandProcessor(ClientCommandProcessor):
             return
         if isinstance(self.ctx, Rac3Context):
             if not self.is_development_build():
-                self.default(f'Development command \"/load_level {" ".join(str(x) for x in args)}\" was used in a '
+                self.default(f'Development command "/load_level {" ".join(str(x) for x in args)}" was used in a '
                              f'non-development build.')
             if not args:
                 self.output("No level specified. Provide an integer ID or region name.")
@@ -296,7 +296,7 @@ class CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, Rac3Context):
             if not self.is_development_build():
                 # let everyone know that a development command was used in a release build.
-                self.default(f'Development command \"/traversal {" ".join(str(x) for x in args)}\" was used in a '
+                self.default(f'Development command "/traversal {" ".join(str(x) for x in args)}" was used in a '
                              f'non-development build.')
 
             # convert the hex input to an int and then do traversal with that as the target id
@@ -321,7 +321,7 @@ class CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, Rac3Context):
             if not self.is_development_build():
                 # let everyone know that a development command was used in a release build.
-                self.default(f'Development command \"/iteration {" ".join(str(x) for x in args)}\" was used in a '
+                self.default(f'Development command "/iteration {" ".join(str(x) for x in args)}" was used in a '
                              f'non-development build.')
 
             # convert the hex input to an int and then do iteration with that as the target id
@@ -345,7 +345,7 @@ class CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, Rac3Context):
             if not self.is_development_build():
                 # let everyone know that a development command was used in a release build.
-                self.default(f'Development command \"/translate_address {" ".join(str(x) for x in args)}\" was used in '
+                self.default(f'Development command "/translate_address {" ".join(str(x) for x in args)}" was used in '
                              f'a non-development build.')
 
             try:
@@ -359,7 +359,7 @@ class CommandProcessor(ClientCommandProcessor):
                         f"Offset: {hex(translated_address - input_address)}")
 
     def _cmd_update_speed(self, *args: str) -> None:
-        """Update the refresh speed of the client"""
+        """Update the refresh speed of the client using the provided number of updates per second"""
         if not self.verify(1):
             return
         if isinstance(self.ctx, Rac3Context):
@@ -367,7 +367,7 @@ class CommandProcessor(ClientCommandProcessor):
                 self.output("Please type a number after the command")
                 return
             if int(args[0]) not in range(1, 61):
-                self.output(f"Please type a valid number between 1 and 60")
+                self.output("Please type a valid number between 1 and 60")
                 return
             self.ctx.fps = 1 / float(args[0])
             self.output(f"Client update set to every {self.ctx.fps}s")
@@ -462,7 +462,7 @@ class Rac3Context(CommonContext):
             async_start(self.send_msgs([{"cmd": "GetDataPackage", "games": [RAC3OPTION.GAME_TITLE_FULL]}]))
             self.data_received = False
             async_start(self.send_msgs([ClientMessage.get_save(self.uuid)]))
-            logger.debug(f"Requested Save Data on Connection")
+            logger.debug("Requested Save Data on Connection")
             # Set death link tag if it was requested in options
             if RAC3OPTION.DEATHLINK in self.slot_data:
                 if self.slot_data[RAC3OPTION.DEATHLINK]:
@@ -485,7 +485,7 @@ class Rac3Context(CommonContext):
             logger.debug(f"{cmd} server packet: {args}")
             if args["keys"]:
                 if f"{self.uuid}_save_data" in args["keys"]:
-                    logger.debug(f"Save Data received")
+                    logger.debug("Save Data received")
                     self.data_received = True
                     if args["keys"][f"{self.uuid}_save_data"]:
                         logger.debug(f"Valid Save data from Server {args['keys'][f'{self.uuid}_save_data']}")
@@ -499,7 +499,7 @@ class Rac3Context(CommonContext):
             logger.debug(f"{cmd} server packet: {args}")
             if args["key"]:
                 if f"{self.uuid}_save_data" == args["key"]:
-                    logger.debug(f"Save Data received by the server")
+                    logger.debug("Save Data received by the server")
                     self.data_received = True
 
         if cmd == "PrintJSON":

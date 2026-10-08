@@ -147,28 +147,30 @@ class RaC3World(World):
         return starting_weapons(self), starting_planets(self)
 
     def create_items(self):
-        itempool = create_itempool(self)
+        """Create the items used in the world"""
+        exclusion_filler = [self.create_filler() for _ in range(self.get_excluded_count())]
+        self.multiworld.itempool.extend(exclusion_filler)
+
         own_location_count = len(self.multiworld.get_unfilled_locations(self.player))
-        total_location_count = len(self.multiworld.get_unfilled_locations())
-        existing_item_count = len(self.multiworld.itempool)
-        item_count = len(itempool)
-        placement_location_count = total_location_count - existing_item_count if self.multiworld.players > 1 else (
-            own_location_count)
-        excluded_count = self.get_excluded_count()
+        itempool = create_itempool(self)
+        item_count = len(itempool + exclusion_filler)
         filler_count = own_location_count - item_count
-        if item_count > placement_location_count and not self.using_ut:
-            self.handle_not_enough_locations(item_count - placement_location_count)
+        # rac3_logger.info(f"\nPlayer: {self.player_name}\n"
+        #                  f"Own location count: {own_location_count}\n"
+        #                  f"Item count: {item_count}\n")
 
-        self.multiworld.itempool.extend(itempool)
-
-        if excluded_count > filler_count and (self.multiworld.players == 1 and not self.using_ut):
-            self.handle_not_enough_locations(excluded_count - filler_count)
-
-        if filler_count >= 0:
+        if filler_count < 0 and not self.using_ut:
+            self.handle_not_enough_locations(-filler_count)
+            self.random.shuffle(itempool)
+            # rac3_logger.info(f"Placing {-filler_count} starting items")
+            for item in range(-filler_count):
+                # rac3_logger.info(f"Starting with: {itempool[0].name}")
+                self.push_precollected(itempool.pop(0))
+        else:
             filler = [self.create_filler() for _ in range(filler_count)]
             self.multiworld.itempool.extend(filler)
-        elif self.multiworld.players == 1 and not self.using_ut:
-            self.handle_not_enough_locations(-filler_count)
+
+        self.multiworld.itempool.extend(itempool)
 
     def get_excluded_count(self) -> int:
         """Get the number of unique excluded locations for this player"""
@@ -181,8 +183,10 @@ class RaC3World(World):
                 excluded_locations.add(option)
         return len(excluded_locations)
 
-    def handle_not_enough_locations(self, count):
+    def handle_not_enough_locations(self, count: int):
         """Check the available location and items counts, raise OptionErrors to warn the player of too few locations"""
+        if self.options.generation_behavior.value:
+            return
         excluded_count = self.get_excluded_count()
         option_list: list[str] = []
         if self.options.skill_points.value == 0:

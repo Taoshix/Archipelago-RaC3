@@ -9,6 +9,7 @@ class RAC3OPTION:
     VERSION = "Version"
     VERSION_NUMBER = "PLSGIVEVERSIONNUMBER-dev"  # This is automatically updated by the GitHub Actions workflow
     START_INVENTORY_FROM_POOL = "Start Inventory From Pool"
+    GENERATION_BEHAVIOR = "Generation Behavior"
     STARTING_WEAPONS = "Starting Weapons"
     BOLT_AND_XP_MULTIPLIER = "Bolt and XP Multiplier"
     PROGRESSIVE_WEAPONS = "Progressive Weapons"

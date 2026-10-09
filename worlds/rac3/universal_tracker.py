@@ -18,6 +18,7 @@ def setup_options_from_slot_data(world: "RaC3World") -> None:
             world.using_ut = True
             world.passthrough = world.multiworld.re_gen_passthrough[world.game]
             world.options.start_inventory_from_pool.value = world.passthrough[RAC3OPTION.START_INVENTORY_FROM_POOL]
+            world.options.generation_behavior.value = world.passthrough[RAC3OPTION.GENERATION_BEHAVIOR]
             world.options.starting_weapons.value = world.passthrough[RAC3OPTION.STARTING_WEAPONS]
             world.options.bolt_and_xp_multiplier.value = world.passthrough[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
             world.options.progressive_weapons.value = world.passthrough[RAC3OPTION.PROGRESSIVE_WEAPONS]

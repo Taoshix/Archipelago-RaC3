@@ -195,7 +195,7 @@ def starting_weapons(world: "RaC3World") -> None:
             if name not in world.options.start_inventory_from_pool.value:
                 weapon_list.append(name)
     world.random.shuffle(weapon_list)
-    world.starting_weapons = weapon_list[:2]
+    world.starting_weapon_list = weapon_list[:2]
 
 
 def starting_planets(world: "RaC3World") -> None:
@@ -228,7 +228,7 @@ def starting_planets(world: "RaC3World") -> None:
                     planet_list = [planet_list[1], RAC3ITEM.STARSHIP_PHOENIX]  # [Other, Phoenix]
             else:
                 planet_list = planet_list[:2]  # [Other, Other]
-    world.starting_planets = planet_list
+    world.starting_planet_list = planet_list
 
 
 # TODO: Rework this function during logic overhaul

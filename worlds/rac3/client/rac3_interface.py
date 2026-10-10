@@ -91,6 +91,7 @@ class Rac3Interface(GameInterface):
         titanium_bolts: int
         nanotech_milestones: int
         exclude_locations: set[str]
+        generation_behavior: int
         deathlink: int
         ship_nose: int
         ship_wings: int
@@ -331,6 +332,7 @@ class Rac3Interface(GameInterface):
         self.options.nanotech_milestones = slot_data[RAC3OPTION.NANOTECH_MILESTONES]
         self.options.exclude_locations = slot_data[RAC3OPTION.EXCLUDE]
         self.options.deathlink = slot_data[RAC3OPTION.DEATHLINK]
+        self.options.generation_behavior = slot_data[RAC3OPTION.GENERATION_BEHAVIOR]
         self.options.ship_nose = slot_data[RAC3OPTION.SHIP_NOSE]
         self.options.ship_wings = slot_data[RAC3OPTION.SHIP_WINGS]
         self.options.ship_skin = slot_data[RAC3OPTION.SHIP_SKIN]

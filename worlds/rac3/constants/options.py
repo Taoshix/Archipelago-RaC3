@@ -7,8 +7,9 @@ class RAC3OPTION:
     GAME_TITLE = "Rac3"
     GAME_TITLE_FULL = "Ratchet and Clank 3"
     VERSION = "Version"
-    VERSION_NUMBER = "PLSGIVEVERSIONNUMBER-dev"  # This is automatically updated by the GitHub actions workflow
+    VERSION_NUMBER = "PLSGIVEVERSIONNUMBER-dev"  # This is automatically updated by the GitHub Actions workflow
     START_INVENTORY_FROM_POOL = "Start Inventory From Pool"
+    GENERATION_BEHAVIOR = "Generation Behavior"
     STARTING_WEAPONS = "Starting Weapons"
     BOLT_AND_XP_MULTIPLIER = "Bolt and XP Multiplier"
     PROGRESSIVE_WEAPONS = "Progressive Weapons"
@@ -51,3 +52,4 @@ class RAC3OPTION:
     VENDOR_ACCESS = "Vendor Access"
     BONUS_VIDCOMIC_HEALTH = "Bonus VidComic Health Upgrades"
     VIDCOMIC_HEALTH_UPGRADES = "VidComic Health Upgrade Locations"
+    WEAPON_MODS = "Weapon Mods"

@@ -2900,7 +2900,7 @@ _LOCATION_NAME_TO_ADDRESS: dict[str, set[tuple[int, CHECKTYPE, int]]] = {
     RAC3LOCATION.PHOENIX_ASSAULT: {(0x001D553E, CHECKTYPE.BIT, 0), (RAC3STATUS.PLANET, CHECKTYPE.BYTE_EQ, 6)},
     RAC3LOCATION.PHOENIX_GRAND_PRIZE: {(0x0014276F, CHECKTYPE.BIT, 0), (RAC3STATUS.PLANET, CHECKTYPE.BYTE_EQ, 3)},
     RAC3LOCATION.PHOENIX_STAR_MAP: {(0x00142CC1, CHECKTYPE.BIT, 0), (RAC3STATUS.PLANET, CHECKTYPE.BYTE_EQ, 3)},
-    RAC3LOCATION.PHOENIX_MASTER_PLAN: {(0x001D5553, CHECKTYPE.BIT, 0), (RAC3STATUS.PLANET, CHECKTYPE.BYTE_EQ, 3)},
+    RAC3LOCATION.PHOENIX_MASTER_PLAN: {(0x00142CC2, CHECKTYPE.BIT, 0), (RAC3STATUS.PLANET, CHECKTYPE.BYTE_EQ, 3)},
     RAC3LOCATION.PHOENIX_VR_WARM_UP: {(0x00142766, CHECKTYPE.BIT, 0)},
     RAC3LOCATION.PHOENIX_VR_D_L_D: {(0x00142767, CHECKTYPE.BIT, 0)},
     RAC3LOCATION.PHOENIX_VR_SPEED_ROUND: {(0x00142768, CHECKTYPE.BIT, 0)},
@@ -3554,17 +3554,24 @@ UT_MAPPING: dict[str, int] = {}
 @dataclass
 class RAC3LOCATIONDATA:
     """Data class for each location"""
-    ID: int = 0
-    REGION: str = RAC3REGION.GALAXY
-    CHECK_ADDRESS: list[RAC3ADDRESSDATA] = None
-    AP_CODE: int = None
-    TAGS: set[str] = None
+    ID: int
+    REGION: str
+    CHECK_ADDRESS: list[RAC3ADDRESSDATA]
+    AP_CODE: int
+    TAGS: set[str]
 
     def __init__(self,
-                 idx: int,
+                 idx: int = 0,
                  region: str = RAC3REGION.GALAXY,
                  check: list[RAC3ADDRESSDATA] | None = None,
                  tags: set[str] | None = None):
+        """
+        :param idx: ID
+        :param region: Planet
+        :param check: Memory Address Data
+        :param tags: Category of location
+        :rtype: RAC3LOCATIONDATA
+        """
         self.ID = idx
         self.REGION = region
         self.CHECK_ADDRESS = check if check else []
@@ -3573,7 +3580,10 @@ class RAC3LOCATIONDATA:
 
     @staticmethod
     def construct(location_name: str):
-        """Construct the given location data for the location data table"""
+        """Construct the given location data for the location data table
+        :param location_name:
+        :rtype: RAC3LOCATIONDATA
+        """
         planet_name: str = _LOCATION_NAME_TO_REGION[location_name]
         planet_id: int = RAC3_REGION_DATA_TABLE[planet_name].ID
         loc_id: int = _LOCATION_NAME_TO_ID[location_name]

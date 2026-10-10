@@ -11,6 +11,7 @@ from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealt
 from worlds.rac3.options.clank_options import ClankOptions
 from worlds.rac3.options.exclude_options import RAC3ExcludeLocations
 from worlds.rac3.options.filler_weight_options import FillerWeight
+from worlds.rac3.options.generation_behavior_options import GenerationBehavior
 from worlds.rac3.options.helpdesk_options import HelpDesk
 from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
@@ -42,6 +43,7 @@ from worlds.rac3.options.vidcomic_health_options import VidComicHealthUpgrades
 from worlds.rac3.options.vidcomics_options import VidComics
 from worlds.rac3.options.vr_challenges_options import VRChallenges
 from worlds.rac3.options.weapon_level_options import WeaponLevels
+from worlds.rac3.options.weapon_mods_options import WeaponMods
 from worlds.rac3.options.weapon_vendors_options import WeaponVendors
 
 
@@ -59,9 +61,11 @@ class RaC3Options(PerGameCommonOptions):
     """YAML Options for RAC3"""
     deathlink: DeathLink
     start_inventory_from_pool: StartInventoryPool
+    generation_behavior: GenerationBehavior
     starting_weapons: StartingWeapons
     bolt_and_xp_multiplier: BoltAndXPMultiplier
     progressive_weapons: ProgressiveWeapons
+    weapon_mods: WeaponMods
     armor_upgrade: ArmorUpgrade
     filler_weight: FillerWeight
     traps_enabled: EnableTraps
@@ -101,10 +105,11 @@ class RaC3Options(PerGameCommonOptions):
 
 
 rac3_option_groups = [
-    OptionGroup("Generic Options", [
+    OptionGroup("Game Options", [
         ProgressionBalancing,
         Accessibility,
         DeathLink,
+        GenerationBehavior,
     ]),
     OptionGroup("RAC3 Game Options", [
         Shortcuts,
@@ -117,6 +122,7 @@ rac3_option_groups = [
         StartingWeapons,
         NGPlusItems,
         ProgressiveWeapons,
+        WeaponMods,
         ArmorUpgrade,
         BonusVidComicHealthUpgrades,
         ClankOptions,
@@ -162,9 +168,11 @@ rac3_option_groups = [
 slot_data_options: list[str] = [
     RAC3OPTION.DEATHLINK,
     RAC3OPTION.START_INVENTORY_FROM_POOL,
+    RAC3OPTION.GENERATION_BEHAVIOR,
     RAC3OPTION.STARTING_WEAPONS,
     RAC3OPTION.BOLT_AND_XP_MULTIPLIER,
     RAC3OPTION.PROGRESSIVE_WEAPONS,
+    RAC3OPTION.WEAPON_MODS,
     RAC3OPTION.NGPLUS_ITEMS,
     RAC3OPTION.NGPLUS_START,
     RAC3OPTION.ARMOR_UPGRADE,
@@ -200,5 +208,5 @@ slot_data_options: list[str] = [
     RAC3OPTION.WEAPON_LEVEL_LOCATIONS,
     RAC3OPTION.VENDOR_ACCESS,
     RAC3OPTION.BONUS_VIDCOMIC_HEALTH,
-    RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES
+    RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES,
 ]

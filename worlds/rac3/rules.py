@@ -1,7 +1,7 @@
 """This module contains the logic implementation for RAC3"""
+import math
 from collections.abc import Callable
 from logging import DEBUG, getLogger
-import math
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionState

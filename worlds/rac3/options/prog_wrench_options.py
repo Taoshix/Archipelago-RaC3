@@ -6,7 +6,7 @@ from worlds.rac3.constants.options import RAC3OPTION
 
 class ProgressiveWrench(Choice):
     """
-    Determines if Progresive OmniWrench items are included in the item pool.
+    Determines if Progressive OmniWrench items are included in the item pool.
     ------------------------------------------------------------------------------------
     Disable for the vanilla OmniWrench behaviour.
     Enable for OmniWrench upgrades to be included in the item pool.
@@ -17,4 +17,3 @@ class ProgressiveWrench(Choice):
     option_disabled = 0
     option_enabled = 1
     default = 0
-

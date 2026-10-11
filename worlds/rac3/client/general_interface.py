@@ -1,6 +1,6 @@
 """This module provides an interface for connecting to a pcsx2 game"""
 from enum import Enum
-from struct import unpack, pack
+from struct import pack, unpack
 from typing import Any
 
 from CommonClient import logger

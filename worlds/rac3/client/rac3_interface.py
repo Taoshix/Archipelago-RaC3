@@ -73,7 +73,6 @@ from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEA
 from worlds.rac3.constants.wrench import RAC3WRENCH
 
 
-
 class Rac3Interface(GameInterface):
     """Handles reading and modifying the game memory"""
 
@@ -961,7 +960,7 @@ class Rac3Interface(GameInterface):
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
             case RAC3ITEM.CHARGE_BOOTS:
                 self._write8(RAC3STATUS.EQUIP_BOOTS, 0x1D)
-            #case RAC3ITEM.PROGRESSIVE_WRENCH:
+            # case RAC3ITEM.PROGRESSIVE_WRENCH:
             #    pass
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
@@ -2009,10 +2008,18 @@ class Rac3Interface(GameInterface):
         if self.options.progressive_wrench:
             prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
             if self.planet != RAC3REGION.MENU and self.between_planets is False:
-                wrench_instruction = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.BASE_ITEM_ID_OFFSET
-                wrench_upgrade = RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) + RAC3WRENCH.UPGRADE_ID_OFFSET
-                wrench_equip = RAC3WRENCH.get_equip_wrench_address(self.planet, self.current_game) + RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET
-                wrench_swing = RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) + RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET
+                wrench_instruction = (
+                    RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
+                    RAC3WRENCH.BASE_ITEM_ID_OFFSET)
+                wrench_upgrade = (
+                    RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
+                    RAC3WRENCH.UPGRADE_ID_OFFSET)
+                wrench_equip = (
+                    RAC3WRENCH.get_equip_wrench_address(self.planet, self.current_game) +
+                    RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET)
+                wrench_swing = (
+                    RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) +
+                    RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET)
                 target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
                 if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
                     self._read32(wrench_instruction) == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE):
@@ -2132,7 +2139,7 @@ class Rac3Interface(GameInterface):
                     case RAC3ITEM.JACKPOT:
                         self.bolt_and_xp_multiplier_value -= 1
                         # Clean up the jackpot status if the multiplier is now 0
-                        # Allows x1 mult yaml option to also have jackpot working
+                        # Allows x1 mult YAML option to also have jackpot working
                         if self.bolt_and_xp_multiplier_value != 0:
                             continue
                     case _:

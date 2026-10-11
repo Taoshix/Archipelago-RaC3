@@ -73,19 +73,19 @@ class RAC3FUNCTION:
     @staticmethod
     def get_check_floor_address(planet: str, game_id: str = '') -> int:
         """Provides the address that effectively allows or disallows the CURRENT_FLOOR to be overwritten"""
-        ADDRESS_OFFSET = 0x30C
+        address_offset = 0x30C
         match game_id:
             case RAC3VERSION.US_ID:
-                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_NTSC + CHECK_FLOOR_OFFSET_NTSC[planet] + ADDRESS_OFFSET
+                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_NTSC + CHECK_FLOOR_OFFSET_NTSC[planet] + address_offset
                 return addr
             case RAC3VERSION.EU_ID:
-                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_PAL + CHECK_FLOOR_OFFSET_PAL[planet] + ADDRESS_OFFSET
+                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_PAL + CHECK_FLOOR_OFFSET_PAL[planet] + address_offset
                 return addr
             # case RAC3VERSION.JP_ID:
             # addr = RAC3FUNCTION.CHECK_FLOOR_BASE_JP + CHECK_FLOOR_OFFSET_JP[planet]
             # return addr
             case _:
-                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_NTSC + CHECK_FLOOR_OFFSET_NTSC[planet] + ADDRESS_OFFSET
+                addr = RAC3FUNCTION.CHECK_FLOOR_BASE_NTSC + CHECK_FLOOR_OFFSET_NTSC[planet] + address_offset
                 return addr
 
     @staticmethod

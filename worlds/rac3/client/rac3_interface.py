@@ -2089,6 +2089,10 @@ class Rac3Interface(GameInterface):
                         self._write8(RAC3STATUS.WEAPON_LOCK, 0)
                     case RAC3ITEM.JACKPOT:
                         self.bolt_and_xp_multiplier_value -= 1
+                        # Clean up the jackpot status if the multiplier is now 0
+                        # Allows x1 mult yaml option to also have jackpot working
+                        if self.bolt_and_xp_multiplier_value == 0:
+                            self._write8(RAC3STATUS.JACKPOT, 0)
                     case RAC3ITEM.MIRROR_TRAP:
                         self._write8(RAC3STATUS.MIRROR_UNIVERSE, 0)
                     case RAC3ITEM.BLACK_SCREEN_TRAP:
@@ -2275,7 +2279,7 @@ class Rac3Interface(GameInterface):
 
     def multiplier_cycler(self):
         """Update the Bolt+EXP multiplier based on settings"""
-        if self.options.bolt_and_xp_multiplier:
+        if self.bolt_and_xp_multiplier_value:
             self._write32(RAC3STATUS.JACKPOT_TIMER, 0x7FFFFFFF)
             self._write8(RAC3STATUS.JACKPOT, self.bolt_and_xp_multiplier_value)
 

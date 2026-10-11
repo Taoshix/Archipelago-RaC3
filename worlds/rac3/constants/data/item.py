@@ -215,31 +215,31 @@ class RAC3ITEMDATA:
 
     @staticmethod
     def construct_vidcomic(idx: int,
-                           tag: list[str] | None = None):
+                           tags: list[str] | None = None):
         """Make a progressive vidcomic item.
         :param idx: Item ID.
-        :param tag: Category of item
+        :param tags: Category of item
         :rtype: RAC3ITEMDATA
         """
         # Progressive order: 1, 2, 3, 4, 5
         # Memory order:      1, 4, 2, 3, 5
         progressive_to_memory: list[int] = [0, 2, 3, 1, 4]
         address: int = progressive_to_memory[idx - 0xFB] + RAC3STATUS.VIDCOMIC
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.VIDCOMIC]
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.VIDCOMIC]
         else:
-            tags: list[str] = [RAC3ITEMTAG.VIDCOMIC]
-        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.progression, tags=tags)
-    
+            all_tags: list[str] = [RAC3ITEMTAG.VIDCOMIC]
+        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.progression, tags=all_tags)
+
     @staticmethod
     def construct_wrench(idx: int,
-                           tag: list[str] | None = None):
-        """Construct a progressive OmniWrench item"""
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.PROG_WRENCH]
+                         tags: list[str] | None = None):
+        """Make OmniWrench items"""
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.PROG_WRENCH]
         else:
-            tags: list[str] = [RAC3ITEMTAG.PROG_WRENCH]
-        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=tags)
+            all_tags: list[str] = [RAC3ITEMTAG.PROG_WRENCH]
+        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=all_tags)
 
     @staticmethod
     def construct_trap(idx: int,
@@ -271,81 +271,81 @@ class RAC3ITEMDATA:
 
     @staticmethod
     def construct_clank(idx: int,
-                        tag: list[str] | None = None):
+                        tags: list[str] | None = None):
         """Make a clank pack item.
         :param idx: Item ID.
-        :param tag: Category of item
+        :param tags: Category of item
         :rtype: RAC3ITEMDATA
         """
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.CLANK]
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.CLANK]
         else:
-            tags: list[str] = [RAC3ITEMTAG.CLANK]
-        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=tags)
+            all_tags: list[str] = [RAC3ITEMTAG.CLANK]
+        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=all_tags)
 
     @staticmethod
     def construct_cheat(idx: int,
                         address: int = 0,
-                        tag: list[str] | None = None):
+                        tags: list[str] | None = None):
         """Make a cheat menu item.
         :param idx: Item ID.
         :param address: Main unlock address.
-        :param tag: Category of item
+        :param tags: Category of item
         :rtype: RAC3ITEMDATA
         """
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.CHEAT]
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.CHEAT]
         else:
-            tags: list[str] = [RAC3ITEMTAG.CHEAT]
-        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
+            all_tags: list[str] = [RAC3ITEMTAG.CHEAT]
+        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=all_tags)
 
     @staticmethod
     def construct_vidcomic_health(idx: int,
                                   address: int = 0,
-                                  tag: list[str] | None = None):
+                                  tags: list[str] | None = None):
         """Make a vidcomic health upgrade item.
         :param idx: Item ID.
         :param address: Main unlock address.
-        :param tag: Category of item
+        :param tags: Category of item
         :rtype: RAC3ITEMDATA
         """
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE]
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE]
         else:
-            tags: list[str] = [RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE]
-        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
+            all_tags: list[str] = [RAC3ITEMTAG.VIDCOMIC_HEALTH_UPGRADE]
+        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=all_tags)
 
     @staticmethod
     def construct_weapon_mod(idx: int,
                              address: int = 0,
-                             tag: list[str] | None = None):
+                             tags: list[str] | None = None):
         """Make a weapon mod item.
         :param idx: Item ID.
         :param address: Main unlock address.
-        :param tag: Category of item
+        :param tags: Category of item
         :rtype: RAC3ITEMDATA
         """
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.WEAPON_MOD]
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.WEAPON_MOD]
         else:
-            tags: list[str] = [RAC3ITEMTAG.WEAPON_MOD]
-        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
+            all_tags: list[str] = [RAC3ITEMTAG.WEAPON_MOD]
+        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=all_tags)
 
     @staticmethod
     def construct_weapon_modpack(idx: int,
                                  address: int = 0,
-                                 tag: list[str] | None = None):
+                                 tags: list[str] | None = None):
         """Make a weapon modpack item.
         :param idx: Item ID.
         :param address: Main unlock address.
-        :param tag: Category of item
+        :param tags: Category of item
         :rtype: RAC3ITEMDATA
         """
-        if tag:
-            tags: list[str] = [*tag, RAC3ITEMTAG.WEAPON_MODPACK]
+        if tags:
+            all_tags: list[str] = [*tags, RAC3ITEMTAG.WEAPON_MODPACK]
         else:
-            tags: list[str] = [RAC3ITEMTAG.WEAPON_MODPACK]
-        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=tags)
+            all_tags: list[str] = [RAC3ITEMTAG.WEAPON_MODPACK]
+        return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=all_tags)
 
 
 RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
@@ -358,7 +358,7 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.COMMANDO_SUIT: RAC3ITEMDATA.construct_unused(0x06),  # Unused
     RAC3ITEM.BOLT_GRABBER: RAC3ITEMDATA.construct_gadget(0x07, ItemClassification.useful),
     RAC3ITEM.LEVITATOR: RAC3ITEMDATA.construct_unused(0x08),  # Unused
-    RAC3ITEM.WRENCH: RAC3ITEMDATA.construct_wrench(0x09, tags=[RAC3ITEMTAG.EQUIPABLE]),
+    RAC3ITEM.WRENCH: RAC3ITEMDATA.construct_wrench(0x09, [RAC3ITEMTAG.EQUIPABLE]),
     RAC3ITEM.BOMB_GLOVE: RAC3ITEMDATA.construct_unused(0x0A, 40,
                                                        [RAC3ITEMTAG.EQUIPABLE, RAC3ITEMTAG.QUICK_SELECTABLE]),  # Unused
     RAC3ITEM.HYPERSHOT: RAC3ITEMDATA.construct_gadget(0x0B, ItemClassification.progression,

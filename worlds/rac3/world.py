@@ -184,7 +184,7 @@ class RaC3World(World):
         #                  f"Own location count: {own_location_count}\n"
         #                  f"Item count: {item_count}\n")
 
-        if filler_count < 0 and not self.using_ut:
+        if filler_count < 0:
             self.handle_not_enough_locations(-filler_count)
             self.random.shuffle(itempool)
             # rac3_logger.info(f"Placing {-filler_count} starting items")

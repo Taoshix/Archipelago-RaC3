@@ -1,4 +1,5 @@
 """This module contains the World class for Ratchet and Clank 3"""
+from collections import Counter
 from logging import DEBUG, getLogger
 from typing import Any, ClassVar, TextIO, TYPE_CHECKING
 
@@ -166,6 +167,9 @@ class RaC3World(World):
                         self.create_item(self.starting_planet_list[1]))
         self.preplaced_items.extend(self.starting_weapon_list)
         self.preplaced_items.extend(self.starting_planet_list)
+        self.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR).place_locked_item(
+            self.create_item(RAC3ITEM.VICTORY))
+        self.preplaced_items.append(RAC3ITEM.VICTORY)
 
     def create_items(self):
         """Create the items used in the world"""
@@ -192,6 +196,11 @@ class RaC3World(World):
             self.multiworld.itempool.extend(filler)
 
         self.multiworld.itempool.extend(itempool)
+        player_items = Counter(item.player for item in self.multiworld.itempool)
+        player_locs = Counter(loc.player for loc in self.multiworld.get_locations() if not loc.item)
+        assert player_items[self.player] == player_locs[self.player], (f"Player item count {player_items[self.player]} "
+                                                                       f"and location count {player_locs[self.player]} "
+                                                                       f"do not match")
 
     def get_filler_item_name(self) -> str:
         if not len(self.filler_items):

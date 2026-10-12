@@ -9,7 +9,6 @@ from worlds.rac3.constants.data.item import (goal_data, infobot_data, item_count
                                              vidcomic_health_data)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
 from worlds.rac3.constants.items import RAC3ITEM
-from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.rac3options import RaC3Options
@@ -368,8 +367,6 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 rac3_logger.warning(f"multiple copies of {name} added to the item pool")
             itempool += create_multiple_items(world, name, item_amount, item_type)
 
-    victory = create_item(world, RAC3ITEM.VICTORY)
-    world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR, world.player).place_locked_item(victory)
     return itempool
 
 

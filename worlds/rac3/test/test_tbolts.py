@@ -19,9 +19,11 @@ class TestNoTBoltLocs(RAC3TestBase):
     options = {
         # "deathlink": DeathLink.default,
         # "start_inventory_from_pool": StartInventoryPool.default,
+        # "generation_behavior": GenerationBehavior.default,
         # "starting_weapons": StartingWeapons.default,
         # "bolt_and_xp_multiplier": BoltAndXPMultiplier.default,
         # "progressive_weapons": ProgressiveWeapons.default,
+        # "weapon_mods": WeaponMods.default,
         # "armor_upgrade": ArmorUpgrade.default,
         # "filler_weight": FillerWeight.default,
         # "traps_enabled": EnableTraps.default,
@@ -99,9 +101,11 @@ class TestTBoltLocs(RAC3TestBase):
     options = {
         # "deathlink": DeathLink.default,
         # "start_inventory_from_pool": StartInventoryPool.default,
+        # "generation_behavior": GenerationBehavior.default,
         # "starting_weapons": StartingWeapons.default,
         # "bolt_and_xp_multiplier": BoltAndXPMultiplier.default,
         # "progressive_weapons": ProgressiveWeapons.default,
+        # "weapon_mods": WeaponMods.default,
         # "armor_upgrade": ArmorUpgrade.default,
         # "filler_weight": FillerWeight.default,
         # "traps_enabled": EnableTraps.default,

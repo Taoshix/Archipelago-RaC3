@@ -133,13 +133,13 @@ _EVENT_NAME_TO_ADDRESS: dict[str, set[tuple[int, CHECKTYPE, int]]] = {
 @dataclass
 class RAC3EVENTDATA:
     """Data class for each event"""
-    NAME: str = "NO NAME EVENT"
-    EVENT: tuple[str, str] = ("No Event Location", "No Event Item")
-    REGION: str = RAC3REGION.GALAXY
-    CHECK_ADDRESS: list[RAC3ADDRESSDATA] = None
+    NAME: str
+    EVENT: tuple[str, str]
+    REGION: str
+    CHECK_ADDRESS: list[RAC3ADDRESSDATA]
 
     def __init__(self,
-                 event: tuple[str, str],
+                 event: tuple[str, str] = ("No Event Location", "No Event Item"),
                  region: str = RAC3REGION.GALAXY,
                  check: list[RAC3ADDRESSDATA] | None = None):
         self.NAME = event[0]

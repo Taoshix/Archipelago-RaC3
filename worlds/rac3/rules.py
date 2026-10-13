@@ -4,6 +4,7 @@ from logging import DEBUG, getLogger
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, CollectionState
+from constants.data.item import ngplus_data
 from worlds.generic.Rules import add_rule
 from worlds.rac3.constants.data.item import infobot_data, non_prog_weapon_data, prog_weapon_data
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
@@ -400,7 +401,8 @@ def set_rules(world: "RaC3World"):
             lambda state: state.has_from_list(infobot_data.keys(), world.player,
                                               calc_nanotech_requirement(10, True)),
         RAC3TROPHY.PHOENIX_OMEGA_ARSENAL:
-            lambda state: state.has_all(non_prog_weapon_data.keys(), world.player)
+            lambda state: state.has_all(
+                [weapon for weapon in non_prog_weapon_data.keys() if weapon not in ngplus_data.keys()], world.player)
                           or state.has_all_counts(
                 {weapon: 5 if weapon == RAC3ITEM.PROGRESSIVE_RY3N0 else 8 for weapon in prog_weapon_data.keys()},
                 world.player),

@@ -196,11 +196,10 @@ class RaC3World(World):
                         self.create_item(self.starting_planet_list[1]))
         self.preplaced_items.extend(self.starting_weapon_list)
         self.preplaced_items.extend(self.starting_planet_list)
-        if self.options.lock_command_center.value:
+        if self.options.lock_command_center.value and (self.options.goal_bio.value or self.options.goal_nef.value):
+            self.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT).place_locked_item(
+                self.create_item(RAC3ITEM.COMMAND_CENTER))
             self.preplaced_items.append(RAC3ITEM.COMMAND_CENTER)
-        self.get_location(RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR).place_locked_item(
-            self.create_item(RAC3ITEM.VICTORY))
-        self.preplaced_items.append(RAC3ITEM.VICTORY)
 
     def create_items(self):
         """Create the items used in the world"""

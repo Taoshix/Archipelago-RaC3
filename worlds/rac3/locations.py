@@ -82,6 +82,7 @@ location_groups: dict[str, set[str]] = {
     RAC3TAG.NGPLUS: get_from_tag(RAC3TAG.NGPLUS),
     RAC3TAG.VR: get_from_tag(RAC3TAG.VR),
     RAC3TAG.WEAPON_LEVEL: get_from_tag(RAC3TAG.WEAPON_LEVEL),
+    RAC3TAG.GOAL: get_from_tag(RAC3TAG.GOAL),
 }
 
 

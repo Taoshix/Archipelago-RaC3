@@ -4,7 +4,7 @@ from logging import DEBUG, getLogger
 from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification
-from worlds.rac3.constants.data.item import (goal_data, infobot_data, item_counts, item_table, NAME_TO_PROG_DICT,
+from worlds.rac3.constants.data.item import (infobot_data, item_counts, item_table, NAME_TO_PROG_DICT,
                                              ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, RAC3ITEMDATA,
                                              titanium_bolt_data, vidcomic_health_data)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
@@ -36,7 +36,7 @@ def create_item(world: "RaC3World", name: str) -> Item:
     :param world: Current world object
     :param name: Item Name
     """
-    data = item_table.get(name, goal_data.get(name))
+    data = item_table.get(name)
     if data is None:
         raise KeyError(f"{name} not found in item_table")
     return GameItem(name, data.AP_CLASSIFICATION, data.AP_CODE, world.player)
@@ -385,10 +385,6 @@ def create_itempool(world: "RaC3World") -> list[Item]:
                 and name not in titanium_bolt_data.keys()):
                 rac3_logger.warning(f"multiple copies of {name} added to the item pool")
             itempool += create_multiple_items(world, name, item_amount, item_type)
-
-    infobot = create_item(world, RAC3ITEM.COMMAND_CENTER)
-    if world.options.lock_command_center.value and (world.options.goal_bio.value or world.options.goal_nef.value):
-        world.multiworld.get_location(RAC3LOCATION.COMMAND_CENTER_INFOBOT, world.player).place_locked_item(infobot)
     return itempool
 
 

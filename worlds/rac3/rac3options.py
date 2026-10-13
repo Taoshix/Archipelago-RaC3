@@ -14,6 +14,7 @@ from worlds.rac3.options.filler_weight_options import FillerWeight
 from worlds.rac3.options.generation_behavior_options import GenerationBehavior
 from worlds.rac3.options.helpdesk_options import HelpDesk
 from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
+from worlds.rac3.options.deathlink_behavior_options import DeathlinkBehavior
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
 from worlds.rac3.options.nanotech_options import NanotechMilestones
 from worlds.rac3.options.ngplus_item_options import NGPlusItems
@@ -102,6 +103,7 @@ class RaC3Options(PerGameCommonOptions):
     weapon_level_locations: WeaponLevels
     bonus_vidcomic_health: BonusVidComicHealthUpgrades
     vidcomic_health_upgrades: VidComicHealthUpgrades
+    deathlink_behavior: DeathlinkBehavior
 
 
 rac3_option_groups = [
@@ -109,6 +111,7 @@ rac3_option_groups = [
         ProgressionBalancing,
         Accessibility,
         DeathLink,
+        DeathlinkBehavior,
         GenerationBehavior,
     ]),
     OptionGroup("RAC3 Game Options", [
@@ -209,4 +212,5 @@ slot_data_options: list[str] = [
     RAC3OPTION.VENDOR_ACCESS,
     RAC3OPTION.BONUS_VIDCOMIC_HEALTH,
     RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES,
+    RAC3OPTION.DEATHLINK_BEHAVIOR
 ]

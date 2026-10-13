@@ -371,6 +371,7 @@ class RaC3World(World):
             RAC3OPTION.VENDOR_ACCESS: self.options.vendor_access.value,
             RAC3OPTION.BONUS_VIDCOMIC_HEALTH: self.options.bonus_vidcomic_health.value,
             RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES: self.options.vidcomic_health_upgrades.value,
+            RAC3OPTION.DEATHLINK_BEHAVIOR: self.options.deathlink_behavior.value,
             RAC3OPTION.TOTAL_LOCATIONS: get_total_locations(self),
         }
 

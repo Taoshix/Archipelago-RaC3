@@ -123,6 +123,7 @@ class Rac3Interface(GameInterface):
         vendor_access: int
         bonus_vidcomic_health: int
         vidcomic_health_upgrade_locations: int
+        deathlink_behavior: int
 
     UnlockItem: dict[str, int] = {}
     options = Options
@@ -363,6 +364,7 @@ class Rac3Interface(GameInterface):
         self.options.vendor_access = slot_data[RAC3OPTION.VENDOR_ACCESS]
         self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
         self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES]
+        self.options.deathlink_behavior = slot_data[RAC3OPTION.DEATHLINK_BEHAVIOR]
 
     ########################################
     # Called on Game and Server Connection #
@@ -1272,7 +1274,8 @@ class Rac3Interface(GameInterface):
         if not self.can_be_killed():
             logger.debug("player unable to be killed")
             return False
-        self._write8(RAC3STATUS.HEALTH, 0)
+        new_health = self._read8(RAC3STATUS.NANOPAK_HEALTH) if self.options.deathlink_behavior == 1 else 0
+        self._write8(RAC3STATUS.HEALTH, new_health)
         self._write8(RAC3STATUS.NANOPAK_HEALTH, 0)
         # death = choice(list(DEATH_FROM_ACTION.keys()))
         if self.vehicle:

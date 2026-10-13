@@ -53,3 +53,4 @@ class RAC3OPTION:
     BONUS_VIDCOMIC_HEALTH = "Bonus VidComic Health Upgrades"
     VIDCOMIC_HEALTH_UPGRADES = "VidComic Health Upgrade Locations"
     WEAPON_MODS = "Weapon Mods"
+    DEATHLINK_BEHAVIOR = "Deathlink Behavior"

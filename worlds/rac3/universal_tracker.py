@@ -60,6 +60,7 @@ def setup_options_from_slot_data(world: "RaC3World") -> None:
             world.options.vendor_access.value = world.passthrough[RAC3OPTION.VENDOR_ACCESS]
             world.options.bonus_vidcomic_health.value = world.passthrough[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
             world.options.vidcomic_health_upgrades.value = world.passthrough[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES]
+            world.options.deathlink_behavior.value = world.passthrough[RAC3OPTION.DEATHLINK_BEHAVIOR]
         else:
             world.using_ut = False
     else:

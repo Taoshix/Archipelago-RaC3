@@ -7,7 +7,7 @@ class RAC3ITEMTAG:
     EQUIPABLE = "Equipable"
     FILLER = "Filler"
     GADGET = "Gadget"
-    GOAL = "Goal"
+    # GOAL = "Goal"
     INFOBOT = "Infobot"
     NGPLUS = "NG+"
     NON_PROG_WEAPON = "Non-Progressive Weapon"

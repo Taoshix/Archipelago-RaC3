@@ -251,13 +251,13 @@ class RAC3ITEMDATA:
         """
         return RAC3ITEMDATA(idx, address, tags=[RAC3ITEMTAG.FILLER])
 
-    @staticmethod
-    def construct_goal(idx: int):
-        """Make the goal item.
-        :param idx: Item ID.
-        :rtype: RAC3ITEMDATA
-        """
-        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=[RAC3ITEMTAG.GOAL])
+    # @staticmethod
+    # def construct_goal(idx: int):
+    #     """Make the goal item.
+    #     :param idx: Item ID.
+    #     :rtype: RAC3ITEMDATA
+    #     """
+    #     return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression, tags=[RAC3ITEMTAG.GOAL])
 
     @staticmethod
     def construct_clank(idx: int,
@@ -737,7 +737,7 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     # VidComic Health Upgrades
     RAC3ITEM.BONUS_VIDCOMIC_HEALTH_UPGRADE: RAC3ITEMDATA.construct_vidcomic_health(0x163),
     # Goal
-    RAC3ITEM.VICTORY: RAC3ITEMDATA.construct_goal(0x201),
+    # RAC3ITEM.VICTORY: RAC3ITEMDATA.construct_goal(0x201),
 }
 
 
@@ -760,7 +760,7 @@ armor_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.ARMOR)
 equipable_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.EQUIPABLE)
 filler_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.FILLER)
 gadget_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.GADGET)
-goal_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.GOAL)
+# goal_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.GOAL)
 infobot_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.INFOBOT)
 ngplus_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NGPLUS)
 non_prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NON_PROG_WEAPON)
@@ -859,7 +859,7 @@ item_groups: dict[str, set[str]] = {
     RAC3ITEMTAG.EQUIPABLE: set(equipable_data.keys()),
     RAC3ITEMTAG.FILLER: set(filler_data.keys()),
     RAC3ITEMTAG.GADGET: set(gadget_data.keys()),
-    RAC3ITEMTAG.GOAL: set(goal_data.keys()),
+    # RAC3ITEMTAG.GOAL: set(goal_data.keys()),
     RAC3ITEMTAG.INFOBOT: set(infobot_data.keys()),
     RAC3ITEMTAG.NGPLUS: set(ngplus_data.keys()),
     RAC3ITEMTAG.NON_PROG_WEAPON: set(non_prog_weapon_data.keys()),

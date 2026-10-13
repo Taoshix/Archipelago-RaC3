@@ -12,6 +12,7 @@ from worlds.rac3.options.armor_vendor_options import ArmorVendors
 from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealthUpgrades
 from worlds.rac3.options.clank_options import ClankOptions
 from worlds.rac3.options.filler_weight_options import FillerWeight
+from worlds.rac3.options.generation_behavior_options import GenerationBehavior
 from worlds.rac3.options.goal_bio_options import GoalBio
 from worlds.rac3.options.goal_boss_gears_options import GoalBossGears
 from worlds.rac3.options.goal_boss_klunk_options import GoalBossKlunk
@@ -61,7 +62,7 @@ from worlds.rac3.options.vendor_access_options import VendorAccess
 from worlds.rac3.options.vidcomic_health_options import VidComicHealthUpgrades
 from worlds.rac3.options.vidcomics_options import VidComics
 from worlds.rac3.options.vr_challenges_options import VRChallenges
-from worlds.rac3.options.weapon_level_options import WeaponLevels
+from worlds.rac3.options.weapon_mods_options import WeaponMods
 from worlds.rac3.options.weapon_vendors_options import WeaponVendors
 from worlds.rac3.test.base import RAC3TestBase
 
@@ -70,9 +71,11 @@ class TestDefaults(RAC3TestBase):
     options = {
         # "deathlink": DeathLink.default,
         # "start_inventory_from_pool": StartInventoryPool.default,
+        # "generation_behavior": GenerationBehavior.default,
         # "starting_weapons": StartingWeapons.default,
         # "bolt_and_xp_multiplier": BoltAndXPMultiplier.default,
         # "progressive_weapons": ProgressiveWeapons.default,
+        # "weapon_mods": WeaponMods.default,
         # "armor_upgrade": ArmorUpgrade.default,
         # "filler_weight": FillerWeight.default,
         # "traps_enabled": EnableTraps.default,
@@ -189,9 +192,11 @@ class TestNotDefault(RAC3TestBase):
     options = {
         "deathlink": DeathLink.option_true,
         "start_inventory_from_pool": {RAC3ITEM.TYHRRA_GUISE: 1},
+        "generation_behavior": GenerationBehavior.option_error,
         "starting_weapons": dict.fromkeys(StartingWeapons.valid_keys, StartingWeapons.max),
         "bolt_and_xp_multiplier": BoltAndXPMultiplier.option_x16,
         "progressive_weapons": ProgressiveWeapons.option_automatic_leveling,
+        "weapon_mods": WeaponMods.option_individual_mods,
         "armor_upgrade": ArmorUpgrade.range_end,
         "filler_weight": dict.fromkeys(FillerWeight.default.keys(), FillerWeight.max),
         "traps_enabled": EnableTraps.option_true,
@@ -213,7 +218,7 @@ class TestNotDefault(RAC3TestBase):
         "ship_wings": ShipWings.option_heavy_ordinance,
         "ship_skin": ShipSkin.option_Zeldren_Sunset,
         "player_skin": RatchetSkin.option_unused_robot,
-        "one_hp_challenge": dict.fromkeys(OneHpChallenge.valid_keys, OneHpChallenge.max),
+        "one_hp_challenge": dict.fromkeys(OneHpChallenge.valid_keys, 1),
         "clank_options": ClankOptions.option_shuffled_progressive,
         "ship_vendor": ShipVendors.option_false,
         "armor_vendor": ArmorVendors.option_false,
@@ -225,8 +230,8 @@ class TestNotDefault(RAC3TestBase):
         "ngplus_start": NGPlusStart.option_enabled_with_multiplier,
         "helpdesk": HelpDesk.option_false,
         "vendor_access": VendorAccess.option_infobot,
-        "weapon_level_locations": WeaponLevels.option_all,
-        "bonus_vidcomic_health": BonusVidComicHealthUpgrades.range_end,
+        "weapon_level_locations": frozenset({"V2, V3, V4, V5"}),
+        "bonus_vidcomic_health": BonusVidComicHealthUpgrades.range_start,
         "vidcomic_health_upgrades": VidComicHealthUpgrades.option_false,
         "lock_command_center": LockCommandCenter.option_true,
         "goal_bio": GoalBio.option_false,
@@ -259,7 +264,7 @@ class TestNotDefault(RAC3TestBase):
         "item_links": [{
             "name": RAC3ITEM.PROGRESSIVE_ARMOR,
             "item_pool": [RAC3ITEM.PROGRESSIVE_PACK],
-            "replacement_item": RAC3ITEM.GRAV_BOOTS
+            "replacement_item": RAC3ITEM.GRAV_BOOTS,
         }],
         "plando_items": [PlandoItem(
             items=[RAC3ITEM.INFECTOR],

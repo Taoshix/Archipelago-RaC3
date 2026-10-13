@@ -4,9 +4,8 @@ from logging import DEBUG, getLogger
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, CollectionState
-from constants.data.item import ngplus_data
 from worlds.generic.Rules import add_rule
-from worlds.rac3.constants.data.item import infobot_data, non_prog_weapon_data, prog_weapon_data
+from worlds.rac3.constants.data.item import infobot_data, ngplus_data, non_prog_weapon_data, prog_weapon_data
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.event import BASE_PLANETS, RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM

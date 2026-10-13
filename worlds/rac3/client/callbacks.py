@@ -483,9 +483,7 @@ async def handle_vendors(ctx: "Context") -> None:
     if vendor_location_apcodes:
         current_hints = set(vendor_location_apcodes)
         if current_hints and not current_hints.issubset(ctx.already_hinted):
-            await ctx.send_msgs([
-                {"cmd": "CreateHints", "locations": vendor_location_apcodes, "player": ctx.slot}
-            ])
+            await ctx.send_msgs([{"cmd": "CreateHints", "locations": vendor_location_apcodes, "player": ctx.slot}])
             ctx.already_hinted.update(current_hints)
 
 

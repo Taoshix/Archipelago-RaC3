@@ -119,7 +119,7 @@ def set_rules(world: "RaC3World"):
         return add >= min(count, loc_count)
 
     def all_goals(goal: bool = False) -> CollectionRule:
-        """Creates a logic rule for having completed all the goal requirements prior to Command Center"""
+        """Creates a logic rule for having completed all the goal requirements for Command Center"""
         event_items: set[str] = {RAC3EVENT.NANOTECH[1], RAC3EVENT.SEWER[1], RAC3EVENT.T_BOLT[1], RAC3EVENT.SKILLS[1],
                                  RAC3EVENT.PLANETS[1], RAC3EVENT.COMPLETION[1]}
         if world.options.goal_qwark.value > 0:
@@ -1608,7 +1608,7 @@ def set_rules(world: "RaC3World"):
         RAC3EVENT.COMMAND_CENTER_BIOBLITERATOR[0]:
             lambda state: state.has(RAC3EVENT.COMMAND_CENTER_NEFARIOUS[1], world.player),
 
-        RAC3EVENT.VICTORY[0]: all_goals(True)
+        RAC3EVENT.VICTORY[0]: all_goals(True),
     }
     for region in world.multiworld.get_regions(world.player):
         for entrance in region.entrances:

@@ -2092,7 +2092,7 @@ class Rac3Interface(GameInterface):
                     case RAC3ITEM.JACKPOT:
                         self.bolt_and_xp_multiplier_value -= 1
                         # Clean up the jackpot status if the multiplier is now 0
-                        # Allows x1 mult yaml option to also have jackpot working
+                        # Allows x1 mult YAML option to also have jackpot working
                         if self.bolt_and_xp_multiplier_value != 0:
                             continue
                     case _:

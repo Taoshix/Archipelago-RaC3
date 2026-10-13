@@ -486,7 +486,24 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
     for tag in data.TAGS:
         match tag:
             case RAC3TAG.NOT_IMPLEMENTED:  # Skip all locations not yet implemented
-                return SkipLocation.EVENT
+                return SkipLocation.SKIP
+            case RAC3TAG.WEAPON_LEVEL:
+                if options.ngplus_items.value == 0 and (
+                    "RY3N0" in data.NAME or "V6" in data.NAME or "V7" in data.NAME or "V8" in data.NAME):
+                    return SkipLocation.SKIP  # Skip all weapon level locations that are V6 or higher if NG+ items
+                    # are disabled
+                if all(key not in data.NAME for key in options.weapon_level_locations.value):
+                    return SkipLocation.EVENT  # Skip weapon level location if all levels chosen by the player do not
+                    # match
+                if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False) and "Shield Charger" in data.NAME:
+                    return SkipLocation.EVENT  # Skip Shield Charger level locations in One HP Challenge
+            case RAC3TAG.VIDCOMIC:
+                if options.vidcomics.value == 0:
+                    return SkipLocation.SKIP  # Skips vidcomic locations if vidcomics option is disabled
+            case RAC3TAG.VIDCOMIC_HEALTH_UPGRADE:
+                if options.vidcomic_health_upgrades.value == 0:
+                    return SkipLocation.SKIP  # Skips vidcomic health upgrade locations if vidcomic_health_upgrade
+                    # option is disabled
             case RAC3TAG.TROPHY:
                 if not options.trophies.value:  # Skip trophy locations if trophies are disabled
                     return SkipLocation.EVENT
@@ -534,13 +551,6 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                     return SkipLocation.EVENT  # Skips AN2 challenge locations if arena option is set to first_only
                 if options.arena.value == 2 and data.NAME not in annihilation_nation_2:
                     return SkipLocation.EVENT  # Skips AN1 challenge locations if arena option is set to second_only
-            case RAC3TAG.VIDCOMIC:
-                if options.vidcomics.value == 0:
-                    return SkipLocation.SKIP  # Skips vidcomic locations if vidcomics option is disabled
-            case RAC3TAG.VIDCOMIC_HEALTH_UPGRADE:
-                if options.vidcomic_health_upgrades.value == 0:
-                    return SkipLocation.SKIP  # Skips vidcomic health upgrade locations if vidcomic_health_upgrade
-                    # option is disabled
             case RAC3TAG.VR:
                 if options.vr_challenges.value == 0:
                     return SkipLocation.EVENT  # Skips vr challenges locations if vr_challenges option is disabled
@@ -571,16 +581,6 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             case RAC3TAG.ARMOR:
                 if options.armor_vendor.value == 0:
                     return SkipLocation.EVENT  # Skip all armor upgrade locations if armor upgrades are disabled
-            case RAC3TAG.WEAPON_LEVEL:
-                if options.ngplus_items.value == 0 and (
-                    "RY3N0" in data.NAME or "V6" in data.NAME or "V7" in data.NAME or "V8" in data.NAME):
-                    return SkipLocation.SKIP  # Skip all weapon level locations that are V6 or higher if NG+ items
-                    # are disabled
-                if all(key not in data.NAME for key in options.weapon_level_locations.value):
-                    return SkipLocation.EVENT  # Skip weapon level location if all levels chosen by the player do not
-                    # match
-                if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False) and "Shield Charger" in data.NAME:
-                    return SkipLocation.EVENT  # Skip Shield Charger level locations in One HP Challenge
             case RAC3TAG.GOAL:
                 # Todo: handle goal events in command center
                 if options.lock_command_center.value == 0 and (options.goal_bio.value or options.goal_nef.value):

@@ -16,7 +16,7 @@ from worlds.rac3.options.goal_crystal_options import GoalCrystal
 from worlds.rac3.options.goal_museum_options import GoalMuseum
 from worlds.rac3.options.goal_nano_options import GoalNano
 from worlds.rac3.options.goal_nef_options import GoalNef
-from worlds.rac3.options.goal_percentage import GoalCompletion
+from worlds.rac3.options.goal_percentage_options import GoalCompletion
 from worlds.rac3.options.goal_planets_options import GoalPlanets
 from worlds.rac3.options.goal_qwark_options import GoalQwark
 from worlds.rac3.options.goal_skillpoints_options import GoalSkillpoints

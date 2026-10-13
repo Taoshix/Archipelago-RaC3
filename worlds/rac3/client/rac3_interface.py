@@ -1274,7 +1274,10 @@ class Rac3Interface(GameInterface):
         if not self.can_be_killed():
             logger.debug("player unable to be killed")
             return False
-        new_health = self._read8(RAC3STATUS.NANOPAK_HEALTH) if self.options.deathlink_behavior == 1 else 0
+        new_health = (self._read8(RAC3STATUS.NANOPAK_HEALTH) 
+                      if self.options.deathlink_behavior == 1 
+                      and self.player_type == RAC3PLAYERTYPE.RATCHET 
+                      else 0)
         self._write8(RAC3STATUS.HEALTH, new_health)
         self._write8(RAC3STATUS.NANOPAK_HEALTH, 0)
         # death = choice(list(DEATH_FROM_ACTION.keys()))

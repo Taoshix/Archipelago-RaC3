@@ -1,5 +1,5 @@
 """This module provides handling for location regions"""
-
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from BaseClasses import Location, Region
@@ -27,6 +27,13 @@ if TYPE_CHECKING:
 class GameLocation(Location):
     """Rac3 game location"""
     game = RAC3OPTION.GAME_TITLE_FULL
+
+
+class SkipLocation(Enum):
+    """Indicates how locations should be handled"""
+    CREATE = 0
+    SKIP = 1
+    EVENT = 2
 
 
 def get_regions() -> set[str]:
@@ -176,12 +183,15 @@ def create_region(world: "RaC3World", name: str) -> Region:
     options = world.options
     for key, data in RAC3_LOCATION_DATA_TABLE.items():
         if data.REGION == name:
-            if should_skip_location(data, options):
-                reg.add_event(key, TRACKING_EVENTS.get(key, "Event"),
-                              lambda _: True, GameLocation, GameItem, False)
-            else:
-                location = GameLocation(world.player, key, data.AP_CODE, reg)
-                reg.locations.append(location)
+            match should_skip_location(data, options):
+                case SkipLocation.CREATE:
+                    location = GameLocation(world.player, key, data.AP_CODE, reg)
+                    reg.locations.append(location)
+                case SkipLocation.SKIP:
+                    continue
+                case SkipLocation.EVENT:
+                    reg.add_event(key, TRACKING_EVENTS.get(key, "Event"),
+                                  lambda _: True, GameLocation, GameItem, False)
     for key, data in RAC3_EVENT_DATA_TABLE.items():
         if data.REGION == name:
             reg.add_event(data.EVENT[0], data.EVENT[1], lambda _: True, GameLocation, GameItem, False)
@@ -205,13 +215,13 @@ def create_region_and_connect(world: "RaC3World", name: str, entrance_name: str,
     return reg
 
 
-def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> bool:
+def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> Enum:
     """
     Return False if the location should be skipped based on options.
 
     :param data: RAC3LOCATIONDATA of the location to be checked
     :param options: RaC3Options of current generation
-    :return: True if the location should not be created
+    :return: 0 for creating a location, 1 for no location creation, 2 for a tracking event location
     """
 
     every_sewer_crystals: list[str] = [
@@ -474,99 +484,105 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
     for tag in data.TAGS:
         match tag:
             case RAC3TAG.NOT_IMPLEMENTED:  # Skip all locations not yet implemented
-                return True
+                return SkipLocation.EVENT
             case RAC3TAG.TROPHY:
                 if not options.trophies.value:  # Skip trophy locations if trophies are disabled
-                    return True
+                    return SkipLocation.EVENT
             case RAC3TAG.LONG_TROPHY:
                 if options.trophies.value < 2:  # Skip long term trophies if not set to every trophy
-                    return True
+                    return SkipLocation.EVENT
                 if should_skip_skill_master() and data.NAME == RAC3TROPHY.PHOENIX_SKILL_MASTER:
-                    return True
+                    return SkipLocation.EVENT
                 if options.ngplus_start.value < 1:
                     if data.NAME == RAC3TROPHY.PHOENIX_NANO_FINDER or data.NAME == RAC3TROPHY.PHOENIX_OMEGA_ARSENAL:
-                        return True  # Skip Phoenix Nano Master and Omega Arsenal trophies if NG+ start is not enabled
+                        return SkipLocation.EVENT  # Skip Phoenix Nano Master and Omega Arsenal trophies if NG+
+                        # start is not enabled
                 if options.ngplus_start.value > 0:
                     if data.NAME == RAC3TROPHY.PHOENIX_NANO_FINDER and options.nanotech_limitation.value < 200:
-                        return True  # Skip Phoenix Nano Master trophy if nanotech limitation is not set to include
+                        return SkipLocation.EVENT  # Skip Phoenix Nano Master trophy if nanotech limitation is not
+                        # set to include
                         # level 200
                     if data.NAME == RAC3TROPHY.PHOENIX_OMEGA_ARSENAL and options.ngplus_items.value == 0:
-                        return True  # Skip Phoenix Omega Arsenal trophy if NG+ items are disabled
+                        return SkipLocation.EVENT  # Skip Phoenix Omega Arsenal trophy if NG+ items are disabled
             case RAC3TAG.SKILLPOINT:
                 if options.skill_points.value == 0:
-                    return True  # Skips skill points when disabled
+                    return SkipLocation.EVENT  # Skips skill points when disabled
                 if options.skill_points.value == 1 and data.NAME not in simple_skillpoints:
-                    return True  # Skips harder skill points
+                    return SkipLocation.EVENT  # Skips harder skill points
             case RAC3TAG.T_BOLT:
                 if options.titanium_bolts.value == 0:
-                    return True  # Skip titanium bolt locations if titanium bolt option is disabled
+                    return SkipLocation.EVENT  # Skip titanium bolt locations if titanium bolt option is disabled
             case RAC3TAG.NANOTECH:
                 if should_skip_nanotech_location(data.NAME, options):
-                    return True  # Skip nanotech milestones outside the selected interval or NG+ range
+                    return SkipLocation.EVENT  # Skip nanotech milestones outside the selected interval or NG+ range
             case RAC3TAG.RANGERS:
                 if options.rangers.value == 0:
-                    return True  # Skips ranger missions locations if rangers option is none
+                    return SkipLocation.EVENT  # Skips ranger missions locations if rangers option is none
                 if options.rangers.value == 1 and data.NAME in extra_ranger:
-                    return True  # Skips optional ranger missions locations if set to story_missions
+                    return SkipLocation.EVENT  # Skips optional ranger missions locations if set to story_missions
                 if options.rangers.value == 2 and data.NAME not in extra_ranger:
-                    return True  # Skips story ranger missions locations if set to optional_missions
+                    return SkipLocation.EVENT  # Skips story ranger missions locations if set to optional_missions
             case RAC3TAG.ARENA:
                 if options.arena.value == 0:
-                    return True  # Skips arena challenges locations if arena option is none
+                    return SkipLocation.EVENT  # Skips arena challenges locations if arena option is none
                 if options.arena.value == 1 and data.NAME not in annihilation_nation_1:
-                    return True  # Skips AN2 challenge locations if arena option is set to first_only
+                    return SkipLocation.EVENT  # Skips AN2 challenge locations if arena option is set to first_only
                 if options.arena.value == 2 and data.NAME not in annihilation_nation_2:
-                    return True  # Skips AN1 challenge locations if arena option is set to second_only
+                    return SkipLocation.EVENT  # Skips AN1 challenge locations if arena option is set to second_only
             case RAC3TAG.VIDCOMIC:
                 if options.vidcomics.value == 0:
-                    return True  # Skips vidcomic locations if vidcomics option is disabled
+                    return SkipLocation.SKIP  # Skips vidcomic locations if vidcomics option is disabled
             case RAC3TAG.VIDCOMIC_HEALTH_UPGRADE:
                 if options.vidcomic_health_upgrades.value == 0:
-                    return True  # Skips vidcomic health upgrade locations if vidcomic_health_upgrade option is disabled
+                    return SkipLocation.SKIP  # Skips vidcomic health upgrade locations if vidcomic_health_upgrade
+                    # option is disabled
             case RAC3TAG.VR:
                 if options.vr_challenges.value == 0:
-                    return True  # Skips vr challenges locations if vr_challenges option is disabled
+                    return SkipLocation.EVENT  # Skips vr challenges locations if vr_challenges option is disabled
             case RAC3TAG.SEWER:
                 if (data.NAME in every_sewer_crystals[options.sewer_limitation.value::]
                     and not (data.NAME == RAC3SKILLPOINT.SEWER_MOTHERLOAD and options.sewer_limitation.value >= 100)):
-                    return True  # Place sewer crystal amount specified in sewer_limitations
+                    return SkipLocation.EVENT  # Place sewer crystal amount specified in sewer_limitations
                 if options.sewer_crystals.value == 0:
-                    return True  # Skip sewer crystal locations if sewer crystals option is disabled
+                    return SkipLocation.EVENT  # Skip sewer crystal locations if sewer crystals option is disabled
                 if options.sewer_crystals.value == 1 and data.NAME not in every_20_sewer_crystals:
-                    return True  # Skip sewer crystal locations that are not in every 20
+                    return SkipLocation.EVENT  # Skip sewer crystal locations that are not in every 20
                 if options.sewer_crystals.value == 2 and data.NAME not in every_10_sewer_crystals:
-                    return True  # Skip sewer crystal locations that are not in every 10
+                    return SkipLocation.EVENT  # Skip sewer crystal locations that are not in every 10
                 if options.sewer_crystals.value == 3 and data.NAME not in every_5_sewer_crystals:
-                    return True  # Skip sewer crystal locations that are not in every 5
+                    return SkipLocation.EVENT  # Skip sewer crystal locations that are not in every 5
             case RAC3TAG.WEAPONS:
                 if options.weapon_vendors.value == 0 and data.NAME not in veldin_weapons:
-                    return True  # Skips every weapon vendor checks except the Veldin ones
+                    return SkipLocation.EVENT  # Skips every weapon vendor checks except the Veldin ones
             case RAC3TAG.NGPLUS:
                 if options.ngplus_vendors.value == 0:
-                    return True  # Skips any NG+ items
+                    return SkipLocation.EVENT  # Skips any NG+ items
             case RAC3TAG.ONE_HP_UNSTABLE:
                 if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False):
-                    return True  # Skip all unstable locations in One HP Challenge
+                    return SkipLocation.EVENT  # Skip all unstable locations in One HP Challenge
             case RAC3TAG.SHIP:
                 if options.ship_vendor.value == 0:
-                    return True  # Skip all ship upgrade locations if ship upgrades are disabled
+                    return SkipLocation.EVENT  # Skip all ship upgrade locations if ship upgrades are disabled
             case RAC3TAG.ARMOR:
                 if options.armor_vendor.value == 0:
-                    return True  # Skip all armor upgrade locations if armor upgrades are disabled
+                    return SkipLocation.EVENT  # Skip all armor upgrade locations if armor upgrades are disabled
             case RAC3TAG.WEAPON_LEVEL:
-                if all(key not in data.NAME for key in options.weapon_level_locations.value):
-                    return True  # Skip weapon level location if all levels chosen by the player do not match
                 if options.ngplus_items.value == 0 and (
                     "RY3N0" in data.NAME or "V6" in data.NAME or "V7" in data.NAME or "V8" in data.NAME):
-                    return True  # Skip all weapon level locations that are V6 or higher if NG+ items are disabled
+                    return SkipLocation.SKIP  # Skip all weapon level locations that are V6 or higher if NG+ items
+                    # are disabled
+                if all(key not in data.NAME for key in options.weapon_level_locations.value):
+                    return SkipLocation.EVENT  # Skip weapon level location if all levels chosen by the player do not
+                    # match
                 if options.one_hp_challenge.value.get(RAC3PLAYERTYPE.RATCHET, False) and "Shield Charger" in data.NAME:
-                    return True  # Skip Shield Charger level locations in One HP Challenge
+                    return SkipLocation.EVENT  # Skip Shield Charger level locations in One HP Challenge
             case RAC3TAG.GOAL:
                 # Todo: handle goal events in command center
                 if options.lock_command_center.value == 0 and (options.goal_bio.value or options.goal_nef.value):
-                    return True  # Skip if command center infobot isn't locked, and the location won't be the goal
+                    return SkipLocation.EVENT  # Skip if command center infobot isn't locked, and the location won't
+                    # be the goal
             # Add more conditions here if needed in the future
-    return False
+    return SkipLocation.CREATE
 
 
 # place_starting_items()

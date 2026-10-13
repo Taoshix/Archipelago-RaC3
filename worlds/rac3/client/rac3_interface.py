@@ -1241,9 +1241,13 @@ class Rac3Interface(GameInterface):
         if self.has_died:
             self.last_death_count = self.death_count
             logger.debug("Death Detected! (death count increased)")
-            is_clank = self.player_type == RAC3PLAYERTYPE.CLANK
-            death = DEATH_FROM_ACTION.get(self.last_death_state, "ran out of nanotech.") if not is_clank else (
-                CLANK_DEATH_FROM_ACTION.get(self.last_death_state, "ran out of nanotech."))
+            match self.player_type:
+                case RAC3PLAYERTYPE.CLANK:
+                    death = CLANK_DEATH_FROM_ACTION.get(self.last_death_state, "ran out of nanotech.")
+                case RAC3PLAYERTYPE.GIANT:
+                    death = "didn't stick to the script."
+                case _:
+                    death = DEATH_FROM_ACTION.get(self.last_death_state, "ran out of nanotech.")
 
             # Vehicle pointer becomes 0 during reload, but the address next to it gets a value during reload after
             # vehicle death
@@ -1275,8 +1279,7 @@ class Rac3Interface(GameInterface):
             logger.debug("player unable to be killed")
             return False
         new_health = (self._read8(RAC3STATUS.NANOPAK_HEALTH) 
-                      if self.options.deathlink_behavior == 1 
-                      and self.player_type == RAC3PLAYERTYPE.RATCHET 
+                      if self.options.deathlink_behavior == 1 and self.player_type == RAC3PLAYERTYPE.RATCHET 
                       else 0)
         self._write8(RAC3STATUS.HEALTH, new_health)
         self._write8(RAC3STATUS.NANOPAK_HEALTH, 0)

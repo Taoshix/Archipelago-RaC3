@@ -11,6 +11,6 @@ class GoalMuseum(Toggle):
     Off:  Insomniac Museum Teleporter is not required to goal
     On:   Insomniac Museum Teleporter is required to goal
     ---------------------------------------------------------------------------------------
-    WARNING: This required ALL TROPHIES, effectively a 100% completion of the game
+    WARNING: This requires ALL TROPHIES, effectively a 100% completion of the game
     """
     display_name = RAC3OPTION.GOAL_MUSEUM

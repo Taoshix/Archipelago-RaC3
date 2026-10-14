@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Location, Region
 from worlds.rac3.constants.data.event import RAC3_EVENT_DATA_TABLE
+from worlds.rac3.constants.data.item import weapon_data
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA
 from worlds.rac3.constants.event import TRACKING_EVENTS
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -18,6 +19,7 @@ from worlds.rac3.constants.player_type import RAC3PLAYERTYPE
 from worlds.rac3.constants.region import RAC3REGION, REGIONS_WITH_LOCATIONS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.items import GameItem
+from worlds.rac3.locations import get_end_locations
 from worlds.rac3.rac3options import RaC3Options
 
 if TYPE_CHECKING:
@@ -186,6 +188,8 @@ def create_region(world: "RaC3World", name: str) -> Region:
             match should_skip_location(data, options):
                 case SkipLocation.CREATE:
                     location = GameLocation(world.player, key, data.AP_CODE, reg)
+                    if name in get_end_locations(world):
+                        location.item_rule = lambda item: item.name not in weapon_data.keys()
                     reg.locations.append(location)
                 case SkipLocation.SKIP:
                     continue

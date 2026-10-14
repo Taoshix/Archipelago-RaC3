@@ -403,9 +403,13 @@ def set_rules(world: "RaC3World"):
             lambda state: state.has_from_list(infobot_data.keys(), world.player,
                                               calc_nanotech_requirement(10, True)),
         RAC3TROPHY.PHOENIX_OMEGA_ARSENAL:
-            lambda state: state.has_all(
-                [weapon for weapon in non_prog_weapon_data.keys() if weapon not in ngplus_data.keys()], world.player)
-                          or state.has_all_counts(
+            lambda state:
+            world.options.progressive_weapons.value == 0 or
+            (state.has_all_counts(
+                {weapon: 0 if weapon == RAC3ITEM.PROGRESSIVE_RY3N0 else 5 for weapon in prog_weapon_data.keys()},
+                world.player) and
+             world.options.ngplus_items.value == 0) or
+            state.has_all_counts(
                 {weapon: 5 if weapon == RAC3ITEM.PROGRESSIVE_RY3N0 else 8 for weapon in prog_weapon_data.keys()},
                 world.player),
 

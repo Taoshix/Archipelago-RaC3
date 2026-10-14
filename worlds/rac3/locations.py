@@ -3,7 +3,10 @@
 from typing import TYPE_CHECKING
 
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
+from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.tags import RAC3TAG
+from worlds.rac3.constants.locations.trophies import RAC3TROPHY
+from worlds.rac3.constants.locations.vendors import RAC3VENDORLOCATION
 from worlds.rac3.constants.region import RAC3REGION
 
 if TYPE_CHECKING:
@@ -24,6 +27,19 @@ def get_location_names() -> dict[str, int]:
 def get_from_tag(tag) -> set[str]:
     """Return a set of location names that match the given tag"""
     return {loc for loc in RAC3_LOCATION_DATA_TABLE.keys() if tag in RAC3_LOCATION_DATA_TABLE[loc].TAGS}
+
+
+def get_end_locations(world: "RaC3World") -> set[str]:
+    """Returns a set of location names that must be after the goal is reachable"""
+    locations: set[str] = {RAC3LOCATION.COMMAND_CENTER_INFOBOT}
+    if world.options.lock_command_center.value > 0:
+        locations.update({RAC3VENDORLOCATION.PHOENIX_SKIN_31, RAC3VENDORLOCATION.PHOENIX_SKIN_32,
+                          RAC3TROPHY.PHOENIX_TITANIUM_COLLECTOR, RAC3TROPHY.PHOENIX_SKILL_MASTER,
+                          RAC3VENDORLOCATION.AQUATOS_SHIELD_CHARGER})
+        for location, data in RAC3_LOCATION_DATA_TABLE.items():
+            if data.REGION == RAC3REGION.COMMAND_CENTER:
+                locations.add(location)
+    return locations
 
 
 # class EventData(NamedTuple):

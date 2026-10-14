@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, CollectionState
 from worlds.generic.Rules import add_rule
-from worlds.rac3.constants.data.item import infobot_data, ngplus_data, non_prog_weapon_data, prog_weapon_data
+from worlds.rac3.constants.data.item import infobot_data, prog_weapon_data
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.event import BASE_PLANETS, RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM
@@ -21,7 +21,7 @@ from worlds.rac3.constants.locations.weapon_levels import RAC3WEAPONLEVEL
 from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.region import RAC3REGION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
-from worlds.rac3.locations import location_groups
+from worlds.rac3.locations import get_end_locations, location_groups
 
 if TYPE_CHECKING:
     from worlds.rac3.world import RaC3World
@@ -152,15 +152,7 @@ def set_rules(world: "RaC3World"):
 
     def collection(state: CollectionState) -> bool:
         """Calculates the current collected location count"""
-        total = {loc for loc in world.get_locations() if loc.address}
-        if world.options.lock_command_center.value > 0:
-            total = {loc for loc in total if getattr(loc.parent_region, "name") !=
-                     RAC3REGION.COMMAND_CENTER and loc.name not in [RAC3LOCATION.COMMAND_CENTER_INFOBOT,
-                                                                    RAC3VENDORLOCATION.PHOENIX_SKIN_31,
-                                                                    RAC3VENDORLOCATION.PHOENIX_SKIN_32,
-                                                                    RAC3TROPHY.PHOENIX_TITANIUM_COLLECTOR,
-                                                                    RAC3TROPHY.PHOENIX_SKILL_MASTER,
-                                                                    RAC3VENDORLOCATION.AQUATOS_SHIELD_CHARGER]}
+        total = {loc for loc in world.get_locations() if loc.address and loc.name not in get_end_locations(world)}
         reachable = {loc for loc in total if loc.can_reach(state)}
         # missing = {loc.name for loc in total if loc not in reachable}
         # rac3_logger.debug(f"Reachable Locations: {len(reachable)}/{len(total)} ("

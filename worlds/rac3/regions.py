@@ -6,7 +6,6 @@ from BaseClasses import Location, Region
 from worlds.rac3.constants.data.event import RAC3_EVENT_DATA_TABLE
 from worlds.rac3.constants.data.item import weapon_data
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA
-from worlds.rac3.constants.event import TRACKING_EVENTS
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.nanotech import NANOTECH_OPTION_TO_MOD, RAC3NANOTECH
 from worlds.rac3.constants.locations.sewers import RAC3SEWER
@@ -194,8 +193,8 @@ def create_region(world: "RaC3World", name: str) -> Region:
                 case SkipLocation.SKIP:
                     continue
                 case SkipLocation.EVENT:
-                    reg.add_event(key, TRACKING_EVENTS.get(key, "Event"),
-                                  lambda _: True, GameLocation, GameItem, False)
+                    split: int = key.find(":") + 1
+                    reg.add_event(key, key[split:], lambda _: True, GameLocation, GameItem, False)
     for key, data in RAC3_EVENT_DATA_TABLE.items():
         if data.REGION == name:
             reg.add_event(data.EVENT[0], data.EVENT[1], lambda _: True, GameLocation, GameItem, False)

@@ -187,6 +187,19 @@ class TestDefaults(RAC3TestBase):
             self.assertTrue(self.can_reach_location(RAC3EVENT.VICTORY[0]), "Goal location not reachable with items")
             self.assertBeatable(True)
 
+    def test_event_duplicates(self):
+        names: dict[str, str] = {}
+        for location in self.multiworld.get_locations(self.player):
+            item = location.item
+            if item is None:
+                continue
+            with self.subTest(f"Location {location.name}"):
+                self.assertIsNotNone(item, f"{location.name} contains no item")
+                if item.name not in self.multiworld.worlds[self.player].item_name_to_id.keys():
+                    self.assertNotIn(item.name, names.values(), f"Event {item.name} not unique")
+                    names[location.name] = item.name
+
+
 
 class TestNotDefault(RAC3TestBase):
     options = {

@@ -20,7 +20,7 @@ from worlds.rac3.constants.data.address import SAVE_DATA
 from worlds.rac3.constants.data.item import (armor_data, cheat_data, equipable_data, gadget_data, infobot_data,
                                              ITEM_FROM_AP_CODE, ITEM_NAME_FROM_ID, item_to_status, non_prog_weapon_data,
                                              PROG_TO_NAME_DICT, quick_selectable_data, RAC3_ITEM_DATA_TABLE,
-                                             trap_magnitude_data, vidcomic_data)
+                                             filler_magnitude_data, trap_magnitude_data, vidcomic_data)
 from worlds.rac3.constants.data.location import (LOCATION_FROM_AP_CODE, LOCATION_TO_INFOBOT_FLAG,
                                                  RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA, REGION_TO_INFOBOT_LOCATION)
 from worlds.rac3.constants.data.position import RAC3POSITIONDATA
@@ -99,6 +99,7 @@ class Rac3Interface(GameInterface):
         traps_enabled: int
         trap_weight: dict[str, int]
         trap_magnitude: dict[str, int]
+        filler_magnitude: dict[str, int]
         rangers: int
         arena: int
         vidcomics: int
@@ -341,6 +342,7 @@ class Rac3Interface(GameInterface):
         self.options.traps_enabled = slot_data[RAC3OPTION.ENABLE_TRAPS]
         self.options.trap_weight = slot_data[RAC3OPTION.TRAP_WEIGHT]
         self.options.trap_magnitude = slot_data[RAC3OPTION.TRAP_MAGNITUDE]
+        self.options.filler_magnitude = slot_data[RAC3OPTION.FILLER_MAGNITUDE]
         self.options.rangers = slot_data[RAC3OPTION.RANGERS]
         self.options.arena = slot_data[RAC3OPTION.ARENA]
         self.options.vidcomics = slot_data[RAC3OPTION.VIDCOMICS]
@@ -942,7 +944,8 @@ class Rac3Interface(GameInterface):
                 pass
             case RAC3ITEM.BOLTS:
                 bolt = self._read32(RAC3STATUS.BOLTS)
-                bolt_pack = min(200000, max(30000, int(bolt * 0.2)))
+                bolt_percentage = self.options.filler_magnitude.get(name, filler_magnitude_data[name])
+                bolt_pack = min(200000, max(30000, int(bolt * bolt_percentage / 100)))
                 new_bolts = bolt + bolt_pack
                 if new_bolts > 0x7FFFFFFF:
                     new_bolts = 0x7FFFFFFF
@@ -960,7 +963,8 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.JACKPOT:
                 # Limit multiplier to 128x
                 if self.bolt_and_xp_multiplier_value <= 6:
-                    _time = time.time() + 30.0
+                    jackpot_duration = self.options.filler_magnitude.get(name, filler_magnitude_data[name])
+                    _time = time.time() + jackpot_duration
                     key = name + str(_time)
                     # if key already exists, add 1 millisecond to prevent overlap
                     if key in self.timers:
@@ -975,7 +979,8 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.NANOTECH_XP:
                 if not self.nanotech_exp:
                     self.nanotech_exp = self._read32(RAC3STATUS.NANOTECH_EXP)
-                nanotech_gain = min(200000, max(20000, int(self.nanotech_exp * 0.15)))
+                nanotech_percentage = self.options.filler_magnitude.get(name, filler_magnitude_data[name])
+                nanotech_gain = min(200000, max(20000, int(self.nanotech_exp * nanotech_percentage / 100)))
                 self.nanotech_exp += nanotech_gain
                 if self.nanotech_exp > 0x7FFFFFFF:
                     self.nanotech_exp = 0x7FFFFFFF

@@ -784,6 +784,12 @@ trap_magnitude_data: dict[str, int] = {
     RAC3ITEM.GADGETRON_DEBT_TRAP: 8,
 }
 
+filler_magnitude_data: dict[str, int] = {
+    RAC3ITEM.NANOTECH_XP: 15,
+    RAC3ITEM.BOLTS: 20,
+    RAC3ITEM.JACKPOT: 30,
+}
+
 item_counts: dict[str, int] = {
     **dict.fromkeys(non_prog_weapon_data.keys(), 1),
     **dict.fromkeys(prog_weapon_data.keys(), 5),

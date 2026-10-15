@@ -10,6 +10,7 @@ from worlds.rac3.options.armor_vendor_options import ArmorVendors
 from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealthUpgrades
 from worlds.rac3.options.clank_options import ClankOptions
 from worlds.rac3.options.exclude_options import RAC3ExcludeLocations
+from worlds.rac3.options.filler_magnitude_options import FillerMagnitude
 from worlds.rac3.options.filler_weight_options import FillerWeight
 from worlds.rac3.options.generation_behavior_options import GenerationBehavior
 from worlds.rac3.options.helpdesk_options import HelpDesk
@@ -73,6 +74,7 @@ class RaC3Options(PerGameCommonOptions):
     traps_enabled: EnableTraps
     trap_weight: TrapWeight
     trap_magnitude: TrapMagnitude
+    filler_magnitude: FillerMagnitude
     weapon_vendors: WeaponVendors
     skill_points: SkillPoints
     trophies: Trophies
@@ -134,6 +136,7 @@ rac3_option_groups = [
         EnableTraps,
         TrapMagnitude,
         TrapWeight,
+        FillerMagnitude,
         FillerWeight,
     ]),
     OptionGroup("RAC3 Location Options", [
@@ -195,6 +198,7 @@ slot_data_options: list[str] = [
     RAC3OPTION.ENABLE_TRAPS,
     RAC3OPTION.TRAP_WEIGHT,
     RAC3OPTION.TRAP_MAGNITUDE,
+    RAC3OPTION.FILLER_MAGNITUDE,
     RAC3OPTION.RANGERS,
     RAC3OPTION.ARENA,
     RAC3OPTION.VIDCOMICS,

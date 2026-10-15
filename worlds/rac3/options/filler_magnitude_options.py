@@ -1,0 +1,17 @@
+"""This module contains options for the magnitude of filler items in the item pool"""
+
+from Options import ItemDict
+from worlds.rac3.constants.data.item import filler_data, filler_magnitude_data
+from worlds.rac3.constants.options import RAC3OPTION
+
+
+class FillerMagnitude(ItemDict):
+    """
+    Sets the duration/impact of filler items in the item pool.
+    A higher value increases the duration in seconds of jackpot or the percentage of bolts or nanotech XP gained.
+    """
+    display_name = RAC3OPTION.FILLER_MAGNITUDE
+    min = 1
+    max = 100
+    valid_keys = filler_data.keys()
+    default = {k: v for k, v in filler_magnitude_data.items() if k in filler_data.keys()}

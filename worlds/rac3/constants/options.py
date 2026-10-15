@@ -29,6 +29,7 @@ class RAC3OPTION:
     ENABLE_TRAPS = "Enable Traps"
     TRAP_WEIGHT = "Trap Weight"
     TRAP_MAGNITUDE = "Trap Magnitude"
+    FILLER_MAGNITUDE = "Filler Magnitude"
     RANGERS = "Rangers"
     ARENA = "Arena"
     VIDCOMICS = "Vidcomics"

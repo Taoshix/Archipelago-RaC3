@@ -9,6 +9,8 @@ class FillerMagnitude(ItemDict):
     """
     Sets the duration/impact of filler items in the item pool.
     A higher value increases the duration in seconds of jackpot or the percentage of bolts or nanotech XP gained.
+
+    Min value is 1, max value is 100.
     """
     display_name = RAC3OPTION.FILLER_MAGNITUDE
     min = 1

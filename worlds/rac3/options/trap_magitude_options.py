@@ -10,6 +10,8 @@ class TrapMagnitude(ItemDict):
     Sets the duration/impact of trap items in the item pool.
     A higher value increases the duration in seconds of a timed trap or the impact up to 100% of a non-timed trap.
     This option has no effect when traps are disabled.
+
+    Min value is 1, max value is 300.
     """
     display_name = RAC3OPTION.TRAP_MAGNITUDE
     min = 1

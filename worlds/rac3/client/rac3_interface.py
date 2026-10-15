@@ -980,7 +980,7 @@ class Rac3Interface(GameInterface):
                 if not self.nanotech_exp:
                     self.nanotech_exp = self._read32(RAC3STATUS.NANOTECH_EXP)
                 nanotech_percentage = self.options.filler_magnitude.get(name, filler_magnitude_data[name])
-                nanotech_gain = min(200000, max(20000, int(self.nanotech_exp * nanotech_percentage / 100)))
+                nanotech_gain = min(300000, max(20000, int(self.nanotech_exp * nanotech_percentage / 100)))
                 self.nanotech_exp += nanotech_gain
                 if self.nanotech_exp > 0x7FFFFFFF:
                     self.nanotech_exp = 0x7FFFFFFF

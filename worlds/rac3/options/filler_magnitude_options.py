@@ -9,7 +9,7 @@ class FillerMagnitude(ItemDict):
     """
     Sets the duration/impact of filler items in the item pool.
     A higher value increases the duration in seconds of jackpot or the percentage of bolts or nanotech XP gained.
-    Bolts and nanotech are still capped at 200,000 per filler respectively,
+    Bolts and nanotech are still capped at 200,000 and 300,000 per filler respectively,
     but a higher value will increase the amount gained up to that cap.
 
     Min value is 1, max value is 100.

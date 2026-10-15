@@ -12,10 +12,10 @@ class FillerMagnitude(ItemDict):
     Bolts and nanotech are still capped at 200,000 and 300,000 per filler respectively,
     but a higher value will increase the amount gained up to that cap.
 
-    Min value is 1, max value is 100.
+    Min value is 1, max value is 300.
     """
     display_name = RAC3OPTION.FILLER_MAGNITUDE
     min = 1
-    max = 100
+    max = 300
     valid_keys = filler_data.keys()
     default = {k: v for k, v in filler_magnitude_data.items() if k in filler_data.keys()}

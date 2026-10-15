@@ -1154,9 +1154,9 @@ class Rac3Interface(GameInterface):
             return RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS
         if (self.options.weapon_level_locations and
             self.options.progressive_weapons and
-            RAC3TAG.WEAPONS in loc_data.TAGS):
+            RAC3TAG.WEAPON_LEVEL in loc_data.TAGS):
             weapon_id = loc_data.CHECK_ADDRESS[0].VALUE
-            weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[weapon_id]].LEVEL
+            weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID.get(weapon_id, RAC3ITEM.SHOCK_CANNON_V8)].LEVEL
             weapon_name = next(name for name, ids in UPGRADE_DICT.items() if ids == weapon_id)
             return weapon_level <= self.weapon_levels[weapon_name]  # Prevent weapon over-levelling from sending
         # TODO: Implement a distance based checktype

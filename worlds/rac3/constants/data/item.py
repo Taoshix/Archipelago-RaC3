@@ -785,7 +785,7 @@ trap_magnitude_data: dict[str, int] = {
 }
 
 filler_magnitude_data: dict[str, int] = {
-    RAC3ITEM.NANOTECH_XP: 15,
+    RAC3ITEM.NANOTECH_XP: 20,
     RAC3ITEM.BOLTS: 20,
     RAC3ITEM.JACKPOT: 30,
 }

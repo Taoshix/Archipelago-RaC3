@@ -69,8 +69,7 @@ from worlds.rac3.constants.vendors.name import RAC3VENDORNAME
 from worlds.rac3.constants.vendors.type import RAC3VENDORTYPE
 from worlds.rac3.constants.vendors.vendor import RAC3SHIPVENDOR, RAC3VENDOR, RAC3WEAPONVENDOR, VENDORTYPE_TO_SLOT_SIZE
 from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION, jp_convert_address,
-                                           jp_get_pause_physical_address, PAL_SHIFTED_PLANETS, RAC3VERSION,
-                                           VERSION_TO_BLACK_SCREEN_ORIGINAL_VALUE)
+                                           jp_get_pause_physical_address, PAL_SHIFTED_PLANETS, RAC3VERSION)
 from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEAPON_MODPACK, WEAPONMOD
 
 
@@ -2048,9 +2047,7 @@ class Rac3Interface(GameInterface):
                     status = item_to_status[name]
                     match status:
                         case RAC3STATUS.BLACK_SCREEN:
-                            self._write16(status, 0)
-                            self._write8(status + 4, 0)
-                            self._write16(RAC3STATUS.BLACK_SCREEN_2, 0)
+                            self._write8(status, 0)
                         case RAC3STATUS.INVISIBLE:
                             self._write8(status, 2)
                         case RAC3STATUS.WRENCH_ONLY:
@@ -2086,10 +2083,7 @@ class Rac3Interface(GameInterface):
                     case RAC3ITEM.MIRROR_TRAP:
                         self._write8(RAC3STATUS.MIRROR_UNIVERSE, 0)
                     case RAC3ITEM.BLACK_SCREEN_TRAP:
-                        blackscreen_orig_value = VERSION_TO_BLACK_SCREEN_ORIGINAL_VALUE.get(self.current_game, 0x8C)
-                        self._write16(RAC3STATUS.BLACK_SCREEN, blackscreen_orig_value)
-                        self._write16(RAC3STATUS.BLACK_SCREEN_2, blackscreen_orig_value)
-                        self._write8(RAC3STATUS.BLACK_SCREEN + 4, 1)
+                        self._write8(RAC3STATUS.BLACK_SCREEN, 2)
                     case RAC3ITEM.NO_CLANK_TRAP:
                         self.clank_disabled_trap = False
                     case RAC3ITEM.INVISIBLE_TRAP:

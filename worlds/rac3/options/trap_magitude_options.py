@@ -17,4 +17,4 @@ class TrapMagnitude(ItemDict):
     min = 1
     max = 300
     valid_keys = trap_data.keys()
-    default = {k:v for k,v in trap_magnitude_data.items() if k in trap_data.keys()}
+    default = {k: v for k, v in trap_magnitude_data.items() if k in trap_data.keys()}

@@ -1,7 +1,7 @@
 """This module provides an RAC3 interface to control the game"""
 import time
 from dataclasses import dataclass
-from random import choice, randint, uniform
+from random import choice, randint
 from typing import Any
 
 from typing_extensions import deprecated
@@ -17,10 +17,10 @@ from worlds.rac3.constants.action_type import ACTION_TYPE_NAMES, RAC3ACTIONTYPE
 from worlds.rac3.constants.check_type import CHECKTYPE
 from worlds.rac3.constants.cutscene_flag import RAC3CUTSCENEFLAG
 from worlds.rac3.constants.data.address import SAVE_DATA
-from worlds.rac3.constants.data.item import (armor_data, cheat_data, equipable_data, gadget_data, infobot_data,
-                                             ITEM_FROM_AP_CODE, ITEM_NAME_FROM_ID, item_to_status, non_prog_weapon_data,
-                                             PROG_TO_NAME_DICT, quick_selectable_data, RAC3_ITEM_DATA_TABLE,
-                                             filler_magnitude_data, trap_magnitude_data, vidcomic_data)
+from worlds.rac3.constants.data.item import (armor_data, cheat_data, equipable_data, filler_magnitude_data, gadget_data,
+                                             infobot_data, ITEM_FROM_AP_CODE, ITEM_NAME_FROM_ID, item_to_status,
+                                             non_prog_weapon_data, PROG_TO_NAME_DICT, quick_selectable_data,
+                                             RAC3_ITEM_DATA_TABLE, trap_magnitude_data, vidcomic_data)
 from worlds.rac3.constants.data.location import (LOCATION_FROM_AP_CODE, LOCATION_TO_INFOBOT_FLAG,
                                                  RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA, REGION_TO_INFOBOT_LOCATION)
 from worlds.rac3.constants.data.position import RAC3POSITIONDATA
@@ -54,7 +54,7 @@ from worlds.rac3.constants.moby_flag import (BOLT_CRANK_TO_REGION, HACKER_PUZZLE
                                              REFRACTOR_PUZZLE_TO_REGION, TYHRRANOID_PUZZLE_TO_REGION)
 from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERACTION
-from worlds.rac3.constants.player_type import PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
+from worlds.rac3.constants.player_type import ONE_HP_CHALLENGE_CHARACTERS, PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
 from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
                                           PLANET_VENDOR_OFFSET,
@@ -62,10 +62,10 @@ from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, P
                                           PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION, REGION_TO_HACKER_DOOR_COUNT,
                                           RESPAWN_COORDS_OFFSET)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
-from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
-from worlds.rac3.constants.speedups import RAC3SPEEDUPS
-from worlds.rac3.constants.status import RAC3STATUS
-from worlds.rac3.constants.vendors.name import RAC3VENDORNAME
+from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS, SHORTCUTS
+from worlds.rac3.constants.speedups import RAC3SPEEDUPS, SPEEDUPS
+from worlds.rac3.constants.status import RAC3STATUS, status_on_off
+from worlds.rac3.constants.vendors.name import RAC3VENDORNAME, VENDOR_TYPES
 from worlds.rac3.constants.vendors.type import RAC3VENDORTYPE
 from worlds.rac3.constants.vendors.vendor import RAC3SHIPVENDOR, RAC3VENDOR, RAC3WEAPONVENDOR, VENDORTYPE_TO_SLOT_SIZE
 from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION, jp_convert_address,
@@ -368,6 +368,24 @@ class Rac3Interface(GameInterface):
         self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
         self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES]
         self.options.deathlink_behavior = slot_data[RAC3OPTION.DEATHLINK_BEHAVIOR]
+        for option, value in trap_magnitude_data.items():
+            if option not in self.options.trap_magnitude.keys():
+                self.options.trap_magnitude.update({option: value})
+        for option, value in filler_magnitude_data.items():
+            if option not in self.options.filler_magnitude.keys():
+                self.options.filler_magnitude.update({option: value})
+        for option in ONE_HP_CHALLENGE_CHARACTERS:
+            if option not in self.options.one_hp_challenge.keys():
+                self.options.one_hp_challenge.update({option: False})
+        for option in VENDOR_TYPES:
+            if option not in self.options.scout_vendors.keys():
+                self.options.scout_vendors.update({option: False})
+        for option in SHORTCUTS:
+            if option not in self.options.shortcuts.keys():
+                self.options.shortcuts.update({option: False})
+        for option in SPEEDUPS:
+            if option not in self.options.speedups.keys():
+                self.options.speedups.update({option: False})
 
     ########################################
     # Called on Game and Server Connection #
@@ -1019,14 +1037,16 @@ class Rac3Interface(GameInterface):
                 if self.timers.get(name, False):
                     self.timers[name] += self.options.trap_magnitude.get(name, trap_magnitude_data[name])
                 else:
-                    self.timers[name] = int(time.time() + self.options.trap_magnitude.get(name, trap_magnitude_data[name]))
+                    self.timers[name] = int(
+                        time.time() + self.options.trap_magnitude.get(name, trap_magnitude_data[name]))
             case RAC3ITEM.NO_CLANK_TRAP:
                 if self.timers.get(name, False):
                     self.timers[name] += self.options.trap_magnitude.get(name, trap_magnitude_data[name])
                 else:
                     # Special case for holostar, nefarious base and klunk fight
                     if not self.clank_disabled:
-                        self.timers[name] = int(time.time() + self.options.trap_magnitude.get(name, trap_magnitude_data[name]))
+                        self.timers[name] = int(
+                            time.time() + self.options.trap_magnitude.get(name, trap_magnitude_data[name]))
             case RAC3ITEM.GADGETRON_DEBT_TRAP:
                 # Losing bolts near pda vendor triggers failsafe for the pda vendor location,
                 # so we need to delay the debt trap until the player is away from the pda vendor
@@ -1263,8 +1283,8 @@ class Rac3Interface(GameInterface):
         if not self.can_be_killed():
             logger.debug("player unable to be killed")
             return False
-        new_health = (self._read8(RAC3STATUS.NANOPAK_HEALTH) 
-                      if self.options.deathlink_behavior == 1 and self.player_type == RAC3PLAYERTYPE.RATCHET 
+        new_health = (self._read8(RAC3STATUS.NANOPAK_HEALTH)
+                      if self.options.deathlink_behavior == 1 and self.player_type == RAC3PLAYERTYPE.RATCHET
                       else 0)
         self._write8(RAC3STATUS.HEALTH, new_health)
         self._write8(RAC3STATUS.NANOPAK_HEALTH, 0)
@@ -1720,16 +1740,14 @@ class Rac3Interface(GameInterface):
     def get_vendor_apcodes(self) -> list | None:
         """Returns a list of apcodes for the open vendor. Returns None if no vendor is open"""
 
-        vendor_scouting = self.options.scout_vendors
-
-        if self.game_state_value != RAC3GAMESTATE.VENDOR or not vendor_scouting:
+        if self.game_state_value != RAC3GAMESTATE.VENDOR or not self.options.scout_vendors:
             return None
 
         vendor_type = self.vendor_type
         vendor_location_apcodes = []
         match vendor_type:
             case RAC3VENDORTYPE.WEAPON:
-                if not self.options.weapon_vendors or not vendor_scouting.get(RAC3VENDORNAME.WEAPON, False):
+                if not self.options.weapon_vendors or not self.options.scout_vendors.get(RAC3VENDORNAME.WEAPON, False):
                     return None
                 vendor_items = self.weapon_vendor_items
                 is_slimcognito = (self.planet == RAC3REGION.AQUATOS and bool(self._read8(
@@ -1743,7 +1761,7 @@ class Rac3Interface(GameInterface):
                                     item in ITEM_TO_WEAPON_VENDOR_LOCATION]
                 vendor_location_apcodes = [RAC3_LOCATION_DATA_TABLE[loc].AP_CODE for loc in vendor_locations]
             case RAC3VENDORTYPE.ARMOR:
-                if not self.options.armor_vendor or not vendor_scouting.get(RAC3VENDORNAME.ARMOR, False):
+                if not self.options.armor_vendor or not self.options.scout_vendors.get(RAC3VENDORNAME.ARMOR, False):
                     return None
 
                 armor_items = self.armor_vendor_items
@@ -1751,7 +1769,7 @@ class Rac3Interface(GameInterface):
                                     item in ITEM_TO_ARMOR_VENDOR_LOCATION]
                 vendor_location_apcodes = [RAC3_LOCATION_DATA_TABLE[loc].AP_CODE for loc in vendor_locations]
             case RAC3VENDORTYPE.SHIP:
-                if not self.options.ship_vendor or not vendor_scouting.get(RAC3VENDORNAME.SHIP, False):
+                if not self.options.ship_vendor or not self.options.scout_vendors.get(RAC3VENDORNAME.SHIP, False):
                     return None
                 ship_keys = list(SHIP_VENDOR_INVENTORY.keys())[:(self.UnlockItem[RAC3SHIPSLOT.SLOT_0] + 1) * 2]
                 filtered_ship_keys = [key for key in ship_keys if key not in self.checked_locations]
@@ -2051,19 +2069,15 @@ class Rac3Interface(GameInterface):
                 if _name == name:
                     status = item_to_status[name]
                     match status:
-                        case RAC3STATUS.BLACK_SCREEN:
-                            self._write8(status, 0)
-                        case RAC3STATUS.INVISIBLE:
-                            self._write8(status, 2)
-                        case RAC3STATUS.WRENCH_ONLY:
-                            self._write8(status, 2)
-                        case RAC3STATUS.DISARM:
-                            if self.vehicle == 0:
-                                self._write8(status, 1)
                         case RAC3STATUS.NO_CLANK:
                             self.clank_disabled_trap = True
+                            continue
+                        case RAC3STATUS.DISARM:
+                            if self.vehicle != 0:
+                                continue
                         case _:
-                            self._write8(status, 1)
+                            pass
+                    self._write8(status, status_on_off.get(status, [1])[0])
             else:
                 self.timers.pop(name)
                 if "Jackpot" in name:
@@ -2075,28 +2089,20 @@ class Rac3Interface(GameInterface):
                         f"{name}{RAC3TEXTFORMATSTRING.WHITE} effect has worn off.",
                         RAC3BOXTHEME.WARNING)
                 match _name:
-                    case RAC3ITEM.LOCK_TRAP:  # Special case for lock trap
-                        # Clear when timer ends directly rather than from the trap cleanup loop below
-                        # Todo: Check for arena mission
-                        self._write8(RAC3STATUS.WEAPON_LOCK, 0)
+                    # Todo: Check for arena mission on LOCK_TRAP
+                    case RAC3ITEM.NO_CLANK_TRAP:
+                        self.clank_disabled_trap = False
+                        continue
                     case RAC3ITEM.JACKPOT:
                         self.bolt_and_xp_multiplier_value -= 1
                         # Clean up the jackpot status if the multiplier is now 0
                         # Allows x1 mult yaml option to also have jackpot working
-                        if self.bolt_and_xp_multiplier_value == 0:
-                            self._write8(RAC3STATUS.JACKPOT, 0)
-                    case RAC3ITEM.MIRROR_TRAP:
-                        self._write8(RAC3STATUS.MIRROR_UNIVERSE, 0)
-                    case RAC3ITEM.BLACK_SCREEN_TRAP:
-                        self._write8(RAC3STATUS.BLACK_SCREEN, 2)
-                    case RAC3ITEM.NO_CLANK_TRAP:
-                        self.clank_disabled_trap = False
-                    case RAC3ITEM.INVISIBLE_TRAP:
-                        self._write8(RAC3STATUS.INVISIBLE, 0)
-                    case RAC3ITEM.DISARM_TRAP:
-                        self._write8(RAC3STATUS.DISARM, 0)
-                    case RAC3ITEM.WRENCH_ONLY_TRAP:
-                        self._write8(RAC3STATUS.WRENCH_ONLY, 0)
+                        if self.bolt_and_xp_multiplier_value != 0:
+                            continue
+                    case _:
+                        pass
+                status = item_to_status[name]
+                self._write8(status, status_on_off.get(status, [0])[1])
 
         # Remove trap effects for traps not in the timer dictionary to prevent any stuck effects
         # Prevent not having lock trap from unlocking weapon during arena weapon specific challenges every cycle

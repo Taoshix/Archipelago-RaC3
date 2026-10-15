@@ -36,6 +36,7 @@ from worlds.rac3.options.skillpoints_options import SkillPoints
 from worlds.rac3.options.speedups_options import Speedups
 from worlds.rac3.options.starting_weapons_options import StartingWeapons
 from worlds.rac3.options.titanium_bolts_options import TitaniumBolts
+from worlds.rac3.options.trap_magitude_options import TrapMagnitude
 from worlds.rac3.options.trap_weight_options import TrapWeight
 from worlds.rac3.options.traps_options import EnableTraps
 from worlds.rac3.options.trophies_options import Trophies
@@ -71,6 +72,7 @@ class RaC3Options(PerGameCommonOptions):
     filler_weight: FillerWeight
     traps_enabled: EnableTraps
     trap_weight: TrapWeight
+    trap_magnitude: TrapMagnitude
     weapon_vendors: WeaponVendors
     skill_points: SkillPoints
     trophies: Trophies
@@ -130,6 +132,7 @@ rac3_option_groups = [
         BonusVidComicHealthUpgrades,
         ClankOptions,
         EnableTraps,
+        TrapMagnitude,
         TrapWeight,
         FillerWeight,
     ]),
@@ -191,6 +194,7 @@ slot_data_options: list[str] = [
     RAC3OPTION.PLAYER_SKIN,
     RAC3OPTION.ENABLE_TRAPS,
     RAC3OPTION.TRAP_WEIGHT,
+    RAC3OPTION.TRAP_MAGNITUDE,
     RAC3OPTION.RANGERS,
     RAC3OPTION.ARENA,
     RAC3OPTION.VIDCOMICS,

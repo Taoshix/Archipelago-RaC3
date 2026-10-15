@@ -28,6 +28,7 @@ class RAC3OPTION:
     DEATHLINK = "Death Link"
     ENABLE_TRAPS = "Enable Traps"
     TRAP_WEIGHT = "Trap Weight"
+    TRAP_MAGNITUDE = "Trap Magnitude"
     RANGERS = "Rangers"
     ARENA = "Arena"
     VIDCOMICS = "Vidcomics"

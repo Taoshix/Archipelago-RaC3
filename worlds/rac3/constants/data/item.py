@@ -773,6 +773,17 @@ quick_selectable_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.QUICK_SELE
 PROG_TO_NAME_DICT: dict[str, str] = dict(zip(prog_weapon_data.keys(), non_prog_weapon_data.keys()))
 NAME_TO_PROG_DICT: dict[str, str] = dict(zip(non_prog_weapon_data.keys(), prog_weapon_data.keys()))
 
+trap_magnitude_data: dict[str, int] = {
+    RAC3ITEM.LOCK_TRAP: 15,
+    RAC3ITEM.MIRROR_TRAP: 20,
+    RAC3ITEM.BLACK_SCREEN_TRAP: 10,
+    RAC3ITEM.NO_CLANK_TRAP: 20,
+    RAC3ITEM.INVISIBLE_TRAP: 20,
+    RAC3ITEM.DISARM_TRAP: 10,
+    RAC3ITEM.WRENCH_ONLY_TRAP: 20,
+    RAC3ITEM.GADGETRON_DEBT_TRAP: 8,
+}
+
 item_counts: dict[str, int] = {
     **dict.fromkeys(non_prog_weapon_data.keys(), 1),
     **dict.fromkeys(prog_weapon_data.keys(), 5),

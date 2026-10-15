@@ -347,6 +347,7 @@ class RaC3World(World):
             RAC3OPTION.PLAYER_SKIN: self.options.player_skin.value,
             RAC3OPTION.ENABLE_TRAPS: self.options.traps_enabled.value,
             RAC3OPTION.TRAP_WEIGHT: self.options.trap_weight.value,
+            RAC3OPTION.TRAP_MAGNITUDE: self.options.trap_magnitude.value,
             RAC3OPTION.RANGERS: self.options.rangers.value,
             RAC3OPTION.ARENA: self.options.arena.value,
             RAC3OPTION.VIDCOMICS: self.options.vidcomics.value,

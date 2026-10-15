@@ -20,7 +20,7 @@ from worlds.rac3.constants.data.address import SAVE_DATA
 from worlds.rac3.constants.data.item import (armor_data, cheat_data, equipable_data, gadget_data, infobot_data,
                                              ITEM_FROM_AP_CODE, ITEM_NAME_FROM_ID, item_to_status, non_prog_weapon_data,
                                              PROG_TO_NAME_DICT, quick_selectable_data, RAC3_ITEM_DATA_TABLE,
-                                             vidcomic_data)
+                                             trap_magnitude_data, vidcomic_data)
 from worlds.rac3.constants.data.location import (LOCATION_FROM_AP_CODE, LOCATION_TO_INFOBOT_FLAG,
                                                  RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA, REGION_TO_INFOBOT_LOCATION)
 from worlds.rac3.constants.data.position import RAC3POSITIONDATA
@@ -99,6 +99,7 @@ class Rac3Interface(GameInterface):
         player_skin: int
         traps_enabled: int
         trap_weight: dict[str, int]
+        trap_magnitude: dict[str, int]
         rangers: int
         arena: int
         vidcomics: int
@@ -340,6 +341,7 @@ class Rac3Interface(GameInterface):
         self.options.player_skin = slot_data[RAC3OPTION.PLAYER_SKIN]
         self.options.traps_enabled = slot_data[RAC3OPTION.ENABLE_TRAPS]
         self.options.trap_weight = slot_data[RAC3OPTION.TRAP_WEIGHT]
+        self.options.trap_magnitude = slot_data[RAC3OPTION.TRAP_MAGNITUDE]
         self.options.rangers = slot_data[RAC3OPTION.RANGERS]
         self.options.arena = slot_data[RAC3OPTION.ARENA]
         self.options.vidcomics = slot_data[RAC3OPTION.VIDCOMICS]
@@ -1008,49 +1010,28 @@ class Rac3Interface(GameInterface):
                     if self.UnlockItem[weapon_name]:
                         self._write32(non_prog_weapon_data[weapon_name].AMMO_ADDRESS, 0)
                 self._write8(RAC3STATUS.QWARK_AMMO, 0)
-            case RAC3ITEM.LOCK_TRAP:
+            case (RAC3ITEM.LOCK_TRAP | RAC3ITEM.MIRROR_TRAP | RAC3ITEM.BLACK_SCREEN_TRAP |
+                  RAC3ITEM.INVISIBLE_TRAP | RAC3ITEM.DISARM_TRAP | RAC3ITEM.WRENCH_ONLY_TRAP):
                 if self.timers.get(name, False):
-                    self.timers[name] += randint(10, 20)
+                    self.timers[name] += self.options.trap_magnitude.get(name, trap_magnitude_data[name])
                 else:
-                    self.timers[name] = int(time.time() + uniform(10, 15))
-            case RAC3ITEM.MIRROR_TRAP:
-                if self.timers.get(name, False):
-                    self.timers[name] += randint(10, 20)
-                else:
-                    self.timers[name] = int(time.time() + uniform(10, 20))
-            case RAC3ITEM.BLACK_SCREEN_TRAP:
-                if self.timers.get(name, False):
-                    self.timers[name] += randint(6, 12)
-                else:
-                    self.timers[name] = int(time.time() + uniform(6, 10))
+                    self.timers[name] = int(time.time() + self.options.trap_magnitude.get(name, trap_magnitude_data[name]))
             case RAC3ITEM.NO_CLANK_TRAP:
                 if self.timers.get(name, False):
-                    self.timers[name] += randint(10, 20)
+                    self.timers[name] += self.options.trap_magnitude.get(name, trap_magnitude_data[name])
                 else:
                     # Special case for holostar, nefarious base and klunk fight
                     if not self.clank_disabled:
-                        self.timers[name] = int(time.time() + uniform(10, 20))
-            case RAC3ITEM.INVISIBLE_TRAP:
-                if self.timers.get(name, False):
-                    self.timers[name] += randint(10, 20)
-                else:
-                    self.timers[name] = int(time.time() + uniform(10, 20))
-            case RAC3ITEM.DISARM_TRAP:
-                if self.timers.get(name, False):
-                    self.timers[name] += randint(6, 15)
-                else:
-                    self.timers[name] = int(time.time() + uniform(6, 15))
-            case RAC3ITEM.WRENCH_ONLY_TRAP:
-                if self.timers.get(name, False):
-                    self.timers[name] += randint(10, 15)
-                else:
-                    self.timers[name] = int(time.time() + uniform(10, 20))
+                        self.timers[name] = int(time.time() + self.options.trap_magnitude.get(name, trap_magnitude_data[name]))
             case RAC3ITEM.GADGETRON_DEBT_TRAP:
                 # Losing bolts near pda vendor triggers failsafe for the pda vendor location,
                 # so we need to delay the debt trap until the player is away from the pda vendor
                 if not self.near_pda_vendor():
                     bolts = self._read32(RAC3STATUS.BOLTS)
-                    new_bolts = bolts * 0.92
+                    impact = self.options.trap_magnitude.get(name, trap_magnitude_data[name])
+                    if impact > 100:
+                        impact = 100
+                    new_bolts = bolts * (100 - impact / 100)
                     self._write32(RAC3STATUS.BOLTS, int(new_bolts))
                 else:
                     self.delayed_debt_trap_count += 1
@@ -2382,7 +2363,11 @@ class Rac3Interface(GameInterface):
         if not self.near_pda_vendor():
             for _ in range(self.delayed_debt_trap_count):
                 bolts = self._read32(RAC3STATUS.BOLTS)
-                new_bolts = bolts * 0.92
+                impact = 100 - self.options.trap_magnitude.get(
+                    RAC3ITEM.GADGETRON_DEBT_TRAP, trap_magnitude_data[RAC3ITEM.GADGETRON_DEBT_TRAP])
+                if impact > 100:
+                    impact = 100
+                new_bolts = bolts * (100 - impact / 100)
                 self._write32(RAC3STATUS.BOLTS, int(new_bolts))
             self.delayed_debt_trap_count = 0
         # Add any other things we need to delay and process here

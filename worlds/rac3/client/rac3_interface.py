@@ -1035,7 +1035,7 @@ class Rac3Interface(GameInterface):
                     impact = self.options.trap_magnitude.get(name, trap_magnitude_data[name])
                     if impact > 100:
                         impact = 100
-                    new_bolts = bolts * (100 - impact / 100)
+                    new_bolts = bolts * (100 - impact) / 100
                     self._write32(RAC3STATUS.BOLTS, int(new_bolts))
                 else:
                     self.delayed_debt_trap_count += 1
@@ -2362,11 +2362,11 @@ class Rac3Interface(GameInterface):
         if not self.near_pda_vendor():
             for _ in range(self.delayed_debt_trap_count):
                 bolts = self._read32(RAC3STATUS.BOLTS)
-                impact = 100 - self.options.trap_magnitude.get(
+                impact = self.options.trap_magnitude.get(
                     RAC3ITEM.GADGETRON_DEBT_TRAP, trap_magnitude_data[RAC3ITEM.GADGETRON_DEBT_TRAP])
                 if impact > 100:
                     impact = 100
-                new_bolts = bolts * (100 - impact / 100)
+                new_bolts = bolts * (100 - impact) / 100
                 self._write32(RAC3STATUS.BOLTS, int(new_bolts))
             self.delayed_debt_trap_count = 0
         # Add any other things we need to delay and process here

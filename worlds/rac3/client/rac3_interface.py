@@ -960,8 +960,9 @@ class Rac3Interface(GameInterface):
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
             case RAC3ITEM.CHARGE_BOOTS:
                 self._write8(RAC3STATUS.EQUIP_BOOTS, 0x1D)
-            # case RAC3ITEM.PROGRESSIVE_WRENCH:
-            #    pass
+            case RAC3ITEM.PROGRESSIVE_WRENCH:
+                if self.UnlockItem[name] > 8:
+                    self.UnlockItem[name] = 8
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
             case RAC3ITEM.BOLTS:
@@ -2007,6 +2008,8 @@ class Rac3Interface(GameInterface):
         """Cycle through the wrench properties and update its state"""
         if self.options.progressive_wrench:
             prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
+            if prog_wrench > 5 and not self.options.ngplus_items:
+                prog_wrench = 5
             if self.planet != RAC3REGION.MENU and self.between_planets is False:
                 wrench_instruction = (
                     RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
@@ -2020,12 +2023,7 @@ class Rac3Interface(GameInterface):
                 wrench_swing = (
                     RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) +
                     RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET)
-                if prog_wrench < 5:
-                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH].get(prog_wrench - 1, UPGRADE_DICT[RAC3ITEM.WRENCH][-1])
-                if prog_wrench > 5 and not self.options.ngplus_items:
-                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][4]
-                if prog_wrench > 8 and self.options.ngplus_items:
-                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][7]
+                target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
                 if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
                     self._read32(wrench_instruction) == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE):
                     if prog_wrench == 0:

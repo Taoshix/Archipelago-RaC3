@@ -399,8 +399,7 @@ async def handle_check_goal(ctx: "Context") -> None:
     if ctx.slot_data is None or ctx.slot is None:
         return
 
-    victory_code = ctx.game_interface.get_victory_code()
-    if victory_code in ctx.checked_locations and not ctx.finished_game:
+    if ctx.game_interface.check_victory() and not ctx.finished_game:
         ctx.finished_game = True
         await ctx.send_msgs([ClientMessage.status_update(ClientStatus.CLIENT_GOAL)])
 
@@ -484,9 +483,7 @@ async def handle_vendors(ctx: "Context") -> None:
     if vendor_location_apcodes:
         current_hints = set(vendor_location_apcodes)
         if current_hints and not current_hints.issubset(ctx.already_hinted):
-            await ctx.send_msgs([
-                {"cmd": "CreateHints", "locations": vendor_location_apcodes, "player": ctx.slot}
-            ])
+            await ctx.send_msgs([{"cmd": "CreateHints", "locations": vendor_location_apcodes, "player": ctx.slot}])
             ctx.already_hinted.update(current_hints)
 
 

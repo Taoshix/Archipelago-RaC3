@@ -34,6 +34,7 @@ from worlds.rac3.options.ship_vendor_options import ShipVendors
 from worlds.rac3.options.ship_wings_options import ShipWings
 from worlds.rac3.options.shortcuts_options import Shortcuts
 from worlds.rac3.options.skillpoints_options import SkillPoints
+from worlds.rac3.options.skillpoints_pick_and_mix_options import SkillPointsPickAndMix
 from worlds.rac3.options.speedups_options import Speedups
 from worlds.rac3.options.starting_weapons_options import StartingWeapons
 from worlds.rac3.options.titanium_bolts_options import TitaniumBolts
@@ -77,6 +78,7 @@ class RaC3Options(PerGameCommonOptions):
     filler_magnitude: FillerMagnitude
     weapon_vendors: WeaponVendors
     skill_points: SkillPoints
+    skill_points_pick_and_mix: SkillPointsPickAndMix
     trophies: Trophies
     titanium_bolts: TitaniumBolts
     rangers: Rangers
@@ -146,6 +148,7 @@ rac3_option_groups = [
         ShipVendors,
         ScoutVendors,
         SkillPoints,
+        SkillPointsPickAndMix,
         Trophies,
         TitaniumBolts,
         WeaponLevels,

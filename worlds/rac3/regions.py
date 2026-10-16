@@ -409,6 +409,8 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
         """Determine if the skill master trophy location should be skipped based on options."""
         if options.skill_points.value < 2:
             return True
+        if options.skill_points.value == 3 and len(options.skill_points_pick_and_mix.value) != 30:
+            return True
         if options.sewer_limitation.value < 100:
             return True
         if options.vidcomics.value == 0:
@@ -449,6 +451,9 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                     return True  # Skips skill points when disabled
                 if options.skill_points.value == 1 and loc not in simple_skillpoints:
                     return True  # Skips harder skill points
+                if (options.skill_points.value == 3
+                    and all(key not in loc for key in options.skill_points_pick_and_mix.value)):
+                    return True  # Skip skill point location if it's not in the player's selected pool
             case RAC3TAG.T_BOLT:
                 if options.titanium_bolts.value == 0:
                     return True  # Skip titanium bolt locations if titanium bolt option is disabled

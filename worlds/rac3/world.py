@@ -335,6 +335,7 @@ class RaC3World(World):
             RAC3OPTION.WEAPON_MODS: self.options.weapon_mods.value,
             RAC3OPTION.ARMOR_UPGRADE: self.options.armor_upgrade.value,
             RAC3OPTION.SKILL_POINTS: self.options.skill_points.value,
+            RAC3OPTION.SKILL_POINTS_PICK_AND_MIX: self.options.skill_points_pick_and_mix.value,
             RAC3OPTION.TROPHIES: self.options.trophies.value,
             RAC3OPTION.TITANIUM_BOLTS: self.options.titanium_bolts.value,
             RAC3OPTION.NANOTECH_MILESTONES: self.options.nanotech_milestones.value,

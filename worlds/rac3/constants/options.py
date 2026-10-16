@@ -15,6 +15,7 @@ class RAC3OPTION:
     PROGRESSIVE_WEAPONS = "Progressive Weapons"
     ARMOR_UPGRADE = "Armor Upgrade"
     SKILL_POINTS = "Skill Points"
+    SKILL_POINTS_PICK_AND_MIX = "Skill Points Pick and Mix"
     TROPHIES = "Trophies"
     TITANIUM_BOLTS = "Titanium Bolts"
     NANOTECH_MILESTONES = "Nanotech Milestones"

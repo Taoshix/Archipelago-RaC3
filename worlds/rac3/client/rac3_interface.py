@@ -57,10 +57,9 @@ from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERA
 from worlds.rac3.constants.player_type import ONE_HP_CHALLENGE_CHARACTERS, PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
 from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
-                                          PLANET_VENDOR_OFFSET,
-                                          PLANETS_WITH_HACKER_PUZZLES, PLANETS_WITH_REFRACTOR_PUZZLES,
-                                          PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION, REGION_TO_HACKER_DOOR_COUNT,
-                                          RESPAWN_COORDS_OFFSET)
+                                          PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES,
+                                          PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
+                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS, SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS, SPEEDUPS
@@ -71,6 +70,7 @@ from worlds.rac3.constants.vendors.vendor import RAC3SHIPVENDOR, RAC3VENDOR, RAC
 from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION, jp_convert_address,
                                            jp_get_pause_physical_address, PAL_SHIFTED_PLANETS, RAC3VERSION)
 from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEAPON_MODPACK, WEAPONMOD
+from worlds.rac3.constants.wrench import RAC3WRENCH
 
 
 class Rac3Interface(GameInterface):
@@ -84,6 +84,7 @@ class Rac3Interface(GameInterface):
         bolt_and_xp_multiplier: int
         progressive_weapons: int
         weapon_mods: int
+        progressive_wrench: int
         armor_upgrade: int
         skill_points: int
         trophies: int
@@ -327,6 +328,7 @@ class Rac3Interface(GameInterface):
         self.options.bolt_and_xp_multiplier = slot_data[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
         self.options.progressive_weapons = slot_data[RAC3OPTION.PROGRESSIVE_WEAPONS]
         self.options.weapon_mods = slot_data[RAC3OPTION.WEAPON_MODS]
+        self.options.progressive_wrench = slot_data[RAC3OPTION.PROGRESSIVE_WRENCH]
         self.options.armor_upgrade = slot_data[RAC3OPTION.ARMOR_UPGRADE]
         self.options.skill_points = slot_data[RAC3OPTION.SKILL_POINTS]
         self.options.trophies = slot_data[RAC3OPTION.TROPHIES]
@@ -958,6 +960,9 @@ class Rac3Interface(GameInterface):
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
             case RAC3ITEM.CHARGE_BOOTS:
                 self._write8(RAC3STATUS.EQUIP_BOOTS, 0x1D)
+            case RAC3ITEM.PROGRESSIVE_WRENCH:
+                if self.UnlockItem[name] > 8:
+                    self.UnlockItem[name] = 8
             case RAC3ITEM.TITANIUM_BOLT:
                 pass
             case RAC3ITEM.BOLTS:
@@ -1812,6 +1817,7 @@ class Rac3Interface(GameInterface):
         self.planet_cycler()
         self.weapon_cycler()
         self.weapon_mod_cycler()
+        self.wrench_cycler()
         self.vidcomic_cycler()
         self.vidcomic_health_cycler()
         self.armor_cycler()
@@ -1998,6 +2004,46 @@ class Rac3Interface(GameInterface):
                 if self.UnlockItem[weapon_name]:
                     self._write8(data.MOD_ADDRESS, self.UnlockItem.get(modpack, 0))
 
+    def wrench_cycler(self):
+        """Cycle through the wrench properties and update its state"""
+        if self.options.progressive_wrench:
+            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
+            if prog_wrench > 5 and not self.options.ngplus_items:
+                prog_wrench = 5
+            if self.planet != RAC3REGION.MENU and self.between_planets is False:
+                wrench_instruction = (
+                    RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
+                    RAC3WRENCH.BASE_ITEM_ID_OFFSET)
+                wrench_upgrade = (
+                    RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
+                    RAC3WRENCH.UPGRADE_ID_OFFSET)
+                wrench_equip = (
+                    RAC3WRENCH.get_equip_wrench_address(self.planet, self.current_game) +
+                    RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET)
+                wrench_swing = (
+                    RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) +
+                    RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET)
+                target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
+                if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
+                    self._read32(wrench_instruction) == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE):
+                    if prog_wrench == 0:
+                        self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
+                        self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
+                        if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
+                            self._write8(RAC3STATUS.WRENCH_LEVEL, 0)
+                    if prog_wrench >= 1:
+                        if (self._read32(wrench_equip) == RAC3WRENCH.PATCHED_EQUIP_VALUE and
+                            self._read32(wrench_swing) == RAC3WRENCH.PATCHED_SWING_VALUE):
+                            self._write32(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
+                            self._write32(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
+                        for _ in range(7):
+                            self._write8(wrench_upgrade, target_level)
+                            wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
+                        if self.max_health < 15:
+                            self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
+        else:
+            return
+
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):
         """Writes new values to the player's last used item history"""
@@ -2096,7 +2142,7 @@ class Rac3Interface(GameInterface):
                     case RAC3ITEM.JACKPOT:
                         self.bolt_and_xp_multiplier_value -= 1
                         # Clean up the jackpot status if the multiplier is now 0
-                        # Allows x1 mult yaml option to also have jackpot working
+                        # Allows x1 mult YAML option to also have jackpot working
                         if self.bolt_and_xp_multiplier_value != 0:
                             continue
                     case _:

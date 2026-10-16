@@ -1,7 +1,7 @@
 """This module contains the logic implementation for RAC3"""
+import math
 from collections.abc import Callable
 from logging import DEBUG, getLogger
-import math
 from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionState
@@ -87,6 +87,14 @@ def set_rules(world: "RaC3World"):
     ngplus_enabled = world.options.ngplus_start.value
     if ngplus_enabled:
         progressive_requirement += 5 if world.options.ngplus_items.value else 4
+
+    progressive_wrench_requirement = 1
+    a_wrench = 1
+    if world.options.progressive_wrench.value > 0:
+        progressive_wrench_requirement += 5 if world.options.ngplus_items.value else 4
+    else:
+        progressive_wrench_requirement = 0
+        a_wrench = 0
 
     region_rules_dict: dict[str, Callable] = {
 
@@ -225,7 +233,9 @@ def set_rules(world: "RaC3World"):
         RAC3VENDORLOCATION.PHOENIX_SKIN_32: lambda state: state.has_from_list(infobot_data.keys(), world.player, 19),
         RAC3SKILLPOINT.PHOENIX_ARMOR: lambda state: state.can_reach_region(RAC3REGION.KOROS, world.player),
         # RAC3LOCATION.PHOENIX_MEET_SASHA
-        RAC3SKILLPOINT.PHOENIX_MONKEY: lambda state: state.has(RAC3ITEM.TYHRRA_GUISE, world.player),
+        RAC3SKILLPOINT.PHOENIX_MONKEY:
+            lambda state: state.has(RAC3ITEM.TYHRRA_GUISE, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3LOCATION.PHOENIX_ASSAULT:
             lambda state: state.can_reach_location(RAC3LOCATION.HIDEOUT_FIND_QWARK, world.player)
                           and state.has(RAC3ITEM.REFRACTOR, world.player),
@@ -247,7 +257,8 @@ def set_rules(world: "RaC3World"):
                            or state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, progressive_requirement))
                           and state.can_reach_location(RAC3LOCATION.PHOENIX_VR_D_L_D, world.player),
         RAC3LOCATION.PHOENIX_VR_WRENCH:
-            lambda state: state.can_reach_location(RAC3LOCATION.PHOENIX_VR_SHOCKER, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.PHOENIX_VR_SHOCKER, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3TBOLT.PHOENIX_VR_NERVES:
             lambda state: state.can_reach_location(RAC3LOCATION.PHOENIX_VR_WRENCH, world.player)
                           and state.can_reach_location(RAC3LOCATION.PHOENIX_VR_90_SECOND, world.player),
@@ -322,7 +333,8 @@ def set_rules(world: "RaC3World"):
         RAC3LOCATION.MARCADIA_RANGERS_4:
             lambda state: state.can_reach_location(RAC3LOCATION.MARCADIA_RANGERS_3, world.player),
         RAC3LOCATION.MARCADIA_RANGERS_5:
-            lambda state: state.can_reach_location(RAC3LOCATION.MARCADIA_RANGERS_4, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.MARCADIA_RANGERS_4, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3LOCATION.MARCADIA_REFRACTOR:
             lambda state: state.can_reach_location(RAC3LOCATION.MARCADIA_RANGERS_5, world.player),
         RAC3SKILLPOINT.MARCADIA_REFLECT:
@@ -367,7 +379,8 @@ def set_rules(world: "RaC3World"):
                           and state.can_reach_location(RAC3LOCATION.NATION_WHIP_IT_GOOD, world.player),
 
         RAC3SKILLPOINT.NATION_BASH:
-            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, progressive_wrench_requirement),
         RAC3LOCATION.NATION_MEET_COURTNEY:
             lambda state: state.can_reach_location(RAC3LOCATION.NATION_BBQ_BOULEVARD, world.player),
         RAC3LOCATION.NATION_INFOBOT_HOLOSTAR:
@@ -560,7 +573,8 @@ def set_rules(world: "RaC3World"):
         RAC3TBOLT.TYHRRANOSIS_CAVE: lambda state: state.has(RAC3ITEM.HYPERSHOT, world.player),
         # RAC3LOCATION.TYHRRANOSIS_BOSS
         RAC3LOCATION.TYHRRANOSIS_RANGERS_1:
-            lambda state: state.can_reach_location(RAC3LOCATION.TYHRRANOSIS_BOSS, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.TYHRRANOSIS_BOSS, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3LOCATION.TYHRRANOSIS_RANGERS_2:
             lambda state: state.can_reach_location(RAC3LOCATION.TYHRRANOSIS_RANGERS_1, world.player),
         RAC3LOCATION.TYHRRANOSIS_RANGERS_3:
@@ -587,7 +601,8 @@ def set_rules(world: "RaC3World"):
         RAC3TBOLT.OBANI_GEMINI_2: lambda state: state.has(RAC3ITEM.REFRACTOR, world.player),
         RAC3LOCATION.OBANI_GEMINI_SKIDD: lambda state: state.has(RAC3ITEM.REFRACTOR, world.player),
 
-        # RAC3SKILLPOINT.BLACKWATER_BASH
+        RAC3SKILLPOINT.BLACKWATER_BASH:
+            lambda state: state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, progressive_wrench_requirement),
         # RAC3LOCATION.BLACKWATER_CITY_RANGERS_1
         RAC3LOCATION.BLACKWATER_CITY_RANGERS_2:
             lambda state: state.can_reach_location(RAC3LOCATION.BLACKWATER_CITY_RANGERS_1, world.player),
@@ -639,7 +654,8 @@ def set_rules(world: "RaC3World"):
         # RAC3LOCATION.METROPOLIS_METAL_NOIDS
         # RAC3TBOLT.METROPOLIS_BEHIND
         RAC3LOCATION.METROPOLIS_DEFEAT_KLUNK:
-            lambda state: state.has_all([RAC3ITEM.GRAV_BOOTS, RAC3ITEM.REFRACTOR], world.player),
+            lambda state: state.has_all([RAC3ITEM.GRAV_BOOTS, RAC3ITEM.REFRACTOR], world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3TBOLT.METROPOLIS_RANGERS:
             lambda state: state.can_reach_location(RAC3LOCATION.METROPOLIS_DEFEAT_KLUNK, world.player),
         RAC3LOCATION.METROPOLIS_RANGERS_1:
@@ -696,7 +712,8 @@ def set_rules(world: "RaC3World"):
                            or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, progressive_requirement))
                           and state.can_reach_location(RAC3LOCATION.ARIDIA_RANGERS_2, world.player),
         RAC3LOCATION.ARIDIA_RANGERS_4:
-            lambda state: state.can_reach_location(RAC3LOCATION.ARIDIA_RANGERS_3, world.player),
+            lambda state: state.can_reach_location(RAC3LOCATION.ARIDIA_RANGERS_3, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3TBOLT.ARIDIA_BASE:
             lambda state: state.has(RAC3ITEM.GRAV_BOOTS, world.player)
                           and state.can_reach_location(RAC3LOCATION.ARIDIA_RANGERS_4, world.player),
@@ -720,7 +737,9 @@ def set_rules(world: "RaC3World"):
         # RAC3TROPHY.KOROS_COURTNEY
         # RAC3TBOLT.KOROS_FENCE
         # RAC3TBOLT.KOROS_GLASS
-        RAC3SKILLPOINT.KOROS_BREAK: lambda state: state.has(RAC3ITEM.BOX_BREAKER, world.player),
+        RAC3SKILLPOINT.KOROS_BREAK:
+            lambda state: state.has(RAC3ITEM.BOX_BREAKER, world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         # RAC3LOCATION.KOROS_BASE
 
         RAC3TBOLT.COMMAND_CENTER:
@@ -736,12 +755,14 @@ def set_rules(world: "RaC3World"):
             lambda state: state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE,
                                          RAC3ITEM.HACKER, RAC3ITEM.REFRACTOR], world.player)
                           and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK,
-                                             RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player),
+                                             RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
         RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR:
             lambda state: state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE,
                                          RAC3ITEM.HACKER, RAC3ITEM.REFRACTOR], world.player)
                           and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK,
-                                             RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player),
+                                             RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
 
         RAC3VENDORLOCATION.NGPLUS_RY3N0: lambda state: state.has_from_list(infobot_data.keys(), world.player, 10),
 

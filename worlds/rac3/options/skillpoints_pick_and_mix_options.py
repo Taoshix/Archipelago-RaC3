@@ -1,4 +1,4 @@
-"""This module contains options for Weapon Level locations"""
+"""This module contains options for Skill Point Pick and Mix"""
 
 from Options import OptionSet
 from worlds.rac3.constants.options import RAC3OPTION

@@ -2020,7 +2020,12 @@ class Rac3Interface(GameInterface):
                 wrench_swing = (
                     RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) +
                     RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET)
-                target_id = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
+                if prog_wrench < 5:
+                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH].get(prog_wrench - 1, UPGRADE_DICT[RAC3ITEM.WRENCH][-1])
+                if prog_wrench > 5 and not self.options.ngplus_items:
+                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][4]
+                if prog_wrench > 8 and self.options.ngplus_items:
+                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][7]
                 if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
                     self._read32(wrench_instruction) == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE):
                     if prog_wrench == 0:
@@ -2034,10 +2039,10 @@ class Rac3Interface(GameInterface):
                             self._write32(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
                             self._write32(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
                         for _ in range(7):
-                            self._write8(wrench_upgrade, target_id)
+                            self._write8(wrench_upgrade, target_level)
                             wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
                         if self.max_health < 15:
-                            self._write8(RAC3STATUS.WRENCH_LEVEL, target_id)
+                            self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
         else:
             return
 

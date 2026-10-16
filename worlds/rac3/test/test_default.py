@@ -11,6 +11,8 @@ from worlds.rac3.options.armor_upgrade_options import ArmorUpgrade
 from worlds.rac3.options.armor_vendor_options import ArmorVendors
 from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealthUpgrades
 from worlds.rac3.options.clank_options import ClankOptions
+from worlds.rac3.options.deathlink_behavior_options import DeathlinkBehavior
+from worlds.rac3.options.filler_magnitude_options import FillerMagnitude
 from worlds.rac3.options.filler_weight_options import FillerWeight
 from worlds.rac3.options.generation_behavior_options import GenerationBehavior
 from worlds.rac3.options.goal_bio_options import GoalBio
@@ -55,6 +57,7 @@ from worlds.rac3.options.skillpoints_options import SkillPoints
 from worlds.rac3.options.speedups_options import Speedups
 from worlds.rac3.options.starting_weapons_options import StartingWeapons
 from worlds.rac3.options.titanium_bolts_options import TitaniumBolts
+from worlds.rac3.options.trap_magitude_options import TrapMagnitude
 from worlds.rac3.options.trap_weight_options import TrapWeight
 from worlds.rac3.options.traps_options import EnableTraps
 from worlds.rac3.options.trophies_options import Trophies
@@ -80,6 +83,8 @@ class TestDefaults(RAC3TestBase):
         # "filler_weight": FillerWeight.default,
         # "traps_enabled": EnableTraps.default,
         # "trap_weight": TrapWeight.default,
+        # "trap_magnitude": TrapMagnitude.default,
+        # "filler_magnitude": FillerMagnitude.default,
         # "weapon_vendors": WeaponVendors.default,
         # "skill_points": SkillPoints.default,
         # "trophies": Trophies.default,
@@ -112,6 +117,7 @@ class TestDefaults(RAC3TestBase):
         # "weapon_level_locations": WeaponLevels.default,
         # "bonus_vidcomic_health": BonusVidComicHealthUpgrades.default,
         # "vidcomic_health_upgrades": VidComicHealthUpgrades.default,
+        # "deathlink_behavior": DeathlinkBehavior.default,
         # "lock_command_center": LockCommandCenter.default,
         # "goal_bio": GoalBio.default,
         # "goal_nef": GoalNef.default,
@@ -200,7 +206,6 @@ class TestDefaults(RAC3TestBase):
                     names[location.name] = item.name
 
 
-
 class TestNotDefault(RAC3TestBase):
     options = {
         "deathlink": DeathLink.option_true,
@@ -214,6 +219,8 @@ class TestNotDefault(RAC3TestBase):
         "filler_weight": dict.fromkeys(FillerWeight.default.keys(), FillerWeight.max),
         "traps_enabled": EnableTraps.option_true,
         "trap_weight": dict.fromkeys(TrapWeight.valid_keys, TrapWeight.max),
+        "trap_magnitude": dict.fromkeys(TrapMagnitude.valid_keys, TrapMagnitude.max),
+        "filler_magnitude": dict.fromkeys(FillerMagnitude.valid_keys, FillerMagnitude.max),
         "weapon_vendors": WeaponVendors.option_false,
         "skill_points": SkillPoints.option_all,
         "trophies": Trophies.option_all,
@@ -246,6 +253,7 @@ class TestNotDefault(RAC3TestBase):
         "weapon_level_locations": frozenset({"V2, V3, V4, V5"}),
         "bonus_vidcomic_health": BonusVidComicHealthUpgrades.range_start,
         "vidcomic_health_upgrades": VidComicHealthUpgrades.option_false,
+        "deathlink_behavior": DeathlinkBehavior.option_nanopak_save,
         "lock_command_center": LockCommandCenter.option_true,
         "goal_bio": GoalBio.option_false,
         "goal_nef": GoalNef.option_true,

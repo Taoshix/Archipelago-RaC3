@@ -224,9 +224,10 @@ class GameInterface:
                                        "game to play.")
                     else:
                         logger.info("Unknown game version detected")
-        if self.current_game == "None" and self.game_id_error != game_id and game_id != b"\x00\x00\x00\x00\x00\x00":
-            logger.warning(f"Connected to the wrong game ({game_id})")
-            self.game_id_error = game_id
+        if self.current_game == "None":
+            if self.game_id_error != game_id and game_id != b"\x00\x00\x00\x00\x00\x00":
+                logger.warning(f"Connected to the wrong game ({game_id})")
+                self.game_id_error = game_id
             return False
         # logger.debug("Valid Game detected")
         return True

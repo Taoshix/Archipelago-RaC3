@@ -2068,6 +2068,8 @@ class Rac3Interface(GameInterface):
             if time.time() < _time:
                 if _name == name:
                     status = item_to_status[name]
+                    if status == RAC3STATUS.BLACK_SCREEN and self._read8(RAC3STATUS.PROGRESSIVE_SCAN):
+                        status = RAC3STATUS.BLACK_SCREEN_PROG_SCAN
                     match status:
                         case RAC3STATUS.NO_CLANK:
                             self.clank_disabled_trap = True
@@ -2102,6 +2104,8 @@ class Rac3Interface(GameInterface):
                     case _:
                         pass
                 status = item_to_status[name]
+                if status == RAC3STATUS.BLACK_SCREEN and self._read8(RAC3STATUS.PROGRESSIVE_SCAN):
+                    status = RAC3STATUS.BLACK_SCREEN_PROG_SCAN
                 self._write8(status, status_on_off.get(status, [0])[1])
 
         # Remove trap effects for traps not in the timer dictionary to prevent any stuck effects

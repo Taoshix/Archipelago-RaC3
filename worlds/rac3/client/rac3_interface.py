@@ -1525,7 +1525,7 @@ class Rac3Interface(GameInterface):
         if self.planet not in PLANET_VENDOR_OFFSET.keys() or self.vendor_type is None:
             return
 
-        if self.options.armor_vendor and self.planet == RAC3REGION.STARSHIP_PHOENIX:
+        if self.options.armor_vendor and self.planet in (RAC3REGION.STARSHIP_PHOENIX, RAC3REGION.PHOENIX_ASSAULT):
             new_armor = self._read32(
                 RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.NEW_ARMOR_OFFSET, self.current_game))
             if 0 < new_armor < 5:

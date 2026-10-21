@@ -204,6 +204,7 @@ class Rac3Interface(GameInterface):
     last_hovered_weapon: str = ""
     track_deaths: bool = False
     equipped_item: int = 0
+    held_item: int = 0
     last_used_0: int = 0
     last_used_1: int = 0
     last_used_2: int = 0
@@ -641,6 +642,7 @@ class Rac3Interface(GameInterface):
         self.is_reloading = self._read8(RAC3STATUS.FORCE_RELOAD)
         self.inside_hacker_puzzle = self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.HACKER].ID
         self.equipped_item = self._read8(RAC3STATUS.EQUIPPED)
+        self.held_item = self._read8(RAC3STATUS.HELD_ITEM)
         self.last_used_0 = self._read8(RAC3STATUS.LAST_USED_0)
         self.last_used_1 = self._read8(RAC3STATUS.LAST_USED_1)
         self.last_used_2 = self._read8(RAC3STATUS.LAST_USED_2)
@@ -1972,8 +1974,7 @@ class Rac3Interface(GameInterface):
                 self._write8(unlock_addr, 0)
                 self._write32(ammo_addr, 0)
                 # Auto unequip locked weapons and equip the wrench
-                held_item = self._read8(RAC3STATUS.HELD_ITEM)
-                if held_item and ITEM_NAME_FROM_ID[held_item] == name:
+                if self.held_item and ITEM_NAME_FROM_ID[self.held_item] == name:
                     self._write8(RAC3STATUS.PENDING_ITEM, 9)  # Wrench
 
         if self.equipped_item > 1 and self.UnlockItem[ITEM_NAME_FROM_ID[self.equipped_item]] == 0:

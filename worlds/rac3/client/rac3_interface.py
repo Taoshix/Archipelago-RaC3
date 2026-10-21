@@ -1971,6 +1971,10 @@ class Rac3Interface(GameInterface):
                 # Prevent the player from using locked weapons and levelling them to accidentally break vendors
                 self._write8(unlock_addr, 0)
                 self._write32(ammo_addr, 0)
+                # Auto unequip locked weapons and equip the wrench
+                held_item = self._read8(RAC3STATUS.HELD_ITEM)
+                if held_item and ITEM_NAME_FROM_ID[held_item] == name:
+                    self._write8(RAC3STATUS.PENDING_ITEM, 9)  # Wrench
 
         if self.equipped_item > 1 and self.UnlockItem[ITEM_NAME_FROM_ID[self.equipped_item]] == 0:
             if self.last_used_1 == 0:

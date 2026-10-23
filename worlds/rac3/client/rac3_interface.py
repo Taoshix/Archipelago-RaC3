@@ -1948,6 +1948,7 @@ class Rac3Interface(GameInterface):
 
     def weapon_cycler(self):
         """Interval update function: Check unlock/lock status of weapons"""
+        # Todo: Overhaul item unlocking using RAC3STATUS.PENDING_ITEM address
         # If in vendor, lock all non-progressive weapons to allow second unlock address to work properly
         if (self.vendor_type == RAC3VENDORTYPE.WEAPON and not self.hovering_over_ammo()
             and not self.hovering_over_mega()):
@@ -1976,7 +1977,7 @@ class Rac3Interface(GameInterface):
                 self._write32(ammo_addr, 0)
                 # Auto unequip locked weapons and equip the wrench
                 if self.held_item and ITEM_NAME_FROM_ID[self.held_item] == name:
-                    self._write8(RAC3STATUS.PENDING_ITEM, 9)  # Wrench
+                    self._write8(RAC3STATUS.PENDING_ITEM, equipable_data[RAC3ITEM.WRENCH].ID)
 
         if self.equipped_item > 1 and self.UnlockItem[ITEM_NAME_FROM_ID[self.equipped_item]] == 0:
             if self.last_used_1 == 0:

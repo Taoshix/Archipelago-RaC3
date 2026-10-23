@@ -1044,7 +1044,8 @@ class Rac3Interface(GameInterface):
                 if self.UnlockItem[name] > 8:
                     self.UnlockItem[name] = 8
             case RAC3ITEM.TITANIUM_BOLT:
-                pass
+                if self.UnlockItem[name] > 40:
+                    self.UnlockItem[name] = 40
             case RAC3ITEM.BOLTS:
                 bolt = self._read32(RAC3STATUS.BOLTS)
                 bolt_percentage = self.options.filler_magnitude.get(name, filler_magnitude_data[name])
@@ -1242,42 +1243,55 @@ class Rac3Interface(GameInterface):
         loc_data: RAC3LOCATIONDATA = RAC3_LOCATION_DATA_TABLE[location]
         if not loc_data:
             return False
-        if self.weapon_demo:  # Prevent sending weapon purchases by testing a weapon in VR
-            return RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS
+        if self.weapon_demo and RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[
+            self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS:
+            return False  # Prevent sending weapon purchases by testing a weapon in VR
         if (self.options.weapon_level_locations and
             self.options.progressive_weapons and
             RAC3TAG.WEAPON_LEVEL in loc_data.TAGS):
             weapon_id = loc_data.CHECK_ADDRESS[0].VALUE
             weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID.get(weapon_id, RAC3ITEM.SHOCK_CANNON_V8)].LEVEL
             weapon_name = next(name for name, ids in UPGRADE_DICT.items() if weapon_id in ids)
-            return weapon_level <= self.weapon_levels[weapon_name]  # Prevent weapon over-levelling from sending
+            if weapon_level <= self.weapon_levels[weapon_name]:
+                return False  # Prevent weapon over-levelling from sending
         # TODO: Implement a distance based checktype
+        current_pos = self.player_pos
+        pos_loc: bool = False
+        pos_check: bool = False
         if location == RAC3LOCATION.OBANI_GEMINI_SKIDD and self.planet == RAC3REGION.OBANI_GEMINI:
-            current_pos = self.player_pos
+            pos_loc = True
             skidd_pos = RAC3POSITIONDATA(201.2, 364.0, 296.8)
-            return (
+            pos_check = (
                 abs(current_pos.X - skidd_pos.X) < 8.0
                 and abs(current_pos.Y - skidd_pos.Y) < 8.0
                 and abs(current_pos.Z - skidd_pos.Z) < 5.0
             )
         if location == RAC3LOCATION.PHOENIX_MEET_SASHA and self.planet == RAC3REGION.STARSHIP_PHOENIX:
-            current_pos = self.player_pos
+            pos_loc = True
             sasha_pos = RAC3POSITIONDATA(157.0, 362.0, 118.0)
-            return (
+            pos_check = (
                 abs(current_pos.X - sasha_pos.X) < 8.0
                 and abs(current_pos.Y - sasha_pos.Y) < 8.0
                 and abs(current_pos.Z - sasha_pos.Z) < 5.0
             )
         if location == RAC3LOCATION.HIDEOUT_FIND_QWARK and self.planet == RAC3REGION.QWARKS_HIDEOUT:
-            current_pos = self.player_pos
+            pos_loc = True
             qwark_pos = RAC3POSITIONDATA(306.0, 298.0, 109.0)
-            return (
+            pos_check = (
                 abs(current_pos.X - qwark_pos.X) < 5.0
                 and abs(current_pos.Y - qwark_pos.Y) < 5.0
                 and abs(current_pos.Z - qwark_pos.Z) < 5.0
             )
+        if pos_loc:
+            if pos_check:
+                logger.debug(f"{location} checked, {len(self.checked_locations) / self.pre_end}% completion")
+                self.checked_locations.add(location)
+                return True
+            return False
         if location == RAC3LOCATION.ARIDIA_RANGERS_5 and self.options.speedups.get(RAC3SPEEDUPS.MISSIONS, False):
             if self._read8(MISSION_COUNTS[location]) > 1:  # Aridia final mission needs special checks
+                logger.debug(f"{location} checked, {len(self.checked_locations) / self.pre_end}% completion")
+                self.checked_locations.add(location)
                 return True
             return False
         check_all: bool = True
@@ -1297,6 +1311,7 @@ class Rac3Interface(GameInterface):
                     value_to_check = self._read32(check.ADDRESS)
             check_all &= check.check_condition(value_to_check)
         if check_all:
+            logger.debug(f"{location} checked, {len(self.checked_locations) / self.pre_end}% completion")
             self.checked_locations.add(location)
         return check_all
 

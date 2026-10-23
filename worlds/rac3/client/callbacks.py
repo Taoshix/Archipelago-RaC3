@@ -396,10 +396,9 @@ async def handle_deathlink(ctx: "Context") -> None:
 async def handle_check_goal(ctx: "Context") -> None:
     """Checks if the goal is completed
     :param ctx: RAC3 context class"""
-    if ctx.slot_data is None or ctx.slot is None:
+    if ctx.slot_data is None or ctx.slot is None or ctx.finished_game:
         return
-
-    if ctx.game_interface.check_victory() and not ctx.finished_game:
+    if ctx.game_interface.check_victory(ctx.server_locations):
         ctx.finished_game = True
         await ctx.send_msgs([ClientMessage.status_update(ClientStatus.CLIENT_GOAL)])
 

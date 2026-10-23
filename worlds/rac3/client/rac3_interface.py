@@ -1982,7 +1982,7 @@ class Rac3Interface(GameInterface):
                 self._write8(unlock_addr, 0)
                 self._write32(ammo_addr, 0)
                 # Auto unequip locked weapons and equip the wrench
-                if self.held_item and ITEM_NAME_FROM_ID[self.held_item] == name:
+                if self.held_item and ITEM_NAME_FROM_ID.get(self.held_item, None) == name:
                     self._write8(RAC3STATUS.PENDING_ITEM, equipable_data[RAC3ITEM.WRENCH].ID)
 
         if self.equipped_item > 1 and self.UnlockItem[ITEM_NAME_FROM_ID[self.equipped_item]] == 0:

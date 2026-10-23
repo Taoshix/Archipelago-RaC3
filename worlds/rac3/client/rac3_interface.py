@@ -2038,7 +2038,7 @@ class Rac3Interface(GameInterface):
                             self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
                             self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
                         if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
-                            self._write8(0x001A71D8, 1)
+                            self._write8(RAC3STATUS.PENDING_ITEM, 1)
                             self._write8(RAC3STATUS.WRENCH_LEVEL, 0)
                 if prog_wrench >= 1:
                         if (self._read16(wrench_equip) == 0x0000 and

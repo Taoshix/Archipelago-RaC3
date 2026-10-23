@@ -126,6 +126,25 @@ class Rac3Interface(GameInterface):
         bonus_vidcomic_health: int
         vidcomic_health_upgrade_locations: int
         deathlink_behavior: int
+        lock_cc: int
+        goal_bio: int
+        goal_nef: int
+        goal_nano: int
+        goal_crystal: int
+        goal_tbolts: int
+        goal_skillpoints: int
+        goal_qwark: int
+        goal_museum: int
+        goal_planets: int
+        goal_completion: int
+        goal_boss_qwark: int
+        goal_boss_two: int
+        goal_boss_noid: int
+        goal_boss_warship: int
+        goal_boss_scorpio: int
+        goal_boss_talos: int
+        goal_boss_gears: int
+        goal_boss_klunk: int
 
     UnlockItem: dict[str, int] = {}
     options = Options
@@ -148,6 +167,24 @@ class Rac3Interface(GameInterface):
     inputs: int = RAC3INPUT.NOTHING
     health: int = 100
     max_health: int = 10
+    end_game: bool = False
+    crystals_current: int = 0
+    crystals_traded: int = 0
+    skillpoints: int = 0
+    qwarktastic: int = 0
+    museum: int = 0
+    boss_qwark: int = 0
+    boss_two: int = 0
+    boss_noid: int = 0
+    boss_warship: int = 0
+    boss_scorpio: int = 0
+    boss_talos: int = 0
+    boss_gears: int = 0
+    boss_klunk: int = 0
+    boss_nef: int = 0
+    boss_bio: int = 0
+    total_locations: int = 0
+    pre_end: int = 0
     main_menu: bool = False
     ratchet_moby: int = 0
     between_planets: bool = False
@@ -283,6 +320,9 @@ class Rac3Interface(GameInterface):
         bits = self.value_to_bits(value)
         return bits
 
+    def _read_flag(self, check: tuple[int, int]) -> bool:
+        return check[1] in self._read_bits(check[0])
+
     def _write_bits(self, data: tuple[int, set[int] | int]):
         address, value = data
         _value: set[int] = {value} if isinstance(value, int) else value
@@ -371,6 +411,27 @@ class Rac3Interface(GameInterface):
         self.options.bonus_vidcomic_health = slot_data[RAC3OPTION.BONUS_VIDCOMIC_HEALTH]
         self.options.vidcomic_health_upgrade_locations = slot_data[RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES]
         self.options.deathlink_behavior = slot_data[RAC3OPTION.DEATHLINK_BEHAVIOR]
+        self.options.lock_cc = slot_data[RAC3OPTION.LOCK_CC]
+        self.options.goal_bio = slot_data[RAC3OPTION.GOAL_BIO]
+        self.options.goal_nef = slot_data[RAC3OPTION.GOAL_NEF]
+        self.options.goal_nano = slot_data[RAC3OPTION.GOAL_NANO]
+        self.options.goal_crystal = slot_data[RAC3OPTION.GOAL_CRYSTAL]
+        self.options.goal_tbolts = slot_data[RAC3OPTION.GOAL_TBOLTS]
+        self.options.goal_skillpoints = slot_data[RAC3OPTION.GOAL_SKILLPOINTS]
+        self.options.goal_qwark = slot_data[RAC3OPTION.GOAL_QWARK]
+        self.options.goal_museum = slot_data[RAC3OPTION.GOAL_MUSEUM]
+        self.options.goal_planets = slot_data[RAC3OPTION.GOAL_PLANETS]
+        self.options.goal_completion = slot_data[RAC3OPTION.GOAL_COMPLETION]
+        self.options.goal_boss_qwark = slot_data[RAC3OPTION.GOAL_BOSS_QWARK]
+        self.options.goal_boss_two = slot_data[RAC3OPTION.GOAL_BOSS_TWO]
+        self.options.goal_boss_noid = slot_data[RAC3OPTION.GOAL_BOSS_NOID]
+        self.options.goal_boss_warship = slot_data[RAC3OPTION.GOAL_BOSS_WARSHIP]
+        self.options.goal_boss_scorpio = slot_data[RAC3OPTION.GOAL_BOSS_SCORPIO]
+        self.options.goal_boss_talos = slot_data[RAC3OPTION.GOAL_BOSS_TALOS]
+        self.options.goal_boss_gears = slot_data[RAC3OPTION.GOAL_BOSS_GEARS]
+        self.options.goal_boss_klunk = slot_data[RAC3OPTION.GOAL_BOSS_KLUNK]
+        self.total_locations = slot_data[RAC3OPTION.TOTAL_LOCATIONS]
+        self.pre_end = slot_data[RAC3OPTION.PRE_END]
         for option, value in trap_magnitude_data.items():
             if option not in self.options.trap_magnitude.keys():
                 self.options.trap_magnitude.update({option: value})
@@ -641,6 +702,24 @@ class Rac3Interface(GameInterface):
         self.inputs = RAC3INPUT(self._read16(RAC3STATUS.READ_INPUT))
         self.health = self._read8(RAC3STATUS.HEALTH)
         self.max_health = self._read8(RAC3STATUS.MAX_HEALTH)
+        self.crystals_current = self._read8(RAC3STATUS.CRYSTALS_CURRENT)
+        self.crystals_traded = self._read8(RAC3STATUS.CRYSTALS_TRADED)
+        self.skillpoints = len([byte for byte in self._read_bytes(RAC3STATUS.SKILLPOINTS, 30) if byte])
+        self.qwarktastic = self._read8(RAC3_LOCATION_DATA_TABLE[
+                                           RAC3LOCATION.NATION_QWARKTASTIC_BATTLE].CHECK_ADDRESS[0].ADDRESS)
+        self.museum = self._read8(RAC3_ITEM_DATA_TABLE[RAC3ITEM.MUSEUM].UNLOCK_ADDRESS)
+        self.boss_qwark = self._read_flag(RAC3PROGRESSFLAG.FLORANA_DEFEAT_QWARK)
+        self.boss_two = self._read8(RAC3_LOCATION_DATA_TABLE[
+                                        RAC3LOCATION.NATION_THE_TERRIBLE_TWO].CHECK_ADDRESS[0].ADDRESS)
+        self.boss_noid = self._read_flag(RAC3PROGRESSFLAG.TYHRRANOSIS_DEFEAT_MOMMA_TYHRRANOID)
+        self.boss_warship = self._read_flag(RAC3PROGRESSFLAG.DAXX_DEFEAT_WARSHIP)
+        self.boss_scorpio = self._read8(RAC3_LOCATION_DATA_TABLE[
+                                            RAC3LOCATION.NATION_MEET_COURTNEY].CHECK_ADDRESS[0].ADDRESS)
+        self.boss_talos = self._read_flag(RAC3PROGRESSFLAG.HOLOSTAR_STUDIOS_CLANK_FINISH_CLANK_SECTION)
+        self.boss_gears = self._read_flag(RAC3PROGRESSFLAG.OBANI_DRACO_DEFEAT_COURTNEY)
+        self.boss_klunk = self._read_flag(RAC3PROGRESSFLAG.METROPOLIS_DEFEATED_KLUNK)
+        self.boss_nef = self._read8(RAC3STATUS.NEFARIOUS)
+        self.boss_bio = self._read8(RAC3STATUS.BIOBLITERATOR)
         self.is_reloading = self._read8(RAC3STATUS.FORCE_RELOAD)
         self.inside_hacker_puzzle = self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.HACKER].ID
         self.equipped_item = self._read8(RAC3STATUS.EQUIPPED)
@@ -1356,13 +1435,51 @@ class Rac3Interface(GameInterface):
     # Check Goal #
     ##############
 
-    @staticmethod
-    def check_victory() -> bool:
+    def check_victory(self, server_locations) -> bool:
         """Returns a bool for if the current game state is 'completed' or not"""
-        victory = True
-        # Todo: add the checks for each goal here, set victory to False if any are not met
-        return victory
-        # let this be changed by an option
+        if not self.end_game:
+            if self.options.goal_nano > self.max_health:
+                return False
+            if self.options.goal_crystal > (self.crystals_current + self.crystals_traded):
+                return False
+            if self.options.goal_tbolts > self.UnlockItem[RAC3ITEM.TITANIUM_BOLT]:
+                return False
+            if self.options.goal_skillpoints > self.skillpoints:
+                return False
+            if self.options.goal_planets > len(self.visited_planets):
+                return False
+            if float(self.options.goal_completion) > float(len(self.checked_locations) / self.pre_end):
+                return False
+            if self.options.goal_qwark and not self.qwarktastic:
+                return False
+            if self.options.goal_museum and not self.museum:
+                return False
+            if self.options.goal_boss_qwark and not self.boss_qwark:
+                return False
+            if self.options.goal_boss_two and not self.boss_two:
+                return False
+            if self.options.goal_boss_noid and not self.boss_noid:
+                return False
+            if self.options.goal_boss_warship and not self.boss_warship:
+                return False
+            if self.options.goal_boss_scorpio and not self.boss_scorpio:
+                return False
+            if self.options.goal_boss_talos and not self.boss_talos:
+                return False
+            if self.options.goal_boss_gears and not self.boss_gears:
+                return False
+            if self.options.goal_boss_klunk and not self.boss_klunk:
+                return False
+            self.end_game = True
+            ap_code = RAC3_LOCATION_DATA_TABLE[RAC3LOCATION.COMMAND_CENTER_INFOBOT].AP_CODE
+            if ap_code in server_locations and RAC3LOCATION.COMMAND_CENTER_INFOBOT not in self.checked_locations:
+                self.collect_locations({RAC3LOCATION.COMMAND_CENTER_INFOBOT})
+        if self.end_game:
+            if self.options.goal_bio and not self.boss_nef:
+                return False
+            if self.options.goal_nef and not self.boss_bio:
+                return False
+        return True
 
     ###################
     # Changing Planet #

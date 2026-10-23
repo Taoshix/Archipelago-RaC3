@@ -705,8 +705,7 @@ class Rac3Interface(GameInterface):
         self.crystals_current = self._read8(RAC3STATUS.CRYSTALS_CURRENT)
         self.crystals_traded = self._read8(RAC3STATUS.CRYSTALS_TRADED)
         self.skillpoints = len([byte for byte in self._read_bytes(RAC3STATUS.SKILLPOINTS, 30) if byte])
-        self.qwarktastic = self._read8(RAC3_LOCATION_DATA_TABLE[
-                                           RAC3LOCATION.NATION_QWARKTASTIC_BATTLE].CHECK_ADDRESS[0].ADDRESS)
+        self.qwarktastic = self._read8(RAC3STATUS.QWARKTASTIC)
         self.museum = self._read8(RAC3_ITEM_DATA_TABLE[RAC3ITEM.MUSEUM].UNLOCK_ADDRESS)
         self.boss_qwark = self._read_flag(RAC3PROGRESSFLAG.FLORANA_DEFEAT_QWARK)
         self.boss_two = self._read8(RAC3_LOCATION_DATA_TABLE[

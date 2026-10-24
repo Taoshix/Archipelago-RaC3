@@ -329,7 +329,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
         # Progressive Wrench option
         if RAC3ITEMTAG.PROG_WRENCH in item_tags and not options.progressive_wrench.value:
             continue
-        if RAC3ITEMTAG.NON_PROG_WRENCH in item_tags and options.progressive_wrench.value:
+        if RAC3ITEMTAG.NON_PROG_WRENCH in item_tags: # and options.progressive_wrench.value:
             continue
 
         # NG+ Item option

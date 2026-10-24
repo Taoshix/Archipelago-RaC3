@@ -300,6 +300,15 @@ class Rac3Interface(GameInterface):
     def _write8(self, address: int, value: int):
         return self.write_batcher.update({(self.address_convert(address), self.DataType.INT8): value})
 
+    def _write8_skip_cache(self, address: int, value: int):
+        return super()._write8(self.address_convert(address), value)
+
+    def _write16_skip_cache(self, address: int, value: int):
+        return super()._write16(self.address_convert(address), value)
+
+    def _write32_skip_cache(self, address: int, value: int):
+        return super()._write32(self.address_convert(address), value)
+
     def _write16(self, address: int, value: int):
         return self.write_batcher.update({(self.address_convert(address), self.DataType.INT16): value})
 
@@ -2148,7 +2157,8 @@ class Rac3Interface(GameInterface):
             wrench_addresses = None
             if (self.planet != RAC3REGION.MENU
                 and self.new_planet is False
-                and self.between_planets is False):
+                and self.between_planets is False
+                and self.pausing_game_state is False):
                 wrench_addresses = RAC3WRENCH.get_wrench_addresses(self.planet, self.current_game)
             if wrench_addresses is not None:
                 # wrench_instruction = (
@@ -2158,25 +2168,29 @@ class Rac3Interface(GameInterface):
                 wrench_equip = wrench_addresses[1] + RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET
                 wrench_swing = wrench_addresses[2] + RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET
                 if prog_wrench == 0:
-                    if self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE:
-                        self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
-                    if self._read32(wrench_swing) == RAC3WRENCH.ORIGINAL_SWING_VALUE:
-                        self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
+                    equip_instruction = self._read32(wrench_equip)
+                    if equip_instruction == RAC3WRENCH.ORIGINAL_EQUIP_VALUE:
+                        self._write32_skip_cache(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
+                    swing_instruction = self._read32(wrench_swing)
+                    if swing_instruction == RAC3WRENCH.ORIGINAL_SWING_VALUE:
+                        self._write32_skip_cache(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
                     if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
                         self._write8(RAC3STATUS.PENDING_ITEM, 1)
                         self._write8(RAC3STATUS.WRENCH_LEVEL, 0)
                 if prog_wrench >= 1:
                     target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
-                    if self._read32(wrench_equip) == RAC3WRENCH.PATCHED_EQUIP_VALUE:
-                        self._write32(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
-                    if self._read32(wrench_swing) == RAC3WRENCH.PATCHED_SWING_VALUE:
-                        self._write32(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
+                    equip_instruction = self._read32(wrench_equip)
+                    if equip_instruction == RAC3WRENCH.PATCHED_EQUIP_VALUE:
+                        self._write32_skip_cache(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
+                    swing_instruction = self._read32(wrench_swing)
+                    if swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE:
+                        self._write32_skip_cache(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
                     for _ in range(7):
                         current_instruction = self._read32(wrench_upgrade)
                         target_instruction = RAC3WRENCH.UPGRADE_INSTRUCTION_BASE + target_level
                         if (current_instruction in RAC3WRENCH.VALID_UPGRADE_INSTRUCTIONS and
                             current_instruction != target_instruction):
-                            self._write8(wrench_upgrade, target_level)
+                            self._write8_skip_cache(wrench_upgrade, target_level)
                         wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
                     if self.max_health < 15:
                         self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)

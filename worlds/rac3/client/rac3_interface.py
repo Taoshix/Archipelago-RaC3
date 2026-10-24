@@ -1240,11 +1240,11 @@ class Rac3Interface(GameInterface):
         if location in self.checked_locations:
             return True
         loc_data: RAC3LOCATIONDATA = RAC3_LOCATION_DATA_TABLE[location]
-        if not loc_data:
+        if (not loc_data  # Ignore locations we don't have data for
+            or location == RAC3LOCATION.COMMAND_CENTER_INFOBOT  # Handle CC unlock elsewhere
+            or self.weapon_demo and RAC3_ITEM_DATA_TABLE[  # Prevent sending weapon purchases by testing a weapon in VR
+                ITEM_NAME_FROM_ID[self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS):
             return False
-        if self.weapon_demo and RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[
-            self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS:
-            return False  # Prevent sending weapon purchases by testing a weapon in VR
         if (self.options.weapon_level_locations and
             self.options.progressive_weapons and
             RAC3TAG.WEAPON_LEVEL in loc_data.TAGS):

@@ -50,6 +50,21 @@ class RAC3WRENCH:
     # todo: Research and write the offsets in their determined file
 
     @staticmethod
+    def has_wrench_offsets(planet: str, game_id: str = '') -> bool:
+        """Check whether all wrench addresses are available for a planet and game version."""
+        match game_id:
+            case RAC3VERSION.US_ID:
+                offset_tables = (WRENCH_FUNCTION_OFFSET_NTSC, EQUIP_WRENCH_OFFSET_NTSC, SWING_WRENCH_OFFSET_NTSC)
+            case RAC3VERSION.EU_ID:
+                offset_tables = (WRENCH_FUNCTION_OFFSET_PAL, EQUIP_WRENCH_OFFSET_PAL, SWING_WRENCH_OFFSET_PAL)
+            case RAC3VERSION.JP_ID:
+                # TODO: replace ntsc with jp offsets when they are found
+                offset_tables = (WRENCH_FUNCTION_OFFSET_JP, EQUIP_WRENCH_OFFSET_JP, SWING_WRENCH_OFFSET_NTSC)
+            case _:
+                offset_tables = (WRENCH_FUNCTION_OFFSET_NTSC, EQUIP_WRENCH_OFFSET_NTSC, SWING_WRENCH_OFFSET_NTSC)
+        return all(planet in offsets for offsets in offset_tables)
+
+    @staticmethod
     def get_wrench_property_address(planet: str, game_id: str = '') -> int:
         """Provides the wrench property address for reading data"""
         match game_id:

@@ -2145,7 +2145,9 @@ class Rac3Interface(GameInterface):
             prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
             if prog_wrench > 5 and not self.options.ngplus_items:
                 prog_wrench = 5
-            if self.planet != RAC3REGION.MENU and self.between_planets is False:
+            if (self.planet != RAC3REGION.MENU
+                and self.between_planets is False
+                and RAC3WRENCH.has_wrench_offsets(self.planet, self.current_game)):
                 # wrench_instruction = (
                 #     RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
                 #     RAC3WRENCH.BASE_ITEM_ID_OFFSET)

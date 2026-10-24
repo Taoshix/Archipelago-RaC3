@@ -2,8 +2,8 @@
 
 from worlds.rac3.constants.function import (EQUIP_WRENCH_OFFSET_JP, EQUIP_WRENCH_OFFSET_NTSC, EQUIP_WRENCH_OFFSET_PAL,
                                             RAC3FUNCTION, SWING_WRENCH_OFFSET_NTSC, SWING_WRENCH_OFFSET_PAL,
-                                            WRENCH_FUNCTION_OFFSET_JP, WRENCH_FUNCTION_OFFSET_NTSC,
-                                            WRENCH_FUNCTION_OFFSET_PAL)
+                                            SWING_WRENCH_OFFSET_JP, WRENCH_FUNCTION_OFFSET_JP, 
+                                            WRENCH_FUNCTION_OFFSET_NTSC, WRENCH_FUNCTION_OFFSET_PAL)
 from worlds.rac3.constants.version import RAC3VERSION
 
 
@@ -64,11 +64,10 @@ class RAC3WRENCH:
                 swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_PAL
                 offset_tables = (WRENCH_FUNCTION_OFFSET_PAL, EQUIP_WRENCH_OFFSET_PAL, SWING_WRENCH_OFFSET_PAL)
             case RAC3VERSION.JP_ID:
-                # TODO: replace ntsc with jp offsets when they are found
                 function_base = RAC3FUNCTION.WRENCH_FUNCTION_BASE_JP
                 equip_base = RAC3FUNCTION.EQUIP_WRENCH_BASE_JP
-                swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_NTSC
-                offset_tables = (WRENCH_FUNCTION_OFFSET_JP, EQUIP_WRENCH_OFFSET_JP, SWING_WRENCH_OFFSET_NTSC)
+                swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_JP
+                offset_tables = (WRENCH_FUNCTION_OFFSET_JP, EQUIP_WRENCH_OFFSET_JP, SWING_WRENCH_OFFSET_JP)
             case _:
                 function_base = RAC3FUNCTION.WRENCH_FUNCTION_BASE_NTSC
                 equip_base = RAC3FUNCTION.EQUIP_WRENCH_BASE_NTSC
@@ -111,6 +110,9 @@ class RAC3WRENCH:
                 return addr
             case RAC3VERSION.EU_ID:
                 addr = RAC3FUNCTION.SWING_WRENCH_BASE_PAL + SWING_WRENCH_OFFSET_PAL[planet]
+                return addr
+            case RAC3VERSION.JP_ID:
+                addr = RAC3FUNCTION.SWING_WRENCH_BASE_JP + SWING_WRENCH_OFFSET_JP[planet]
                 return addr
             case _:
                 addr = RAC3FUNCTION.SWING_WRENCH_BASE_NTSC + SWING_WRENCH_OFFSET_NTSC[planet]

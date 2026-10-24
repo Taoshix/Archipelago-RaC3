@@ -2173,7 +2173,11 @@ class Rac3Interface(GameInterface):
                     if self._read32(wrench_swing) == RAC3WRENCH.PATCHED_SWING_VALUE:
                         self._write32(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
                     for _ in range(7):
-                        self._write8(wrench_upgrade, target_level)
+                        current_instruction = self._read32(wrench_upgrade)
+                        target_instruction = RAC3WRENCH.UPGRADE_INSTRUCTION_BASE + target_level
+                        if (current_instruction in RAC3WRENCH.VALID_UPGRADE_INSTRUCTIONS and
+                            current_instruction != target_instruction):
+                            self._write8(wrench_upgrade, target_level)
                         wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
                     if self.max_health < 15:
                         self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)

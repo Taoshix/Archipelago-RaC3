@@ -180,6 +180,7 @@ def set_rules(world: "RaC3World"):
     else:
         progressive_wrench_requirement = 0
         a_wrench = 0
+    vr_wrench_requirement = progressive_wrench_requirement if ngplus_enabled else a_wrench
 
     region_rules_dict: dict[str, CollectionRule] = {
 
@@ -343,7 +344,7 @@ def set_rules(world: "RaC3World"):
                           and state.can_reach_location(RAC3LOCATION.PHOENIX_VR_D_L_D, world.player),
         RAC3LOCATION.PHOENIX_VR_WRENCH:
             lambda state: state.can_reach_location(RAC3LOCATION.PHOENIX_VR_SHOCKER, world.player)
-                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, vr_wrench_requirement),
         RAC3TBOLT.PHOENIX_VR_NERVES:
             lambda state: state.can_reach_location(RAC3LOCATION.PHOENIX_VR_WRENCH, world.player)
                           and state.can_reach_location(RAC3LOCATION.PHOENIX_VR_90_SECOND, world.player),

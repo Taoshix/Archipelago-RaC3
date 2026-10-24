@@ -1489,9 +1489,9 @@ class Rac3Interface(GameInterface):
             if ap_code in server_locations and RAC3LOCATION.COMMAND_CENTER_INFOBOT not in self.checked_locations:
                 self.collect_locations({RAC3LOCATION.COMMAND_CENTER_INFOBOT})
         if self.end_game:
-            if self.options.goal_bio and not self.boss_nef:
+            if self.options.goal_nef and not self.boss_nef:
                 return False
-            if self.options.goal_nef and not self.boss_bio:
+            if self.options.goal_bio and not self.boss_bio:
                 return False
         return True
 

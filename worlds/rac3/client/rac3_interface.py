@@ -2145,21 +2145,18 @@ class Rac3Interface(GameInterface):
             prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
             if prog_wrench > 5 and not self.options.ngplus_items:
                 prog_wrench = 5
+            wrench_addresses = None
             if (self.planet != RAC3REGION.MENU
-                and self.between_planets is False
-                and RAC3WRENCH.has_wrench_offsets(self.planet, self.current_game)):
+                and self.new_planet is False
+                and self.between_planets is False):
+                wrench_addresses = RAC3WRENCH.get_wrench_addresses(self.planet, self.current_game)
+            if wrench_addresses is not None:
                 # wrench_instruction = (
                 #     RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
                 #     RAC3WRENCH.BASE_ITEM_ID_OFFSET)
-                wrench_upgrade = (
-                    RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
-                    RAC3WRENCH.UPGRADE_ID_OFFSET)
-                wrench_equip = (
-                    RAC3WRENCH.get_equip_wrench_address(self.planet, self.current_game) +
-                    RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET)
-                wrench_swing = (
-                    RAC3WRENCH.get_swing_wrench_address(self.planet, self.current_game) +
-                    RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET)
+                wrench_upgrade = wrench_addresses[0] + RAC3WRENCH.UPGRADE_ID_OFFSET
+                wrench_equip = wrench_addresses[1] + RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET
+                wrench_swing = wrench_addresses[2] + RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET
                 if prog_wrench == 0:
                     if self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE:
                         self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)

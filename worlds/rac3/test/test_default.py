@@ -3,6 +3,7 @@
 from BaseClasses import CollectionState
 from Options import Accessibility, DeathLink, PlandoItem, ProgressionBalancing
 from options.prog_wrench_options import ProgressiveWrench
+from options.skillpoints_pick_and_mix_options import SkillPointsPickAndMix
 from worlds.rac3.constants.event import RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -89,6 +90,7 @@ class TestDefaults(RAC3TestBase):
         # "filler_magnitude": FillerMagnitude.default,
         # "weapon_vendors": WeaponVendors.default,
         # "skill_points": SkillPoints.default,
+        # "skill_points_pick_and_mix": SkillPointsPickAndMix.default
         # "trophies": Trophies.default,
         # "titanium_bolts": TitaniumBolts.default,
         # "rangers": Rangers.default,
@@ -226,6 +228,7 @@ class TestNotDefault(RAC3TestBase):
         "filler_magnitude": dict.fromkeys(FillerMagnitude.valid_keys, FillerMagnitude.max),
         "weapon_vendors": WeaponVendors.option_false,
         "skill_points": SkillPoints.option_all,
+        "skill_points_pick_and_mix": SkillPointsPickAndMix.valid_keys,
         "trophies": Trophies.option_all,
         "titanium_bolts": TitaniumBolts.option_false,
         "rangers": Rangers.option_story_missions,

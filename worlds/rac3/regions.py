@@ -486,7 +486,7 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             return True
         return False
 
-    for tag in data.TAGS:
+    for tag in sorted(data.TAGS):
         match tag:
             case RAC3TAG.NOT_IMPLEMENTED:  # Skip all locations not yet implemented
                 return SkipLocation.SKIP

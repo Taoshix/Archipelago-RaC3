@@ -18,6 +18,17 @@ class RAC3WRENCH:
     # the OmniWrench is decoupled from Nanotech and the function will write there instead.
     PER_LEVEL_OFFSET: int = 0x18  # Starting at WRENCH_FUNCTION_BASE + NANOTECH_THRESHOLD_OFFSET, every +0x18 will
     # contain an upgrade. +0x90 directly jumps from V2 to V8.
+    UPGRADE_INSTRUCTION_BASE: int = 0x24020000
+    VALID_UPGRADE_INSTRUCTIONS: list[int] = [
+        0x24020009,
+        0x240200A4,
+        0x240200A5,
+        0x240200C6,
+        0x240200C7,
+        0x240200C8,
+        0x240200C9,
+        0x240200CA,
+    ]
 
     # SWING_WRENCH_BASE_NTSC = 0x004D38F0
     SWING_WRENCH_ADDRESS_OFFSET: int = 0xD8  # 24020009, if 24020000 or NOP'd, you cannot swing the wrench.
@@ -37,6 +48,42 @@ class RAC3WRENCH:
     PATCHED_HOLD_VALUE = 0x24040000
 
     # todo: Research and write the offsets in their determined file
+
+    @staticmethod
+    def get_wrench_addresses(planet: str, game_id: str = '') -> tuple[int, int, int] | None:
+        """Get all wrench addresses, or None when the planet has incomplete offsets."""
+        match game_id:
+            case RAC3VERSION.US_ID:
+                function_base = RAC3FUNCTION.WRENCH_FUNCTION_BASE_NTSC
+                equip_base = RAC3FUNCTION.EQUIP_WRENCH_BASE_NTSC
+                swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_NTSC
+                offset_tables = (WRENCH_FUNCTION_OFFSET_NTSC, EQUIP_WRENCH_OFFSET_NTSC, SWING_WRENCH_OFFSET_NTSC)
+            case RAC3VERSION.EU_ID:
+                function_base = RAC3FUNCTION.WRENCH_FUNCTION_BASE_PAL
+                equip_base = RAC3FUNCTION.EQUIP_WRENCH_BASE_PAL
+                swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_PAL
+                offset_tables = (WRENCH_FUNCTION_OFFSET_PAL, EQUIP_WRENCH_OFFSET_PAL, SWING_WRENCH_OFFSET_PAL)
+            case RAC3VERSION.JP_ID:
+                # TODO: replace ntsc with jp offsets when they are found
+                function_base = RAC3FUNCTION.WRENCH_FUNCTION_BASE_JP
+                equip_base = RAC3FUNCTION.EQUIP_WRENCH_BASE_JP
+                swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_NTSC
+                offset_tables = (WRENCH_FUNCTION_OFFSET_JP, EQUIP_WRENCH_OFFSET_JP, SWING_WRENCH_OFFSET_NTSC)
+            case _:
+                function_base = RAC3FUNCTION.WRENCH_FUNCTION_BASE_NTSC
+                equip_base = RAC3FUNCTION.EQUIP_WRENCH_BASE_NTSC
+                swing_base = RAC3FUNCTION.SWING_WRENCH_BASE_NTSC
+                offset_tables = (WRENCH_FUNCTION_OFFSET_NTSC, EQUIP_WRENCH_OFFSET_NTSC, SWING_WRENCH_OFFSET_NTSC)
+        if not all(planet in offsets for offsets in offset_tables):
+            return None
+        return (function_base + offset_tables[0][planet],
+                equip_base + offset_tables[1][planet],
+                swing_base + offset_tables[2][planet])
+
+    @staticmethod
+    def has_wrench_offsets(planet: str, game_id: str = '') -> bool:
+        """Check whether all wrench addresses are available for a planet and game version."""
+        return RAC3WRENCH.get_wrench_addresses(planet, game_id) is not None
 
     @staticmethod
     def get_wrench_property_address(planet: str, game_id: str = '') -> int:

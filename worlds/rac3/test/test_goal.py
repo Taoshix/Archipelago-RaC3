@@ -36,6 +36,7 @@ class TestAllGoals(RAC3TestBase):
         # "bolt_and_xp_multiplier": BoltAndXPMultiplier.default,
         # "progressive_weapons": ProgressiveWeapons.default,
         # "weapon_mods": WeaponMods.default,
+        # "progressive_wrench": ProgressiveWrench.default,
         # "armor_upgrade": ArmorUpgrade.default,
         # "filler_weight": FillerWeight.default,
         # "traps_enabled": EnableTraps.default,

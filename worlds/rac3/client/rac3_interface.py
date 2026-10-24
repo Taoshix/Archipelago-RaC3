@@ -2146,9 +2146,9 @@ class Rac3Interface(GameInterface):
             if prog_wrench > 5 and not self.options.ngplus_items:
                 prog_wrench = 5
             if self.planet != RAC3REGION.MENU and self.between_planets is False:
-                wrench_instruction = (
-                    RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
-                    RAC3WRENCH.BASE_ITEM_ID_OFFSET)
+                # wrench_instruction = (
+                #     RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
+                #     RAC3WRENCH.BASE_ITEM_ID_OFFSET)
                 wrench_upgrade = (
                     RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
                     RAC3WRENCH.UPGRADE_ID_OFFSET)
@@ -2160,23 +2160,23 @@ class Rac3Interface(GameInterface):
                     RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET)
                 target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
                 if prog_wrench == 0:
-                        if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
-                            self._read32(wrench_swing) == RAC3WRENCH.ORIGINAL_SWING_VALUE):
-                            self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
-                            self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
-                        if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
-                            self._write8(RAC3STATUS.PENDING_ITEM, 1)
-                            self._write8(RAC3STATUS.WRENCH_LEVEL, 0)
+                    if (self._read32(wrench_equip) == RAC3WRENCH.ORIGINAL_EQUIP_VALUE and
+                        self._read32(wrench_swing) == RAC3WRENCH.ORIGINAL_SWING_VALUE):
+                        self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
+                        self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
+                    if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
+                        self._write8(RAC3STATUS.PENDING_ITEM, 1)
+                        self._write8(RAC3STATUS.WRENCH_LEVEL, 0)
                 if prog_wrench >= 1:
-                        if (self._read16(wrench_equip) == 0x0000 and
-                            self._read16(wrench_swing) == 0x0000):
-                            self._write16(wrench_equip, 0x28CA)
-                            self._write16(wrench_swing, 0x0009)
-                        for _ in range(7):
-                            self._write8(wrench_upgrade, target_level)
-                            wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
-                        if self.max_health < 15:
-                            self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
+                    if (self._read16(wrench_equip) == 0x0000 and
+                        self._read16(wrench_swing) == 0x0000):
+                        self._write16(wrench_equip, 0x28CA)
+                        self._write16(wrench_swing, 0x0009)
+                    for _ in range(7):
+                        self._write8(wrench_upgrade, target_level)
+                        wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
+                    if self.max_health < 15:
+                        self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
         else:
             return
 

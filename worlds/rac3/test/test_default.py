@@ -2,6 +2,7 @@
 
 from BaseClasses import CollectionState
 from Options import Accessibility, DeathLink, PlandoItem, ProgressionBalancing
+from options.prog_wrench_options import ProgressiveWrench
 from worlds.rac3.constants.event import RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -79,6 +80,7 @@ class TestDefaults(RAC3TestBase):
         # "bolt_and_xp_multiplier": BoltAndXPMultiplier.default,
         # "progressive_weapons": ProgressiveWeapons.default,
         # "weapon_mods": WeaponMods.default,
+        # "progressive_wrench": ProgressiveWrench.default,
         # "armor_upgrade": ArmorUpgrade.default,
         # "filler_weight": FillerWeight.default,
         # "traps_enabled": EnableTraps.default,
@@ -215,6 +217,7 @@ class TestNotDefault(RAC3TestBase):
         "bolt_and_xp_multiplier": BoltAndXPMultiplier.option_x16,
         "progressive_weapons": ProgressiveWeapons.option_automatic_leveling,
         "weapon_mods": WeaponMods.option_individual_mods,
+        "progressive_wrench": ProgressiveWrench.option_enabled,
         "armor_upgrade": ArmorUpgrade.range_end,
         "filler_weight": dict.fromkeys(FillerWeight.default.keys(), FillerWeight.max),
         "traps_enabled": EnableTraps.option_true,

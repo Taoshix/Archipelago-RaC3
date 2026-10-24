@@ -100,6 +100,18 @@ class GameInterface:
         self.cycle_batch_reads_count += 1
         return self.pypine.read_string(address, n)
 
+    def _write8(self, address: int, value: int):
+        self.cycle_writes_count += 1
+        return self.pypine.write_int8(address, value)
+
+    def _write16(self, address: int, value: int):
+        self.cycle_writes_count += 1
+        return self.pypine.write_int16(address, value)
+
+    def _write32(self, address: int, value: int):
+        self.cycle_writes_count += 1
+        return self.pypine.write_int32(address, value)
+
     def batch_write(self):
         """Send all the stashed writes to pypine"""
         batch: list[tuple[Pine.DataSize, int, bytes]] = []

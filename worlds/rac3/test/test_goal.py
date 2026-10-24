@@ -1,4 +1,5 @@
 """This module contains UnitTesting for the Goal condition"""
+from options.skillpoints_pick_and_mix_options import SkillPointsPickAndMix
 from worlds.rac3.constants.event import ALL_GOALS, ALL_PLANETS, RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.tags import RAC3TAG
@@ -45,6 +46,7 @@ class TestAllGoals(RAC3TestBase):
         # "filler_magnitude": FillerMagnitude.default,
         # "weapon_vendors": WeaponVendors.default,
         # "skill_points": SkillPoints.default,
+        # "skill_points_pick_and_mix": SkillPointsPickAndMix.default,
         # "trophies": Trophies.default,
         # "titanium_bolts": TitaniumBolts.default,
         # "rangers": Rangers.default,

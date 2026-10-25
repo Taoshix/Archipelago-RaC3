@@ -1,4 +1,5 @@
 """This module provides an RAC3 interface to control the game"""
+from sys import flags
 import time
 from dataclasses import dataclass
 from random import choice, randint
@@ -2281,6 +2282,11 @@ class Rac3Interface(GameInterface):
                         case _:
                             pass
                     self._write8(status, status_on_off.get(status, [1])[0])
+
+                    # Make vehicles invisible as well
+                    if self.vehicle and status == RAC3STATUS.INVISIBLE:
+                        flags = self._read32(self.vehicle + 0x34)
+                        self._write32(self.vehicle + 0x34, flags | 0x01)
             else:
                 self.timers.pop(name)
                 if "Jackpot" in name:
@@ -2308,6 +2314,11 @@ class Rac3Interface(GameInterface):
                 if status == RAC3STATUS.BLACK_SCREEN and self._read8(RAC3STATUS.PROGRESSIVE_SCAN):
                     status = RAC3STATUS.BLACK_SCREEN_PROG_SCAN
                 self._write8(status, status_on_off.get(status, [0])[1])
+
+                # Make vehicles visible again
+                if self.vehicle and status == RAC3STATUS.INVISIBLE:
+                    flags = self._read32(self.vehicle + 0x34)
+                    self._write32(self.vehicle + 0x34, flags & ~0x01)
 
         # Remove trap effects for traps not in the timer dictionary to prevent any stuck effects
         # Prevent not having lock trap from unlocking weapon during arena weapon specific challenges every cycle

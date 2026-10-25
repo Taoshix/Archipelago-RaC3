@@ -2185,10 +2185,12 @@ class Rac3Interface(GameInterface):
                     swing_instruction = self._read32(wrench_swing)
                     if swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE:
                         self._write32_skip_cache(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
-                    for _ in range(7):
+                    for wrench_level in range(1, 8):
                         current_instruction = self._read32(wrench_upgrade)
+                        expected_level = UPGRADE_DICT[RAC3ITEM.WRENCH][wrench_level]
+                        expected_instruction = RAC3WRENCH.UPGRADE_INSTRUCTION_BASE + expected_level
                         target_instruction = RAC3WRENCH.UPGRADE_INSTRUCTION_BASE + target_level
-                        if (current_instruction in RAC3WRENCH.VALID_UPGRADE_INSTRUCTIONS and
+                        if (current_instruction == expected_instruction and
                             current_instruction != target_instruction):
                             self._write8_skip_cache(wrench_upgrade, target_level)
                         wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET

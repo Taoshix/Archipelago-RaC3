@@ -19,16 +19,6 @@ class RAC3WRENCH:
     PER_LEVEL_OFFSET: int = 0x18  # Starting at WRENCH_FUNCTION_BASE + NANOTECH_THRESHOLD_OFFSET, every +0x18 will
     # contain an upgrade. +0x90 directly jumps from V2 to V8.
     UPGRADE_INSTRUCTION_BASE: int = 0x24020000
-    VALID_UPGRADE_INSTRUCTIONS: list[int] = [
-        0x24020009,
-        0x240200A4,
-        0x240200A5,
-        0x240200C6,
-        0x240200C7,
-        0x240200C8,
-        0x240200C9,
-        0x240200CA,
-    ]
 
     # SWING_WRENCH_BASE_NTSC = 0x004D38F0
     SWING_WRENCH_ADDRESS_OFFSET: int = 0xD8  # 24020009, if 24020000 or NOP'd, you cannot swing the wrench.

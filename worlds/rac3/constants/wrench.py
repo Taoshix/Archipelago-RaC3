@@ -14,11 +14,10 @@ class RAC3WRENCH:
     NANOTECH_DIFFERENCE_CHECK_OFFSET: int = 0x2B4  # Example: For V2, this address contains the decimal number 25. 25
     # + 15 = 40, OmniWrench V3.
     UPGRADE_ID_OFFSET: int = 0x2BC  # Contains the ID that will be written to the BASE_ITEM_ID.
-    BASE_ITEM_ID_OFFSET: int = 0x350  # Contains the item ID that the function will write to. If 00 or 01,
-    # the OmniWrench is decoupled from Nanotech and the function will write there instead.
+    BASE_ITEM_ID_OFFSET: int = 0x350  # sb v0,9(v1): writes the Nanotech-selected wrench variant to the level table.
+    # NOP this wrench level write to control WRENCH_LEVEL directly
     PER_LEVEL_OFFSET: int = 0x18  # Starting at WRENCH_FUNCTION_BASE + NANOTECH_THRESHOLD_OFFSET, every +0x18 will
     # contain an upgrade. +0x90 directly jumps from V2 to V8.
-    UPGRADE_INSTRUCTION_BASE: int = 0x24020000
 
     # SWING_WRENCH_BASE_NTSC = 0x004D38F0
     SWING_WRENCH_ADDRESS_OFFSET: int = 0xD8  # 24020009, if 24020000 or NOP'd, you cannot swing the wrench.
@@ -29,6 +28,7 @@ class RAC3WRENCH:
     # pressing square.
 
     ORIGINAL_INSTRUCTION_VALUE = 0xA0620009
+    PATCHED_INSTRUCTION_VALUE = 0x00000000  # Disable only the automatic Nanotech-to-wrench variant store.
     ORIGINAL_SWING_VALUE = 0x24020009
     ORIGINAL_EQUIP_VALUE = 0x908228CA
     ORIGINAL_HOLD_VALUE = 0x24040009

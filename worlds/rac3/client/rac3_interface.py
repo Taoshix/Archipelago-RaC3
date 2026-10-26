@@ -2150,55 +2150,54 @@ class Rac3Interface(GameInterface):
                     self._write8(data.MOD_ADDRESS, self.UnlockItem.get(modpack, 0))
 
     def wrench_cycler(self):
-        """Cycle through the wrench properties and update its state"""
-        if self.options.progressive_wrench:
-            prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
-            if prog_wrench > 5 and not self.options.ngplus_items:
-                prog_wrench = 5
-            wrench_addresses = None
-            if (self.planet != RAC3REGION.MENU
-                and self.new_planet is False
-                and self.between_planets is False
-                and self.pausing_game_state is False):
-                wrench_addresses = RAC3WRENCH.get_wrench_addresses(self.planet, self.current_game)
-            if wrench_addresses is not None:
-                # wrench_instruction = (
-                #     RAC3WRENCH.get_wrench_property_address(self.planet, self.current_game) +
-                #     RAC3WRENCH.BASE_ITEM_ID_OFFSET)
-                wrench_upgrade = wrench_addresses[0] + RAC3WRENCH.UPGRADE_ID_OFFSET
-                wrench_equip = wrench_addresses[1] + RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET
-                wrench_swing = wrench_addresses[2] + RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET
-                if prog_wrench == 0:
-                    equip_instruction = self._read32(wrench_equip)
-                    if equip_instruction == RAC3WRENCH.ORIGINAL_EQUIP_VALUE:
-                        self._write32_skip_cache(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
-                    swing_instruction = self._read32(wrench_swing)
-                    if swing_instruction == RAC3WRENCH.ORIGINAL_SWING_VALUE:
-                        self._write32_skip_cache(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
-                    if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
-                        self._write8(RAC3STATUS.PENDING_ITEM, 1)
-                        self._write8(RAC3STATUS.WRENCH_LEVEL, 0)
-                if prog_wrench >= 1:
-                    target_level = UPGRADE_DICT[RAC3ITEM.WRENCH][prog_wrench - 1]
-                    equip_instruction = self._read32(wrench_equip)
-                    if equip_instruction == RAC3WRENCH.PATCHED_EQUIP_VALUE:
-                        self._write32_skip_cache(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
-                    swing_instruction = self._read32(wrench_swing)
-                    if swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE:
-                        self._write32_skip_cache(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
-                    for wrench_level in range(1, 8):
-                        current_instruction = self._read32(wrench_upgrade)
-                        expected_level = UPGRADE_DICT[RAC3ITEM.WRENCH][wrench_level]
-                        expected_instruction = RAC3WRENCH.UPGRADE_INSTRUCTION_BASE + expected_level
-                        target_instruction = RAC3WRENCH.UPGRADE_INSTRUCTION_BASE + target_level
-                        if (current_instruction == expected_instruction and
-                            current_instruction != target_instruction):
-                            self._write8_skip_cache(wrench_upgrade, target_level)
-                        wrench_upgrade += RAC3WRENCH.PER_LEVEL_OFFSET
-                    if self.max_health < 15:
-                        self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
-        else:
+        """Control the wrench variant through data after disabling its automatic Nanotech store."""
+        if not self.options.progressive_wrench:
             return
+        if (self.planet == RAC3REGION.MENU or self.between_planets):
+            return
+
+        wrench_addresses = RAC3WRENCH.get_wrench_addresses(self.planet, self.current_game)
+        if wrench_addresses is None:
+            return
+        wrench_instruction = wrench_addresses[0] + RAC3WRENCH.BASE_ITEM_ID_OFFSET
+        write_wrench_lvl_instruction = self._read32(wrench_instruction)
+        if write_wrench_lvl_instruction not in (RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE, RAC3WRENCH.PATCHED_INSTRUCTION_VALUE):
+            return
+
+        wrench_levels = UPGRADE_DICT[RAC3ITEM.WRENCH]
+        prog_wrench = self.UnlockItem[RAC3ITEM.PROGRESSIVE_WRENCH]
+        if prog_wrench > 8:
+            prog_wrench = 8
+
+        target_level = wrench_levels[max(1, prog_wrench) - 1]
+        self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
+
+        wrench_equip = wrench_addresses[1] + RAC3WRENCH.EQUIP_WRENCH_ADDRESS_OFFSET
+        wrench_swing = wrench_addresses[2] + RAC3WRENCH.SWING_WRENCH_ADDRESS_OFFSET
+        equip_instruction = self._read32(wrench_equip)
+        swing_instruction = self._read32(wrench_swing)
+        should_restore_wrench = (prog_wrench > 0 and
+                                 (equip_instruction == RAC3WRENCH.PATCHED_EQUIP_VALUE or
+                                  swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE))
+
+        if (write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE or should_restore_wrench):
+            self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
+
+        if write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE:
+            self._write32(wrench_instruction, RAC3WRENCH.PATCHED_INSTRUCTION_VALUE)
+
+        if prog_wrench == 0:
+            if equip_instruction == RAC3WRENCH.ORIGINAL_EQUIP_VALUE:
+                self._write32(wrench_equip, RAC3WRENCH.PATCHED_EQUIP_VALUE)
+            if swing_instruction == RAC3WRENCH.ORIGINAL_SWING_VALUE:
+                self._write32(wrench_swing, RAC3WRENCH.PATCHED_SWING_VALUE)
+            if self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.WRENCH].ID:
+                self._write8(RAC3STATUS.PENDING_ITEM, 1)
+        else:
+            if equip_instruction == RAC3WRENCH.PATCHED_EQUIP_VALUE:
+                self._write32(wrench_equip, RAC3WRENCH.ORIGINAL_EQUIP_VALUE)
+            if swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE:
+                self._write32(wrench_swing, RAC3WRENCH.ORIGINAL_SWING_VALUE)
 
     def update_weapon_equip(self, equip: int | None, last_0: int | None,
                             last_1: int | None, last_2: int | None):

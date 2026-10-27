@@ -2354,11 +2354,10 @@ class Rac3Interface(GameInterface):
                 # Todo: update the ryno special cases to handle any weapon
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
-                if weapon_name == RAC3ITEM.RY3N0 and self.weapon_levels.get(weapon_name, 1) > self.ryno:
-                    self.weapon_levels[weapon_name] = self.ryno
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL
-                prev_saved = self.weapon_levels.get(weapon_name, 1)
+                prev_saved = min(self.weapon_levels.get(weapon_name, 1), target_level)
+                self.weapon_levels[weapon_name] = prev_saved
                 if prev_saved < current_level <= target_level:
                     self.weapon_levels[weapon_name] = current_level
                 if self.vendor_type == RAC3VENDORTYPE.WEAPON:

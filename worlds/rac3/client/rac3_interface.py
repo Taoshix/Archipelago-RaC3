@@ -728,7 +728,7 @@ class Rac3Interface(GameInterface):
         self.boss_gears = self._read_flag(RAC3PROGRESSFLAG.OBANI_DRACO_DEFEAT_COURTNEY)
         self.boss_klunk = self._read_flag(RAC3PROGRESSFLAG.METROPOLIS_DEFEATED_KLUNK)
         self.boss_nef = self._read8(RAC3STATUS.NEFARIOUS)
-        self.boss_bio = self._read8(RAC3STATUS.BIOBLITERATOR)
+        self.boss_bio = self._read8(RAC3STATUS.BIOBLITERATOR) & (1 << 6)
         self.is_reloading = self._read8(RAC3STATUS.FORCE_RELOAD)
         self.inside_hacker_puzzle = self._read8(RAC3STATUS.HELD_ITEM) == RAC3_ITEM_DATA_TABLE[RAC3ITEM.HACKER].ID
         self.equipped_item = self._read8(RAC3STATUS.EQUIPPED)

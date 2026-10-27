@@ -377,6 +377,7 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
     ]
 
     annihilation_nation_1: list[str] = [
+        RAC3LOCATION.PHOENIX_GRAND_PRIZE,
         RAC3TBOLT.NATION_CLIFF,
         RAC3SKILLPOINT.NATION_CAMERA,
         RAC3SKILLPOINT.NATION_FLEE,

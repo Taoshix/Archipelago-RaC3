@@ -12,6 +12,8 @@ class ProgressiveWrench(Choice):
     Enable for OmniWrench upgrades to be included in the item pool.
     ------------------------------------------------------------------------------------
     Note: Experimental feature. You will start with no wrench.
+    May occasionally crash PCSX2 when landing on a planet,
+    possibly due to a race condition between our instruction patching and PCSX2's recompiler.
     """
     display_name = RAC3OPTION.PROGRESSIVE_WRENCH
     option_disabled = 0

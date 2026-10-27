@@ -1261,7 +1261,7 @@ class Rac3Interface(GameInterface):
             weapon_id = loc_data.CHECK_ADDRESS[0].VALUE
             weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID.get(weapon_id, RAC3ITEM.SHOCK_CANNON_V8)].LEVEL
             weapon_name = next(name for name, ids in UPGRADE_DICT.items() if weapon_id in ids)
-            if weapon_level <= self.weapon_levels[weapon_name]:
+            if weapon_level > self.weapon_levels[weapon_name]:
                 return False  # Prevent weapon over-levelling from sending
         # TODO: Implement a distance based checktype
         current_pos = self.player_pos

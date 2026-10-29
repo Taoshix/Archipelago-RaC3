@@ -36,6 +36,26 @@ def set_rules(world: "RaC3World"):
 
     :param world: RaC3World of current generation"""
 
+    locations_by_name = {loc.name: loc for loc in world.get_locations()}
+    end_locations = get_end_locations(world)
+    completion_locations = tuple(
+        loc for loc in locations_by_name.values() if loc.address and loc.name not in end_locations
+    )
+    completion_percentage = world.options.goal_completion.value
+    # The bolt tag also includes the collector trophy, so it must not count itself.
+    # Locked Command Center checks cannot contribute to their own unlock condition.
+    tag_locations = {
+        tag: tuple(
+            loc for name, loc in locations_by_name.items()
+            if name in location_groups[tag]
+            and name != RAC3TROPHY.PHOENIX_TITANIUM_COLLECTOR
+            and not (tag == RAC3TAG.SKILLPOINT and loc.is_event)
+            and not (world.options.lock_command_center.value
+                     and RAC3_LOCATION_DATA_TABLE[name].REGION == RAC3REGION.COMMAND_CENTER)
+        )
+        for tag in (RAC3TAG.SKILLPOINT, RAC3TAG.T_BOLT)
+    }
+
     def all_locations(tag: str, skip: str = "") -> CollectionRule:
         """check if all locations with this tag can be reached
 
@@ -43,11 +63,9 @@ def set_rules(world: "RaC3World"):
         :param skip: Name of the location to ignore checking
         :return: Collection rule
         """
-        check: list[str] = []
-        for loc in world.get_locations():
-            if loc.name in location_groups[tag] and loc.name != skip:
-                check.append(loc.name)
-        return lambda state: all([state.can_reach_location(name, world.player) for name in check])
+        check = tuple(loc for name, loc in locations_by_name.items()
+                      if name in location_groups[tag] and name != skip)
+        return lambda state: all(loc.can_reach(state) for loc in check)
 
     def calc_nanotech_requirement(default_infobot_count: int, ngplus_levels: bool = False) -> int:
         """Calculate the amount of infobots required for a given nanotech level based on the world options
@@ -97,7 +115,7 @@ def set_rules(world: "RaC3World"):
         return False
 
     def can_reach_tags(state: CollectionState, tag: str, count: int) -> bool:
-        """Checks if more locations from the tag group can be collected than the count
+        """Check whether the requested number of eligible tagged locations is reachable.
 
         :param state: current collection state of the multiworld
         :param tag: name of location tag to check
@@ -105,18 +123,16 @@ def set_rules(world: "RaC3World"):
 
         :return: True if the amount of reachable locations is greater than or equal to 'count'
         """
-        add = 0
-        loc_count = -1
-        for loc in location_groups[tag]:
-            if loc not in world.get_locations() or (tag == RAC3TAG.SKILLPOINT and world.get_location(loc).is_event):
-                continue
-            loc_count += 1
-            if state.can_reach_region(RAC3_LOCATION_DATA_TABLE[loc].REGION, world.player) and rules_dict.get(
-                loc, lambda _: True)(state):
-                add += 1
-        if world.options.lock_command_center.value:
-            loc_count -= 1
-        return add >= min(count, loc_count)
+        check = tag_locations[tag]
+        remaining = min(count, len(check))
+        if remaining <= 0:
+            return True
+        for loc in check:
+            if loc.can_reach(state):
+                remaining -= 1
+                if remaining == 0:
+                    return True
+        return False
 
     def all_goals(goal: bool = False) -> CollectionRule:
         """Creates a logic rule for having completed all the goal requirements for Command Center"""
@@ -151,15 +167,11 @@ def set_rules(world: "RaC3World"):
         return lambda state: state.has_all(event_items, world.player)
 
     def collection(state: CollectionState) -> bool:
-        """Calculates the current collected location count"""
-        total = {loc for loc in world.get_locations() if loc.address and loc.name not in get_end_locations(world)}
-        reachable = {loc for loc in total if loc.can_reach(state)}
-        # missing = {loc.name for loc in total if loc not in reachable}
-        # rac3_logger.debug(f"Reachable Locations: {len(reachable)}/{len(total)} ("
-        #                   f"{(100 * len(reachable) / len(total)).__round__(1)}% "
-        #                   f"out of {world.options.goal_completion.value}%)\n"
-        #                   f"Unreachable Locations: {len(missing)}: {missing}")
-        return len(reachable) / len(total) >= world.options.goal_completion.value / 100
+        """Check the percentage of eligible locations reachable in the current state."""
+        if completion_percentage == 0:
+            return True
+        reachable = sum(loc.can_reach(state) for loc in completion_locations)
+        return reachable / len(completion_locations) >= completion_percentage / 100
 
     progressive_requirement = 1
     ngplus_enabled = world.options.ngplus_start.value

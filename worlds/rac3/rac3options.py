@@ -7,11 +7,34 @@ from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.options.arena_options import Arena
 from worlds.rac3.options.armor_upgrade_options import ArmorUpgrade
 from worlds.rac3.options.armor_vendor_options import ArmorVendors
+from worlds.rac3.options.bonus_vidcomic_health_options import BonusVidComicHealthUpgrades
 from worlds.rac3.options.clank_options import ClankOptions
 from worlds.rac3.options.exclude_options import RAC3ExcludeLocations
+from worlds.rac3.options.filler_magnitude_options import FillerMagnitude
 from worlds.rac3.options.filler_weight_options import FillerWeight
+from worlds.rac3.options.generation_behavior_options import GenerationBehavior
+from worlds.rac3.options.goal_bio_options import GoalBio
+from worlds.rac3.options.goal_boss_gears_options import GoalBossGears
+from worlds.rac3.options.goal_boss_klunk_options import GoalBossKlunk
+from worlds.rac3.options.goal_boss_noid_options import GoalBossNoid
+from worlds.rac3.options.goal_boss_qwark_options import GoalBossQwark
+from worlds.rac3.options.goal_boss_scorpio_options import GoalBossScorpio
+from worlds.rac3.options.goal_boss_talos_options import GoalBossTalos
+from worlds.rac3.options.goal_boss_two_options import GoalBossTwo
+from worlds.rac3.options.goal_boss_warship_options import GoalBossWarship
+from worlds.rac3.options.goal_crystal_options import GoalCrystal
+from worlds.rac3.options.goal_museum_options import GoalMuseum
+from worlds.rac3.options.goal_nano_options import GoalNano
+from worlds.rac3.options.goal_nef_options import GoalNef
+from worlds.rac3.options.goal_percentage_options import GoalCompletion
+from worlds.rac3.options.goal_planets_options import GoalPlanets
+from worlds.rac3.options.goal_qwark_options import GoalQwark
+from worlds.rac3.options.goal_skillpoints_options import GoalSkillpoints
+from worlds.rac3.options.goal_tbolts_options import GoalTbolts
 from worlds.rac3.options.helpdesk_options import HelpDesk
+from worlds.rac3.options.lock_cc_options import LockCommandCenter
 from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
+from worlds.rac3.options.deathlink_behavior_options import DeathlinkBehavior
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
 from worlds.rac3.options.nanotech_options import NanotechMilestones
 from worlds.rac3.options.ngplus_item_options import NGPlusItems
@@ -19,6 +42,7 @@ from worlds.rac3.options.ngplus_start_options import NGPlusStart
 from worlds.rac3.options.ngplus_vendor_options import NGPlusVendor
 from worlds.rac3.options.one_hp_options import OneHpChallenge
 from worlds.rac3.options.prog_weapons_options import ProgressiveWeapons
+from worlds.rac3.options.prog_wrench_options import ProgressiveWrench
 from worlds.rac3.options.rangers_options import Rangers
 from worlds.rac3.options.ratchet_skins_options import RatchetSkin
 from worlds.rac3.options.scout_vendors_options import ScoutVendors
@@ -30,16 +54,20 @@ from worlds.rac3.options.ship_vendor_options import ShipVendors
 from worlds.rac3.options.ship_wings_options import ShipWings
 from worlds.rac3.options.shortcuts_options import Shortcuts
 from worlds.rac3.options.skillpoints_options import SkillPoints
+from worlds.rac3.options.skillpoints_pick_and_mix_options import SkillPointsPickAndMix
 from worlds.rac3.options.speedups_options import Speedups
 from worlds.rac3.options.starting_weapons_options import StartingWeapons
 from worlds.rac3.options.titanium_bolts_options import TitaniumBolts
+from worlds.rac3.options.trap_magitude_options import TrapMagnitude
 from worlds.rac3.options.trap_weight_options import TrapWeight
 from worlds.rac3.options.traps_options import EnableTraps
 from worlds.rac3.options.trophies_options import Trophies
 from worlds.rac3.options.vendor_access_options import VendorAccess
+from worlds.rac3.options.vidcomic_health_options import VidComicHealthUpgrades
 from worlds.rac3.options.vidcomics_options import VidComics
 from worlds.rac3.options.vr_challenges_options import VRChallenges
 from worlds.rac3.options.weapon_level_options import WeaponLevels
+from worlds.rac3.options.weapon_mods_options import WeaponMods
 from worlds.rac3.options.weapon_vendors_options import WeaponVendors
 
 
@@ -57,15 +85,21 @@ class RaC3Options(PerGameCommonOptions):
     """YAML Options for RAC3"""
     deathlink: DeathLink
     start_inventory_from_pool: StartInventoryPool
+    generation_behavior: GenerationBehavior
     starting_weapons: StartingWeapons
     bolt_and_xp_multiplier: BoltAndXPMultiplier
     progressive_weapons: ProgressiveWeapons
+    weapon_mods: WeaponMods
+    progressive_wrench: ProgressiveWrench
     armor_upgrade: ArmorUpgrade
     filler_weight: FillerWeight
     traps_enabled: EnableTraps
     trap_weight: TrapWeight
+    trap_magnitude: TrapMagnitude
+    filler_magnitude: FillerMagnitude
     weapon_vendors: WeaponVendors
     skill_points: SkillPoints
+    skill_points_pick_and_mix: SkillPointsPickAndMix
     trophies: Trophies
     titanium_bolts: TitaniumBolts
     rangers: Rangers
@@ -94,13 +128,60 @@ class RaC3Options(PerGameCommonOptions):
     helpdesk: HelpDesk
     vendor_access: VendorAccess
     weapon_level_locations: WeaponLevels
+    bonus_vidcomic_health: BonusVidComicHealthUpgrades
+    vidcomic_health_upgrades: VidComicHealthUpgrades
+    deathlink_behavior: DeathlinkBehavior
+    lock_command_center: LockCommandCenter
+    goal_bio: GoalBio
+    goal_nef: GoalNef
+    goal_nano: GoalNano
+    goal_crystal: GoalCrystal
+    goal_tbolts: GoalTbolts
+    goal_skillpoints: GoalSkillpoints
+    goal_qwark: GoalQwark
+    goal_museum: GoalMuseum
+    goal_planets: GoalPlanets
+    goal_completion: GoalCompletion
+    goal_boss_qwark: GoalBossQwark
+    goal_boss_two: GoalBossTwo
+    goal_boss_noid: GoalBossNoid
+    goal_boss_warship: GoalBossWarship
+    goal_boss_scorpio: GoalBossScorpio
+    goal_boss_talos: GoalBossTalos
+    goal_boss_gears: GoalBossGears
+    goal_boss_klunk: GoalBossKlunk
 
 
 rac3_option_groups = [
-    OptionGroup("Generic Options", [
+    OptionGroup("Game Options", [
         ProgressionBalancing,
         Accessibility,
         DeathLink,
+        DeathlinkBehavior,
+        GenerationBehavior,
+    ]),
+    OptionGroup("RAC3 Goal Options", [
+        LockCommandCenter,
+        GoalBio,
+        GoalNef,
+        GoalNano,
+        GoalCrystal,
+        GoalTbolts,
+        GoalSkillpoints,
+        GoalQwark,
+        GoalMuseum,
+        GoalPlanets,
+        GoalCompletion,
+    ]),
+    OptionGroup("RAC3 Required Boss Options", [
+        GoalBossQwark,
+        GoalBossTwo,
+        GoalBossNoid,
+        GoalBossWarship,
+        GoalBossScorpio,
+        GoalBossTalos,
+        GoalBossGears,
+        GoalBossKlunk,
     ]),
     OptionGroup("RAC3 Game Options", [
         Shortcuts,
@@ -113,10 +194,15 @@ rac3_option_groups = [
         StartingWeapons,
         NGPlusItems,
         ProgressiveWeapons,
+        WeaponMods,
+        ProgressiveWrench,
         ArmorUpgrade,
+        BonusVidComicHealthUpgrades,
         ClankOptions,
         EnableTraps,
+        TrapMagnitude,
         TrapWeight,
+        FillerMagnitude,
         FillerWeight,
     ]),
     OptionGroup("RAC3 Location Options", [
@@ -126,11 +212,13 @@ rac3_option_groups = [
         ShipVendors,
         ScoutVendors,
         SkillPoints,
+        SkillPointsPickAndMix,
         Trophies,
         TitaniumBolts,
         WeaponLevels,
         Rangers,
         VidComics,
+        VidComicHealthUpgrades,
         VRChallenges,
         Arena,
         SewerCrystals,
@@ -156,9 +244,12 @@ rac3_option_groups = [
 slot_data_options: list[str] = [
     RAC3OPTION.DEATHLINK,
     RAC3OPTION.START_INVENTORY_FROM_POOL,
+    RAC3OPTION.GENERATION_BEHAVIOR,
     RAC3OPTION.STARTING_WEAPONS,
     RAC3OPTION.BOLT_AND_XP_MULTIPLIER,
     RAC3OPTION.PROGRESSIVE_WEAPONS,
+    RAC3OPTION.WEAPON_MODS,
+    RAC3OPTION.PROGRESSIVE_WRENCH,
     RAC3OPTION.NGPLUS_ITEMS,
     RAC3OPTION.NGPLUS_START,
     RAC3OPTION.ARMOR_UPGRADE,
@@ -174,6 +265,8 @@ slot_data_options: list[str] = [
     RAC3OPTION.PLAYER_SKIN,
     RAC3OPTION.ENABLE_TRAPS,
     RAC3OPTION.TRAP_WEIGHT,
+    RAC3OPTION.TRAP_MAGNITUDE,
+    RAC3OPTION.FILLER_MAGNITUDE,
     RAC3OPTION.RANGERS,
     RAC3OPTION.ARENA,
     RAC3OPTION.VIDCOMICS,
@@ -193,4 +286,7 @@ slot_data_options: list[str] = [
     RAC3OPTION.HELP_DESK,
     RAC3OPTION.WEAPON_LEVEL_LOCATIONS,
     RAC3OPTION.VENDOR_ACCESS,
+    RAC3OPTION.BONUS_VIDCOMIC_HEALTH,
+    RAC3OPTION.VIDCOMIC_HEALTH_UPGRADES,
+    RAC3OPTION.DEATHLINK_BEHAVIOR
 ]

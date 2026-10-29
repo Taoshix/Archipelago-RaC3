@@ -1,0 +1,3 @@
+[submodule "worlds/rac3/pypine"]
+	path = worlds/rac3/pypine
+	url = https://github.com/evilwb/pypine.git

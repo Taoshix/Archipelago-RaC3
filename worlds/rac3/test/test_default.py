@@ -2,8 +2,8 @@
 
 from BaseClasses import CollectionState
 from Options import Accessibility, DeathLink, PlandoItem, ProgressionBalancing
-from options.prog_wrench_options import ProgressiveWrench
-from options.skillpoints_pick_and_mix_options import SkillPointsPickAndMix
+from worlds.rac3.options.prog_wrench_options import ProgressiveWrench
+from worlds.rac3.options.skillpoints_pick_and_mix_options import SkillPointsPickAndMix
 from worlds.rac3.constants.event import RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION

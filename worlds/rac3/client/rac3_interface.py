@@ -618,6 +618,7 @@ class Rac3Interface(GameInterface):
         self._write8(RAC3STATUS.SHIP_SKIN, self.options.ship_skin)
         self._write8(RAC3STATUS.PLAYER_SKIN, self.options.player_skin)
         self._write8(RAC3STATUS.PLAYER_SKIN_2, self.options.player_skin)
+        self._write32(RAC3STATUS.LOADED_SKIN, 0xFFFFFFFF)  # Invalidate cached skin
 
     def setup_challenge_mode(self):
         """Make the challenge mode popup not appear if starting in challenge mode"""
@@ -1283,14 +1284,6 @@ class Rac3Interface(GameInterface):
                 and abs(current_pos.Y - sasha_pos.Y) < 8.0
                 and abs(current_pos.Z - sasha_pos.Z) < 5.0
             )
-        if location == RAC3LOCATION.HIDEOUT_FIND_QWARK and self.planet == RAC3REGION.QWARKS_HIDEOUT:
-            pos_loc = True
-            qwark_pos = RAC3POSITIONDATA(306.0, 298.0, 109.0)
-            pos_check = (
-                abs(current_pos.X - qwark_pos.X) < 5.0
-                and abs(current_pos.Y - qwark_pos.Y) < 5.0
-                and abs(current_pos.Z - qwark_pos.Z) < 5.0
-            )
         if pos_loc:
             if pos_check:
                 logger.debug(f"{location} checked, {len(self.checked_locations) / self.pre_end}% completion")
@@ -1692,6 +1685,14 @@ class Rac3Interface(GameInterface):
         new_inventory = []
         match self.vendor_type:
             case RAC3VENDORTYPE.WEAPON:
+                # Clear pending item if it is a locked weapon, so they dont equip it
+                pending_item = self._read8(RAC3STATUS.PENDING_ITEM)
+                if (pending_item and
+                    pending_item in ITEM_NAME_FROM_ID and
+                    ITEM_NAME_FROM_ID[pending_item] in non_prog_weapon_data and
+                    self.UnlockItem[ITEM_NAME_FROM_ID[pending_item]] == 0):
+                        self._write8(RAC3STATUS.PENDING_ITEM, 0)
+
                 progressive_weapons_mode = self.options.progressive_weapons
                 if self.options.weapon_level_locations and progressive_weapons_mode == 2:
                     progressive_weapons_mode = 1  # Force manual leveling if weapon level locations are enabled
@@ -2118,9 +2119,6 @@ class Rac3Interface(GameInterface):
                 # Prevent the player from using locked weapons and levelling them to accidentally break vendors
                 self._write8(unlock_addr, 0)
                 self._write32(ammo_addr, 0)
-                # Auto unequip locked weapons and equip the wrench
-                if self.held_item and ITEM_NAME_FROM_ID.get(self.held_item, None) == name:
-                    self._write8(RAC3STATUS.PENDING_ITEM, equipable_data[RAC3ITEM.WRENCH].ID)
 
         if self.equipped_item > 1 and self.UnlockItem[ITEM_NAME_FROM_ID[self.equipped_item]] == 0:
             if self.last_used_1 == 0:

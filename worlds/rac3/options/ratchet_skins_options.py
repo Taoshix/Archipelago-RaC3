@@ -8,8 +8,7 @@ class RatchetSkin(Choice):
     """
     Cosmetic:
     What Skin should Ratchet have?
-    Remember to reload your save file after starting a new game to apply the skin!
-    Alternatively, go to the Armor Vendor to reload the skin.
+    If the chosen skin is missing, reload your save file without saving or go to the armor vendor.
     """
     display_name = RAC3OPTION.PLAYER_SKIN
     option_default = 0

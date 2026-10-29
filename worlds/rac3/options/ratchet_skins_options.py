@@ -18,7 +18,7 @@ class RatchetSkin(Choice):
     option_tuxedo = 7
     option_buginoid = 8
     option_brainius = 9
-    option_unused_robot = 10
+    option_constructo_bot = 10
     option_robo_rooster = 11
     option_trooper = 12
     option_robo = 13

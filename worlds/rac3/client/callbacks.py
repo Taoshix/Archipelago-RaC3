@@ -196,7 +196,6 @@ async def _handle_game_ready(ctx: "Context") -> None:
             ctx.game_interface.setup_settings()
             logger.info("Checking cosmetics...")
             ctx.game_interface.add_cosmetics()
-            logger.info("Load the latest autosave or enter the Armor Vendor to apply cosmetics")
             logger.info("Setting up codecave...")
             ctx.code_cave_setup = False
             await handle_codecave(ctx)

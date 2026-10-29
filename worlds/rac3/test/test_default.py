@@ -243,7 +243,7 @@ class TestNotDefault(RAC3TestBase):
         "ship_nose": ShipNose.option_scoop,
         "ship_wings": ShipWings.option_heavy_ordinance,
         "ship_skin": ShipSkin.option_Zeldren_Sunset,
-        "player_skin": RatchetSkin.option_unused_robot,
+        "player_skin": RatchetSkin.option_constructo_bot,
         "one_hp_challenge": dict.fromkeys(OneHpChallenge.valid_keys, 1),
         "clank_options": ClankOptions.option_shuffled_progressive,
         "ship_vendor": ShipVendors.option_false,

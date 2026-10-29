@@ -58,7 +58,8 @@ from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERA
 from worlds.rac3.constants.player_type import ONE_HP_CHALLENGE_CHARACTERS, PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
 from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
-                                          PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES,
+                                          PLANET_VENDOR_OFFSET, PLANETS_WITH_BOLT_CRANK_PUZZLES,
+                                          PLANETS_WITH_HACKER_PUZZLES,
                                           PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
                                           REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
@@ -235,6 +236,7 @@ class Rac3Interface(GameInterface):
     opened_the_hacker_doors: bool = False
     opened_the_tyhrranoid_doors: bool = False
     opened_the_refractor_doors: bool = False
+    turned_the_bolt_cranks: bool = False
     weapon_levels: dict[str, int] = {}
     delayed_weapon_levelups: list[str] = []
     delayed_debt_trap_count: int = 0
@@ -657,10 +659,6 @@ class Rac3Interface(GameInterface):
         """One time setup of speedup options when starting a new session"""
         if self.options.shortcuts.get(RAC3SHORTCUTS.HOLOSTAR_CLANK, False):
             self._write8(RAC3_REGION_DATA_TABLE[RAC3REGION.HOLOSTAR_STUDIOS_CLANK].VISIT_ADDRESS, 1)
-        if self.options.speedups.get(RAC3SPEEDUPS.BOLT_CRANK, False):
-            for check in BOLT_CRANK_TO_REGION.keys():
-                self._write_bits(check)
-
         if self.options.speedups.get(RAC3SPEEDUPS.MISSIONS, False):
             self._write_bits(RAC3PROGRESSFLAG.ARIDIA_5TH_MISSION_COMPLETE)  # Aridia final mission access
             for loc, addr in MISSION_COUNTS.items():
@@ -1053,6 +1051,8 @@ class Rac3Interface(GameInterface):
             case RAC3ITEM.PROGRESSIVE_WRENCH:
                 if self.UnlockItem[name] > 8:
                     self.UnlockItem[name] = 8
+                self.puzzle_cycler(name, RAC3SPEEDUPS.BOLT_CRANK, "turned_the_bolt_cranks",
+                                   PLANETS_WITH_BOLT_CRANK_PUZZLES, BOLT_CRANK_TO_REGION, True)
             case RAC3ITEM.TITANIUM_BOLT:
                 if self.UnlockItem[name] > 40:
                     self.UnlockItem[name] = 40
@@ -2702,6 +2702,9 @@ class Rac3Interface(GameInterface):
                            PLANETS_WITH_TYHRRANOID_PUZZLES, TYHRRANOID_PUZZLE_TO_REGION)
         self.puzzle_cycler(RAC3ITEM.REFRACTOR, RAC3SPEEDUPS.REFRACTOR, "opened_the_refractor_doors",
                            PLANETS_WITH_REFRACTOR_PUZZLES, REFRACTOR_PUZZLE_TO_REGION)
+        wrench = RAC3ITEM.PROGRESSIVE_WRENCH if self.options.progressive_wrench else None
+        self.puzzle_cycler(wrench, RAC3SPEEDUPS.BOLT_CRANK, "turned_the_bolt_cranks",
+                           PLANETS_WITH_BOLT_CRANK_PUZZLES, BOLT_CRANK_TO_REGION)
 
         if self.new_planet and self.planet != RAC3REGION.TYHRRANOSIS and self.tyhrra_intro > 0:
             if RAC3PROGRESSFLAG.TYHRRANOSIS_COMPLETE_PROLOGUE[1] not in self._read_bits(
@@ -2764,10 +2767,12 @@ class Rac3Interface(GameInterface):
             self.opened_the_hacker_doors = True
 
     # TODO: Add moby scanning for Phoenix Rescue and Command Center Refractor doors since they dont have a progress flag
-    def puzzle_cycler(self, item: str, option: str, check: str, planets: list[str], table: dict[tuple[int, int],
+    def puzzle_cycler(self, item: str | None, option: str, check: str, planets: list[str], table: dict[tuple[int, int],
     str], already: bool | None = False):
-        """General function for handling updating any puzzle type during the cycler iterations."""
-        if (not self.UnlockItem[item] and not already) or not self.options.speedups.get(option, False):
+        """General function for handling updating any puzzle type during the cycler iterations.
+           If we pass in an item, we will check if the item is unlocked and if the option is enabled before processing."""
+        if ((item is not None and not self.UnlockItem[item] and not already)
+            or not self.options.speedups.get(option, False)):
             return
         if not already and self.is_reloading and not self.__getattribute__(check):
             self.__setattr__(check, True)
@@ -3188,6 +3193,7 @@ class Rac3Interface(GameInterface):
         logger.info(f"Opened Hacker Doors: {self.opened_the_hacker_doors}")
         logger.info(f"Opened Tyhrranoid Doors: {self.opened_the_tyhrranoid_doors}")
         logger.info(f"Opened Refractor Doors: {self.opened_the_refractor_doors}")
+        logger.info(f"Turned Bolt Cranks: {self.turned_the_bolt_cranks}")
         visited_planets = [planet for planet in self.visited_planets if not (
             planet == RAC3REGION.HOLOSTAR_STUDIOS_CLANK and self.options.shortcuts.get(RAC3SHORTCUTS.HOLOSTAR_CLANK,
                                                                                        False))]

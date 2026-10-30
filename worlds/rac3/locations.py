@@ -98,7 +98,7 @@ location_groups: dict[str, set[str]] = {
     RAC3TAG.RANGERS: get_from_tag(RAC3TAG.RANGERS),
     RAC3TAG.ARENA: get_from_tag(RAC3TAG.ARENA),
     RAC3TAG.NANOTECH: get_from_tag(RAC3TAG.NANOTECH),
-    RAC3TAG.UNSTABLE: get_from_tag(RAC3TAG.UNSTABLE),
+    # RAC3TAG.UNSTABLE: get_from_tag(RAC3TAG.UNSTABLE),
     RAC3TAG.WEAPONS: get_from_tag(RAC3TAG.WEAPONS),
     RAC3TAG.ARMOR: get_from_tag(RAC3TAG.ARMOR),
     RAC3TAG.SHIP: get_from_tag(RAC3TAG.SHIP),

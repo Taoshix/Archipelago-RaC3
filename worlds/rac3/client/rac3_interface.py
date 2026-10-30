@@ -157,6 +157,7 @@ class Rac3Interface(GameInterface):
     timers: dict[str, float] = {}
     planet: str = RAC3REGION.GALAXY
     new_planet: bool = True
+    transporter_fixed: bool = False
     player_type: str = RAC3PLAYERTYPE.RATCHET
     player_pos: RAC3POSITIONDATA
     vehicle: int = 0
@@ -508,6 +509,7 @@ class Rac3Interface(GameInterface):
         # self.UnlockItem[RAC3ITEM.FLORANA] = 1
         # self.UnlockItem[RAC3ITEM.STARSHIP_PHOENIX] = 1
         # self.UnlockItem[RAC3ITEM.MUSEUM] = 1
+        self.transporter_fixed = False
         self.timers.clear()
         self.checked_locations.clear()
         self.visited_planets.clear()
@@ -1957,6 +1959,7 @@ class Rac3Interface(GameInterface):
         """Ran at the end of the main loop to update any memory values based on collection state"""
         self.gadget_cycler()
         self.planet_cycler()
+        self.phoenix_transporter_cycler()
         self.weapon_cycler()
         self.weapon_mod_cycler()
         self.wrench_cycler()
@@ -2089,6 +2092,38 @@ class Rac3Interface(GameInterface):
             self.ship_slot_limit = self.UnlockItem[RAC3SHIPSLOT.SLOT_0]
             if number >= self.ship_slot_limit:
                 self._write8(RAC3_SHIP_DATA_TABLE[slot].SLOT_ADDRESS, 0)
+
+    def phoenix_transporter_cycler(self):
+        """Prevent blocked briefing cutscenes from spawning the transporter at the bridge."""
+        if self.transporter_fixed:
+            return
+
+        # Mark transporter as fixed early if these flags are set
+        if (self._read_flag(RAC3CUTSCENEFLAG.PHOENIX_AQUATOS_MISSION_BRIEFING_CUTSCENE)
+            and self._read_flag(RAC3CUTSCENEFLAG.PHOENIX_TYHRRANOSIS_MISSION_BRIEFING_CUTSCENE)):
+            self.transporter_fixed = True
+            return
+
+        # Start checking if a later story flag has been set
+        # Later story flags block the earlier cutscenes
+        later_story = bool(self.UnlockItem[RAC3ITEM.MASTER_PLAN])
+        if not later_story:
+            later_story_addresses = [
+                        RAC3STATUS.METROPOLIS_KLUNK_COMPLETE,
+                        RAC3STATUS.ESCAPED_LEVIATHAN,
+                        RAC3STATUS.TYHRRANOSIS_MOMMA_TYHRRANOID_COMPLETE,
+                    ]
+            for address in later_story_addresses:
+                if self._read8(address):
+                    later_story = True
+                    break
+
+        # Mark these events as completed since the game wont do it
+        if later_story or self._read8(RAC3STATUS.AQUATOS_LANDED):
+            self._write_bits(RAC3CUTSCENEFLAG.PHOENIX_AQUATOS_MISSION_BRIEFING_CUTSCENE)
+
+        if later_story:
+            self._write_bits(RAC3CUTSCENEFLAG.PHOENIX_TYHRRANOSIS_MISSION_BRIEFING_CUTSCENE)
 
     def weapon_cycler(self):
         """Interval update function: Check unlock/lock status of weapons"""

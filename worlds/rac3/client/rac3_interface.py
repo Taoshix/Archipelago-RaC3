@@ -73,6 +73,7 @@ from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION
                                            jp_get_pause_physical_address, PAL_SHIFTED_PLANETS, RAC3VERSION)
 from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEAPON_MODPACK, WEAPONMOD
 from worlds.rac3.constants.wrench import RAC3WRENCH
+from worlds.rac3.locations import get_completion_location_names
 
 
 class Rac3Interface(GameInterface):
@@ -1465,8 +1466,14 @@ class Rac3Interface(GameInterface):
                 return False
             if self.options.goal_planets > len(self.visited_planets):
                 return False
-            if float(self.options.goal_completion) > float(len(self.checked_locations) / self.pre_end):
-                return False
+            if self.options.goal_completion:
+                completion_locations = get_completion_location_names(
+                    (LOCATION_FROM_AP_CODE[code] for code in server_locations), bool(self.options.lock_cc)
+                )
+                if self.options.goal_completion * len(completion_locations) > 100 * len(
+                    self.checked_locations & completion_locations
+                ):
+                    return False
             if self.options.goal_qwark and not self.qwarktastic:
                 return False
             if self.options.goal_museum and not self.museum:

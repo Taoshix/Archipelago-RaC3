@@ -2893,33 +2893,37 @@ class Rac3Interface(GameInterface):
         return 0
 
     def find_moby_by_id_iteration(self, target_id: int) -> int:
-        """Traverse the moby table on the current planet to find a moby with the given ID and return its
-        address"""
-        if not self.ratchet_moby:
-            logger.debug("Ratchet pointer is null")
-            return 0
+        """Find a Moby by UID, stopping at the empty moby with a 0xFF state value at the end of the active moby list."""
         addr = self.ratchet_moby
-        iteration_count = 0
-        while iteration_count < 2000:
-            current_id_addr = addr + 0xB2
-            if current_id_addr < 0 or current_id_addr > 0xFFFFFFFF:
-                logger.debug(
-                    f"Moby with ID {target_id} not found, current id address out of range at {hex(current_id_addr)}")
-                return 0
-            # noinspection PyBroadException
-            try:
-                current_id = self._read16(current_id_addr)
-            except Exception:
-                logger.debug(f"Failed reading moby id at {hex(current_id_addr)}")
-                return 0
-            if current_id == target_id:
-                logger.debug(
-                    f"Moby with ID {target_id} found at address: {hex(addr)} after {iteration_count} iterations")
-                return addr
-            addr += 0x100
-            iteration_count += 1
+        ram_end = 0x02000000
 
-        logger.debug(f"Moby with ID {target_id} not found after {iteration_count} iterations")
+        if not 0 < addr < ram_end:
+            return 0
+
+        while addr + 0x100 <= ram_end:
+            # Read a batch of up to 128 moby addresses at once
+            count = min(128, (ram_end - addr) // 0x100)
+            moby_addresses = [addr + i * 0x100 for i in range(count)]
+
+            # Read state and UID together using batching
+            read_addresses = [moby_addr + offset for moby_addr in moby_addresses for offset in [0x20, 0xB2]]
+
+            # Odd indices are the state, even indices are the UID
+            moby_state_uid_pairs = self._read16_batch(read_addresses)
+
+            for i, moby_addr in enumerate(moby_addresses):
+                # Since we cant use read8 and read16 together in a batch,
+                # so we have to extract the state from the halfword at +0x20.
+                state = moby_state_uid_pairs[i * 2] & 0xFF
+                # If the state is 0xFF, we've reached the end of the active moby list.
+                if state == 0xFF:
+                    return 0
+
+                if moby_state_uid_pairs[i * 2 + 1] == target_id:
+                    return moby_addr
+
+            addr += count * 0x100
+
         return 0
 
     def pda_vendor_cycler(self):

@@ -218,7 +218,6 @@ class Rac3Interface(GameInterface):
     checked_locations: set[str] = set()
     clank_disabled: bool = False
     clank_disabled_trap: bool = False
-    unfreeze_packs: bool = False
     visited_planets: set[str] = set()
     weapon_vendor_items: list[str] = []
     armor_vendor_items: list[str] = []
@@ -1042,10 +1041,15 @@ class Rac3Interface(GameInterface):
                 if self.UnlockItem[name] > 1:
                     self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
                     self.UnlockItem[name] = 2
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.THRUSTER_PACK].ID)
+                else:
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.HELI_PACK].ID)
             case RAC3ITEM.HELI_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
+                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.THRUSTER_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
+                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK] = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
@@ -2503,7 +2507,7 @@ class Rac3Interface(GameInterface):
                     self._write8(addr, 0)
 
     def clank_cycler(self):
-        """Checks the current state to see if clank needs to be disabled"""
+        """Handle Clank removal and replace a locked Thruster-Pack with Heli-Pack"""
         # Special cases where Clank is already removed
         if ((self.planet == RAC3REGION.HOLOSTAR_STUDIOS and not self._read8(RAC3STATUS.HOLOSTAR_CLANK_FIX))
             or self.planet == RAC3REGION.AQUATOS_BASE
@@ -2513,18 +2517,32 @@ class Rac3Interface(GameInterface):
         # No special case:
         else:
             self._write8(RAC3STATUS.NO_CLANK, 0)
-        if self.UnlockItem[RAC3ITEM.HELI_PACK]:
-            if self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
-                if not self.unfreeze_packs:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
-                self.unfreeze_packs = True
-            else:
-                if self.game_state_value == RAC3GAMESTATE.PAUSED:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 3)  # Set pack freeze
-                else:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
-        elif self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
-            self.unfreeze_packs = True
+        if (self.UnlockItem[RAC3ITEM.THRUSTER_PACK]):
+            return
+
+        heli_pack_id = gadget_data[RAC3ITEM.HELI_PACK].ID
+        thruster_pack_id = gadget_data[RAC3ITEM.THRUSTER_PACK].ID
+        self._write8(RAC3STATUS.PREFER_THRUSTER_PACK, 0) # Prevents accidentally spawning with the Thruster-Pack
+        for address in [RAC3STATUS.SELECTED_PACK, RAC3STATUS.STORED_PACK]:
+            if self._read32(address) == thruster_pack_id:
+                self._write32(address, heli_pack_id)
+
+        pending_pack_id = self._read32(RAC3STATUS.PENDING_PACK)
+        if pending_pack_id == thruster_pack_id:
+            self._write32(RAC3STATUS.PENDING_PACK, heli_pack_id)
+            pending_pack_id = heli_pack_id
+
+        # Do not do anything if it is the hydro-pack
+        if (pending_pack_id > heli_pack_id):
+            return
+
+        if (self._read32(RAC3STATUS.ACTIVE_PACK) != thruster_pack_id
+            or self._read32(RAC3STATUS.PACK_STATE) != 2): # Not ready for new pack
+            return
+
+        # Restore compares against the active pack, even if PACK_EQUIP is already Heli-Pack.
+        self._write32(RAC3STATUS.STORED_PACK, heli_pack_id)
+        self._write32(RAC3STATUS.RESTORE_PACK, 1)
 
     def multiplier_cycler(self):
         """Update the Bolt+EXP multiplier based on settings"""

@@ -218,7 +218,6 @@ class Rac3Interface(GameInterface):
     checked_locations: set[str] = set()
     clank_disabled: bool = False
     clank_disabled_trap: bool = False
-    unfreeze_packs: bool = False
     visited_planets: set[str] = set()
     weapon_vendor_items: list[str] = []
     armor_vendor_items: list[str] = []
@@ -1042,10 +1041,15 @@ class Rac3Interface(GameInterface):
                 if self.UnlockItem[name] > 1:
                     self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
                     self.UnlockItem[name] = 2
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.THRUSTER_PACK].ID)
+                else:
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.HELI_PACK].ID)
             case RAC3ITEM.HELI_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
+                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.THRUSTER_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
+                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK] = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
@@ -2503,7 +2507,7 @@ class Rac3Interface(GameInterface):
                     self._write8(addr, 0)
 
     def clank_cycler(self):
-        """Checks the current state to see if clank needs to be disabled"""
+        """Handle Clank removal and replace a locked Thruster-Pack with Heli-Pack"""
         # Special cases where Clank is already removed
         if ((self.planet == RAC3REGION.HOLOSTAR_STUDIOS and not self._read8(RAC3STATUS.HOLOSTAR_CLANK_FIX))
             or self.planet == RAC3REGION.AQUATOS_BASE
@@ -2513,18 +2517,32 @@ class Rac3Interface(GameInterface):
         # No special case:
         else:
             self._write8(RAC3STATUS.NO_CLANK, 0)
-        if self.UnlockItem[RAC3ITEM.HELI_PACK]:
-            if self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
-                if not self.unfreeze_packs:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
-                self.unfreeze_packs = True
-            else:
-                if self.game_state_value == RAC3GAMESTATE.PAUSED:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 3)  # Set pack freeze
-                else:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
-        elif self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
-            self.unfreeze_packs = True
+        if (self.UnlockItem[RAC3ITEM.THRUSTER_PACK]):
+            return
+
+        heli_pack_id = gadget_data[RAC3ITEM.HELI_PACK].ID
+        thruster_pack_id = gadget_data[RAC3ITEM.THRUSTER_PACK].ID
+        self._write8(RAC3STATUS.PREFER_THRUSTER_PACK, 0) # Prevents accidentally spawning with the Thruster-Pack
+        for address in [RAC3STATUS.SELECTED_PACK, RAC3STATUS.STORED_PACK]:
+            if self._read32(address) == thruster_pack_id:
+                self._write32(address, heli_pack_id)
+
+        pending_pack_id = self._read32(RAC3STATUS.PENDING_PACK)
+        if pending_pack_id == thruster_pack_id:
+            self._write32(RAC3STATUS.PENDING_PACK, heli_pack_id)
+            pending_pack_id = heli_pack_id
+
+        # Do not do anything if it is the hydro-pack
+        if (pending_pack_id > heli_pack_id):
+            return
+
+        if (self._read32(RAC3STATUS.ACTIVE_PACK) != thruster_pack_id
+            or self._read32(RAC3STATUS.PACK_STATE) != 2): # Not ready for new pack
+            return
+
+        # Restore compares against the active pack, even if PACK_EQUIP is already Heli-Pack.
+        self._write32(RAC3STATUS.STORED_PACK, heli_pack_id)
+        self._write32(RAC3STATUS.RESTORE_PACK, 1)
 
     def multiplier_cycler(self):
         """Update the Bolt+EXP multiplier based on settings"""
@@ -2875,33 +2893,37 @@ class Rac3Interface(GameInterface):
         return 0
 
     def find_moby_by_id_iteration(self, target_id: int) -> int:
-        """Traverse the moby table on the current planet to find a moby with the given ID and return its
-        address"""
-        if not self.ratchet_moby:
-            logger.debug("Ratchet pointer is null")
-            return 0
+        """Find a Moby by UID, stopping at the empty moby with a 0xFF state value at the end of the active moby list."""
         addr = self.ratchet_moby
-        iteration_count = 0
-        while iteration_count < 2000:
-            current_id_addr = addr + 0xB2
-            if current_id_addr < 0 or current_id_addr > 0xFFFFFFFF:
-                logger.debug(
-                    f"Moby with ID {target_id} not found, current id address out of range at {hex(current_id_addr)}")
-                return 0
-            # noinspection PyBroadException
-            try:
-                current_id = self._read16(current_id_addr)
-            except Exception:
-                logger.debug(f"Failed reading moby id at {hex(current_id_addr)}")
-                return 0
-            if current_id == target_id:
-                logger.debug(
-                    f"Moby with ID {target_id} found at address: {hex(addr)} after {iteration_count} iterations")
-                return addr
-            addr += 0x100
-            iteration_count += 1
+        ram_end = 0x02000000
 
-        logger.debug(f"Moby with ID {target_id} not found after {iteration_count} iterations")
+        if not 0 < addr < ram_end:
+            return 0
+
+        while addr + 0x100 <= ram_end:
+            # Read a batch of up to 128 moby addresses at once
+            count = min(128, (ram_end - addr) // 0x100)
+            moby_addresses = [addr + i * 0x100 for i in range(count)]
+
+            # Read state and UID together using batching
+            read_addresses = [moby_addr + offset for moby_addr in moby_addresses for offset in [0x20, 0xB2]]
+
+            # Odd indices are the state, even indices are the UID
+            moby_state_uid_pairs = self._read16_batch(read_addresses)
+
+            for i, moby_addr in enumerate(moby_addresses):
+                # Since we cant use read8 and read16 together in a batch,
+                # so we have to extract the state from the halfword at +0x20.
+                state = moby_state_uid_pairs[i * 2] & 0xFF
+                # If the state is 0xFF, we've reached the end of the active moby list.
+                if state == 0xFF:
+                    return 0
+
+                if moby_state_uid_pairs[i * 2 + 1] == target_id:
+                    return moby_addr
+
+            addr += count * 0x100
+
         return 0
 
     def pda_vendor_cycler(self):

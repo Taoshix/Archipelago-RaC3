@@ -2306,12 +2306,10 @@ class Rac3Interface(GameInterface):
         """Cycle through the timer dictionary, check their duration, and handle their effects"""
         timers = list(self.timers.items())
         for name, _time in timers:
-            if name.endswith(str(_time)):
-                _name = name[:-len(str(_time))]
-            else:
-                _name = name
+            is_jackpot = name.startswith(RAC3ITEM.JACKPOT)
+            _name = RAC3ITEM.JACKPOT if is_jackpot else name
             if time.time() < _time:
-                if _name == name:
+                if not is_jackpot:
                     status = item_to_status[name]
                     if status == RAC3STATUS.BLACK_SCREEN and self._read8(RAC3STATUS.PROGRESSIVE_SCAN):
                         status = RAC3STATUS.BLACK_SCREEN_PROG_SCAN
@@ -2332,7 +2330,7 @@ class Rac3Interface(GameInterface):
                         self._write32(self.vehicle + 0x34, flags | 0x01)
             else:
                 self.timers.pop(name)
-                if "Jackpot" in name:
+                if is_jackpot:
                     self.enqueue_notification(
                         f"{RAC3TEXTFORMATSTRING.WHITE}Jackpot x{2 ** self.bolt_and_xp_multiplier_value} "
                         f"{RAC3TEXTFORMATSTRING.NORMAL}effect has worn off.")
@@ -2349,8 +2347,9 @@ class Rac3Interface(GameInterface):
                         self.bolt_and_xp_multiplier_value -= 1
                         # Clean up the jackpot status if the multiplier is now 0
                         # Allows x1 mult YAML option to also have jackpot working
-                        if self.bolt_and_xp_multiplier_value != 0:
-                            continue
+                        if self.bolt_and_xp_multiplier_value == 0:
+                            self._write8(RAC3STATUS.JACKPOT, 0)
+                        continue
                     case _:
                         pass
                 status = item_to_status[name]

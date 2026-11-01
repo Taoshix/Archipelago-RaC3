@@ -3262,3 +3262,109 @@ class Rac3Interface(GameInterface):
                 ORIGINAL_INSTRUCTIONS[instruction],
                 PATCHED_INSTRUCTIONS[instruction],
             }]
+
+    def get_goal_status(self, server_locations):
+        """Collect the current status of the goal conditions"""
+        goal_conditions = "The current status of the unfinished goal requirements:"
+        completed_requirements = "\n\nThe following requirements are already completed:"
+        collected_sewer = self.crystals_current + self.crystals_traded
+        collected_tbolts = self.UnlockItem[RAC3ITEM.TITANIUM_BOLT]
+        completed_planets = len(self.visited_planets)
+        completion_locations = get_completion_location_names(
+            (LOCATION_FROM_AP_CODE[code] for code in server_locations), bool(self.options.lock_cc)
+        )
+        required_locations = (self.options.goal_completion * len(completion_locations)) // 100
+        checked_locations = (100 * len(self.checked_locations & completion_locations)) // 100
+        if self.options.goal_nano > 10:
+            if self.options.goal_nano > self.max_health:
+                goal_conditions += f"\n- Nanotech level requirement ({self.max_health}/{self.options.goal_nano})"
+            else:
+                completed_requirements += "\n- Nanotech requirement completed!"
+        if self.options.goal_crystal > 0:
+            if self.options.goal_crystal > collected_sewer:
+                goal_conditions += f"\n- Collect Sewer Crystals ({collected_sewer}/{self.options.goal_crystal})"
+            else:
+                completed_requirements += "\n- Sewer Crystal requirement completed!"
+        if self.options.goal_tbolts > 0:
+            if self.options.goal_tbolts > collected_tbolts:
+                goal_conditions += f"\n- Collect Titanium Bolts ({collected_tbolts}/{self.options.goal_tbolts})"
+            else:
+                completed_requirements += "\n- Titanium Bolts (AP item) requirement completed!"
+        if self.options.goal_skillpoints > 0:
+            if self.options.goal_skillpoints > self.skillpoints:
+                goal_conditions += f"\n- Skillpoints completed ({self.skillpoints}/{self.options.goal_skillpoints})"
+            else:
+                completed_requirements += "\n- Skillpoints requirement completed!"
+        if self.options.goal_planets:
+            if self.options.goal_planets > completed_planets:
+                goal_conditions += f"\n- Planets completed ({completed_planets}/{self.options.goal_planets})"
+            else:
+                completed_requirements += "\n- Planet completion requirement completed!"
+        if self.options.goal_completion > 0:
+            if self.options.goal_completion * len(completion_locations) > 100 * len(
+                    self.checked_locations & completion_locations):
+                goal_conditions += (f"\n- Locations collected ({checked_locations}/{required_locations}) "
+                                    f"for {self.options.goal_completion}% requirement")
+            else:
+                completed_requirements += f"\n- Location collection percentage requirement completed!"
+        if self.options.goal_qwark:
+            if not self.qwarktastic:
+                goal_conditions += f"\n- Complete the Qwarktastic Battle on Annihilation Nation!"
+            else:
+                completed_requirements += f"\n- Qwarktastic battle completed!"
+        if self.options.goal_museum:
+            if not self.museum:
+                goal_conditions += f"\n- Unlock the Insomniac Museum teleporter in the Phoenix Trophy Room!"
+            else:
+                completed_requirements += f"\n- Insomniac Museum teleporter unlocked!"
+        if self.options.goal_boss_qwark:
+            if not self.boss_qwark:
+                goal_conditions += f"\n- Defeat Captain Qwark on Florana!"
+            else:
+                completed_requirements += f"\n- Captain Qwark defeated!"
+        if self.options.goal_boss_two:
+            if not self.boss_two:
+                goal_conditions += f"\n- Defeat the Terrible Two on Annihilation Nation!"
+            else:
+                completed_requirements += f"\n- Terrible Two defeated!"
+        if self.options.goal_boss_noid:
+            if not self.boss_noid:
+                goal_conditions += f"\n- Defeat Momma Tyhrranoid on Tyhrranosis!"
+            else:
+                completed_requirements += f"\n- Momma Tyhrranoid defeated!"
+        if self.options.goal_boss_warship:
+            if not self.boss_warship:
+                goal_conditions += f"\n- Defeat the Warship on Daxx!"
+            else:
+                completed_requirements += f"\n- Daxx Warship defeated!"
+        if self.options.goal_boss_scorpio:
+            if not self.boss_scorpio:
+                goal_conditions += f"\n- Defeat Scorpio on Annihilation Nation!"
+            else:
+                completed_requirements += f"\n- Scorpio defeated!"
+        if self.options.goal_boss_talos:
+            if not self.boss_talos:
+                goal_conditions += f"\n- Defeat the Terror of Talos as Giant Clank on Holostar Studios!"
+            else:
+                completed_requirements += f"\n- Terror of Talos defeated!"
+        if self.options.goal_boss_gears:
+            if not self.boss_gears:
+                goal_conditions += f"\n- Defeat Courtney Gears on Obani Draco!"
+            else:
+                completed_requirements += f"\n- Courtney Gears defeated!"
+        if self.options.goal_boss_klunk:
+            if not self.boss_klunk:
+                goal_conditions += f"\n- Defeat Klunk on Metropolis!"
+            else:
+                completed_requirements += f"\n- Klunk defeated!"
+        if self.options.goal_nef:
+            if not self.boss_nef:
+                goal_conditions += f"\n- Defeat Dr. Nefarious on Command Center!"
+            else:
+                completed_requirements += f"\n- Dr. Nefarious defeated!"
+        if self.options.goal_bio:
+            if not self.boss_bio:
+                goal_conditions += f"\n- Defeat the Biobliterator on Command Center!"
+            else:
+                completed_requirements += f"\n- Biobliterator defeated!"
+        logger.info(goal_conditions + completed_requirements)

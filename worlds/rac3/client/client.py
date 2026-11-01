@@ -372,6 +372,13 @@ class CommandProcessor(ClientCommandProcessor):
             self.ctx.fps = 1 / float(args[0])
             self.output(f"Client update set to every {self.ctx.fps}s")
 
+    def _cmd_goal_status(self) -> None:
+        """Displays the current status of the goal requirements"""
+        if not self.verify(2):
+            return
+        if isinstance(self.ctx, Rac3Context):
+            self.ctx.game_interface.get_goal_status(self.ctx.server_locations)
+
 
 class Rac3Context(CommonContext):
     """Class for handling server connection with the game client"""

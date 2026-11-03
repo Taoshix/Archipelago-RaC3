@@ -864,18 +864,18 @@ def set_rules(world: "RaC3World"):
         RAC3SKILLPOINT.COMMAND_CENTER_GERMS:
             lambda state: state.has_any([RAC3ITEM.INFECTOR, RAC3ITEM.PROGRESSIVE_INFECTOR], world.player) and
                           state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE], world.player),
-        # RAC3LOCATION.COMMAND_CENTER_NEFARIOUS:
-        #     lambda state: state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE,
-        #                                  RAC3ITEM.HACKER, RAC3ITEM.REFRACTOR], world.player)
-        #                   and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK,
-        #                                      RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player)
-        #                   and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
-        # RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR:
-        #     lambda state: state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE,
-        #                                  RAC3ITEM.HACKER, RAC3ITEM.REFRACTOR], world.player)
-        #                   and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK,
-        #                                      RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player)
-        #                   and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
+        RAC3LOCATION.COMMAND_CENTER_NEFARIOUS:
+            lambda state: state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE,
+                                         RAC3ITEM.HACKER, RAC3ITEM.REFRACTOR], world.player)
+                          and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK,
+                                             RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
+        RAC3LOCATION.COMMAND_CENTER_BIOBLITERATOR:
+            lambda state: state.has_all([RAC3ITEM.HYPERSHOT, RAC3ITEM.GRAV_BOOTS, RAC3ITEM.TYHRRA_GUISE,
+                                         RAC3ITEM.HACKER, RAC3ITEM.REFRACTOR], world.player)
+                          and state.has_any([RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK,
+                                             RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK], world.player)
+                          and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
 
         RAC3VENDORLOCATION.NGPLUS_RY3N0: lambda state: state.has_from_list(infobot_data.keys(), world.player, 10),
 

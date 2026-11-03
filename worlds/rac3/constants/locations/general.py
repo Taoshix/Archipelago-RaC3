@@ -157,8 +157,8 @@ class RAC3LOCATION:
     HIDEOUT_PDA = "Qwarks Hideout: PDA Vendor"
     KOROS_BASE = "Koros: Fire the Cannon"
     COMMAND_CENTER_INFOBOT = "Completed Goal Requirements"
-    # COMMAND_CENTER_NEFARIOUS = "Command Center: Dr. Nefarious Defeated!"
-    # COMMAND_CENTER_BIOBLITERATOR = "Command Center: Biobliterator Defeated!"
+    COMMAND_CENTER_NEFARIOUS = "Command Center: Defeat Dr. Nefarious"
+    COMMAND_CENTER_BIOBLITERATOR = "Command Center: Defeat the Biobliterator"
 
 
 MISSION_COUNTS: dict[str, int] = {

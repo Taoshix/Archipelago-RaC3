@@ -60,7 +60,7 @@ from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, P
                                           PLANET_VENDOR_OFFSET, PLANETS_WITH_BOLT_CRANK_PUZZLES,
                                           PLANETS_WITH_HACKER_PUZZLES,
                                           PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
-                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET)
+                                          REGION_TO_HACKER_DOOR_COUNT)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS, SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS, SPEEDUPS
@@ -746,7 +746,9 @@ class Rac3Interface(GameInterface):
         self.pda_vendor = self.find_pda_vendor()
         self.holo_final_door = self.find_holostar_door()
         if self.holo_final_door:
-            self.holo_door = self._read16(self.holo_final_door + 0xBE)
+            pos = (self._read_float(self.holo_final_door + 0x10), self._read_float(self.holo_final_door + 0x14))
+            if abs(pos[0] - self.player_pos.X) < 10 and abs(pos[1] - self.player_pos.Y) < 10:
+                self.holo_door = self._read16(self.holo_final_door + 0xBE)
         else:
             self.holo_door = 0
         self.vendor_type = self.vendor_check()
@@ -1632,14 +1634,12 @@ class Rac3Interface(GameInterface):
 
     def teleport_to_ship(self):
         """Handle respawning the player, to their ship if available, otherwise to the most recent checkpoint"""
-        if self.should_overwrite_respawn() and self.planet in RESPAWN_COORDS_OFFSET.keys():
-            self._write_bytes(
-                RESPAWN_COORDS_OFFSET[self.planet] + RAC3STATUS.RESPAWN_BASE,
-                self._read_bytes(RAC3STATUS.ENTRANCE_X, 28))
+        if self.should_overwrite_respawn():
             logger.debug(f"Player respawned on: {self.planet}")
+            self.force_respawn(True)
         else:
             logger.debug(f"Player respawned at last checkpoint on: {self.planet}")
-        self.force_respawn()
+            self.force_respawn()
 
     def should_overwrite_respawn(self) -> bool:
         """Determine if the current respawn coordinates should be overwritten to the ship coordinates"""
@@ -1649,21 +1649,22 @@ class Rac3Interface(GameInterface):
             # Entrance coordinates on JP are at the ship instead of clank's trailer
             return RAC3LOCATION.HOLOSTAR_RETURN_TO_SHIP in self.checked_locations
         match self.planet:
-            case RAC3REGION.VELDIN | RAC3REGION.TYHRRANOSIS | RAC3REGION.ZELDRIN_STARPORT:
-                # Veldin: Problems with F-sector
-                # Tyhrranosis: Entrance coordinates in the first section that gets unloaded after leaving
+            case RAC3REGION.ZELDRIN_STARPORT:
                 # Zeldrin: only one respawn point, that is right next to the ship, and we don't want anything to happen
                 #          while aboard the leviathan
                 return False
             case RAC3REGION.MARCADIA:
-                return self._read32(RAC3STATUS.MARCADIA_SECTION) < 3  # 1: Main, 2: Rangers, 3: LDF
+                return self._read32(RAC3STATUS.MARCADIA_SECTION) < 2  # 1: Main, 2: Rangers, 3: LDF
             case _:
                 return True
 
-    def force_respawn(self):
+    def force_respawn(self, ship: bool | None = None):
         """Force the game to reload the current planet, respawning the player"""
         self.self_respawning = True
-        self._write8(RAC3STATUS.FORCE_RELOAD, 1)
+        if ship:
+            self._write8(RAC3STATUS.FORCE_RELOAD, 2)
+        else:
+            self._write8(RAC3STATUS.FORCE_RELOAD, 1)
 
     def check_intro(self) -> bool:
         """Checks if the player has reached the end of the intro by collecting the phoenix coordinates"""
@@ -2733,14 +2734,12 @@ class Rac3Interface(GameInterface):
                             self._unwrite_bits(data.FLAG_ADDRESSES[0])
                             # logger.debug("UnSet Metro Dropship")
                         continue
-                    # Todo: check for the player opening the final door
                     if name == RAC3SHORTCUTS.HOLOSTAR_TELEPORTER and data.FLAG_ADDRESSES is not None:
                         if self.holo_teleport == 0 and self.short_pause:
                             self.holo_teleport += 1
                             self._write_bits(data.FLAG_ADDRESSES[0])
                             logger.debug("Set Holostar Teleporter")
-                        elif self.holo_teleport == 1 and self.holo_door > 1 and 278.0 < self._read_float(
-                            RESPAWN_COORDS_OFFSET[self.planet] + RAC3STATUS.RESPAWN_BASE + 4) < 279:
+                        elif self.holo_teleport == 1 and self.holo_door > 1:
                             logger.debug("Trigger Holostar Cutscene")
                             self.holo_teleport += 1
                             self._unwrite_bits(data.FLAG_ADDRESSES[0])

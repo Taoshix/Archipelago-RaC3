@@ -119,7 +119,7 @@ def set_rules(world: "RaC3World"):
     def can_reach_tags(state: CollectionState, tag: str, count: int) -> bool:
         """Check whether the requested number of eligible tagged locations is reachable.
 
-        :param state: current collection state of the multiworld
+        :param state: Current collection state of the multiworld
         :param tag: name of location tag to check
         :param count: location count required to be reachable
 

@@ -1,5 +1,4 @@
 """This module provides an RAC3 interface to control the game"""
-from sys import flags
 import time
 from dataclasses import dataclass
 from random import choice, randint
@@ -1642,7 +1641,7 @@ class Rac3Interface(GameInterface):
             logger.debug(f"Player respawned at last checkpoint on: {self.planet}")
         self.force_respawn()
 
-    def should_overwrite_respawn(self):
+    def should_overwrite_respawn(self) -> bool:
         """Determine if the current respawn coordinates should be overwritten to the ship coordinates"""
         if self.player_type in {RAC3PLAYERTYPE.CLANK, RAC3PLAYERTYPE.GIANT, RAC3PLAYERTYPE.QWARK}:
             return False
@@ -1698,13 +1697,13 @@ class Rac3Interface(GameInterface):
         new_inventory = []
         match self.vendor_type:
             case RAC3VENDORTYPE.WEAPON:
-                # Clear pending item if it is a locked weapon, so they dont equip it
+                # Clear pending item if it is a locked weapon, so they don't equip it
                 pending_item = self._read8(RAC3STATUS.PENDING_ITEM)
                 if (pending_item and
                     pending_item in ITEM_NAME_FROM_ID and
                     ITEM_NAME_FROM_ID[pending_item] in non_prog_weapon_data and
                     self.UnlockItem[ITEM_NAME_FROM_ID[pending_item]] == 0):
-                        self._write8(RAC3STATUS.PENDING_ITEM, 0)
+                    self._write8(RAC3STATUS.PENDING_ITEM, 0)
 
                 progressive_weapons_mode = self.options.progressive_weapons
                 if self.options.weapon_level_locations and progressive_weapons_mode == 2:
@@ -2120,16 +2119,16 @@ class Rac3Interface(GameInterface):
         later_story = bool(self.UnlockItem[RAC3ITEM.MASTER_PLAN])
         if not later_story:
             later_story_addresses = [
-                        RAC3STATUS.METROPOLIS_KLUNK_COMPLETE,
-                        RAC3STATUS.ESCAPED_LEVIATHAN,
-                        RAC3STATUS.TYHRRANOSIS_MOMMA_TYHRRANOID_COMPLETE,
-                    ]
+                RAC3STATUS.METROPOLIS_KLUNK_COMPLETE,
+                RAC3STATUS.ESCAPED_LEVIATHAN,
+                RAC3STATUS.TYHRRANOSIS_MOMMA_TYHRRANOID_COMPLETE,
+            ]
             for address in later_story_addresses:
                 if self._read8(address):
                     later_story = True
                     break
 
-        # Mark these events as completed since the game wont do it
+        # Mark these events as completed since the game won't do it
         if later_story or self._read8(RAC3STATUS.AQUATOS_LANDED):
             self._write_bits(RAC3CUTSCENEFLAG.PHOENIX_AQUATOS_MISSION_BRIEFING_CUTSCENE)
 
@@ -2197,7 +2196,7 @@ class Rac3Interface(GameInterface):
         """Control the wrench variant through data after disabling its automatic Nanotech store."""
         if not self.options.progressive_wrench:
             return
-        if (self.planet == RAC3REGION.MENU or self.between_planets):
+        if self.planet == RAC3REGION.MENU or self.between_planets:
             return
 
         wrench_addresses = RAC3WRENCH.get_wrench_addresses(self.planet, self.current_game)
@@ -2205,7 +2204,8 @@ class Rac3Interface(GameInterface):
             return
         wrench_instruction = wrench_addresses[0] + RAC3WRENCH.BASE_ITEM_ID_OFFSET
         write_wrench_lvl_instruction = self._read32(wrench_instruction)
-        if write_wrench_lvl_instruction not in (RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE, RAC3WRENCH.PATCHED_INSTRUCTION_VALUE):
+        if write_wrench_lvl_instruction not in (RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE,
+                                                RAC3WRENCH.PATCHED_INSTRUCTION_VALUE):
             return
 
         wrench_levels = UPGRADE_DICT[RAC3ITEM.WRENCH]
@@ -2224,7 +2224,7 @@ class Rac3Interface(GameInterface):
                                  (equip_instruction == RAC3WRENCH.PATCHED_EQUIP_VALUE or
                                   swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE))
 
-        if (write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE or should_restore_wrench):
+        if write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE or should_restore_wrench:
             self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
 
         if write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE:
@@ -2520,12 +2520,12 @@ class Rac3Interface(GameInterface):
         # No special case:
         else:
             self._write8(RAC3STATUS.NO_CLANK, 0)
-        if (self.UnlockItem[RAC3ITEM.THRUSTER_PACK]):
+        if self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
             return
 
         heli_pack_id = gadget_data[RAC3ITEM.HELI_PACK].ID
         thruster_pack_id = gadget_data[RAC3ITEM.THRUSTER_PACK].ID
-        self._write8(RAC3STATUS.PREFER_THRUSTER_PACK, 0) # Prevents accidentally spawning with the Thruster-Pack
+        self._write8(RAC3STATUS.PREFER_THRUSTER_PACK, 0)  # Prevents accidentally spawning with the Thruster-Pack
         for address in [RAC3STATUS.SELECTED_PACK, RAC3STATUS.STORED_PACK]:
             if self._read32(address) == thruster_pack_id:
                 self._write32(address, heli_pack_id)
@@ -2536,11 +2536,11 @@ class Rac3Interface(GameInterface):
             pending_pack_id = heli_pack_id
 
         # Do not do anything if it is the hydro-pack
-        if (pending_pack_id > heli_pack_id):
+        if pending_pack_id > heli_pack_id:
             return
 
         if (self._read32(RAC3STATUS.ACTIVE_PACK) != thruster_pack_id
-            or self._read32(RAC3STATUS.PACK_STATE) != 2): # Not ready for new pack
+            or self._read32(RAC3STATUS.PACK_STATE) != 2):  # Not ready for new pack
             return
 
         # Restore compares against the active pack, even if PACK_EQUIP is already Heli-Pack.
@@ -2832,8 +2832,10 @@ class Rac3Interface(GameInterface):
     # TODO: Add moby scanning for Phoenix Rescue and Command Center Refractor doors since they dont have a progress flag
     def puzzle_cycler(self, item: str | None, option: str, check: str, planets: list[str], table: dict[tuple[int, int],
     str], already: bool | None = False):
-        """General function for handling updating any puzzle type during the cycler iterations.
-           If we pass in an item, we will check if the item is unlocked and if the option is enabled before processing."""
+        """
+        General function for handling updating any puzzle type during the cycler iterations.
+        If we pass in an item, we will check if the item is unlocked and if the option is enabled before processing.
+        """
         if ((item is not None and not self.UnlockItem[item] and not already)
             or not self.options.speedups.get(option, False)):
             return

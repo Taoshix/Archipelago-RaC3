@@ -219,7 +219,7 @@ class TestNotDefault(RAC3TestBase):
         "bolt_and_xp_multiplier": BoltAndXPMultiplier.option_x16,
         "progressive_weapons": ProgressiveWeapons.option_automatic_leveling,
         "weapon_mods": WeaponMods.option_individual_mods,
-        "progressive_wrench": ProgressiveWrench.option_enabled,
+        "progressive_wrench": ProgressiveWrench.option_true,
         "armor_upgrade": ArmorUpgrade.range_end,
         "filler_weight": dict.fromkeys(FillerWeight.default.keys(), FillerWeight.max),
         "traps_enabled": EnableTraps.option_true,

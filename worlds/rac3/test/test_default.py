@@ -239,7 +239,7 @@ class TestNotDefault(RAC3TestBase):
         "sewer_limitation": SewerLimitation.range_end,
         "nanotech_milestones": NanotechMilestones.option_all,
         "nanotech_limitation": NanotechLimitation.range_end,
-        "exclude_locations": set(),
+        "exclude_locations": {RAC3LOCATION.PHOENIX_MEET_SASHA},
         "ship_nose": ShipNose.option_scoop,
         "ship_wings": ShipWings.option_heavy_ordinance,
         "ship_skin": ShipSkin.option_Zeldren_Sunset,

@@ -1,5 +1,4 @@
 """This module provides an RAC3 interface to control the game"""
-from sys import flags
 import time
 from dataclasses import dataclass
 from random import choice, randint
@@ -61,7 +60,7 @@ from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, P
                                           PLANET_VENDOR_OFFSET, PLANETS_WITH_BOLT_CRANK_PUZZLES,
                                           PLANETS_WITH_HACKER_PUZZLES,
                                           PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
-                                          REGION_TO_HACKER_DOOR_COUNT, RESPAWN_COORDS_OFFSET)
+                                          REGION_TO_HACKER_DOOR_COUNT)
 from worlds.rac3.constants.ship_slot import RAC3SHIPSLOT, SHIP_SLOTS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS, SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS, SPEEDUPS
@@ -218,7 +217,6 @@ class Rac3Interface(GameInterface):
     checked_locations: set[str] = set()
     clank_disabled: bool = False
     clank_disabled_trap: bool = False
-    unfreeze_packs: bool = False
     visited_planets: set[str] = set()
     weapon_vendor_items: list[str] = []
     armor_vendor_items: list[str] = []
@@ -748,7 +746,9 @@ class Rac3Interface(GameInterface):
         self.pda_vendor = self.find_pda_vendor()
         self.holo_final_door = self.find_holostar_door()
         if self.holo_final_door:
-            self.holo_door = self._read16(self.holo_final_door + 0xBE)
+            pos = (self._read_float(self.holo_final_door + 0x10), self._read_float(self.holo_final_door + 0x14))
+            if abs(pos[0] - self.player_pos.X) < 10 and abs(pos[1] - self.player_pos.Y) < 10:
+                self.holo_door = self._read16(self.holo_final_door + 0xBE)
         else:
             self.holo_door = 0
         self.vendor_type = self.vendor_check()
@@ -1042,10 +1042,15 @@ class Rac3Interface(GameInterface):
                 if self.UnlockItem[name] > 1:
                     self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
                     self.UnlockItem[name] = 2
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.THRUSTER_PACK].ID)
+                else:
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.HELI_PACK].ID)
             case RAC3ITEM.HELI_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
+                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.THRUSTER_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
+                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK] = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1
@@ -1629,16 +1634,14 @@ class Rac3Interface(GameInterface):
 
     def teleport_to_ship(self):
         """Handle respawning the player, to their ship if available, otherwise to the most recent checkpoint"""
-        if self.should_overwrite_respawn() and self.planet in RESPAWN_COORDS_OFFSET.keys():
-            self._write_bytes(
-                RESPAWN_COORDS_OFFSET[self.planet] + RAC3STATUS.RESPAWN_BASE,
-                self._read_bytes(RAC3STATUS.ENTRANCE_X, 28))
+        if self.should_overwrite_respawn():
             logger.debug(f"Player respawned on: {self.planet}")
+            self.force_respawn(True)
         else:
             logger.debug(f"Player respawned at last checkpoint on: {self.planet}")
-        self.force_respawn()
+            self.force_respawn()
 
-    def should_overwrite_respawn(self):
+    def should_overwrite_respawn(self) -> bool:
         """Determine if the current respawn coordinates should be overwritten to the ship coordinates"""
         if self.player_type in {RAC3PLAYERTYPE.CLANK, RAC3PLAYERTYPE.GIANT, RAC3PLAYERTYPE.QWARK}:
             return False
@@ -1646,21 +1649,22 @@ class Rac3Interface(GameInterface):
             # Entrance coordinates on JP are at the ship instead of clank's trailer
             return RAC3LOCATION.HOLOSTAR_RETURN_TO_SHIP in self.checked_locations
         match self.planet:
-            case RAC3REGION.VELDIN | RAC3REGION.TYHRRANOSIS | RAC3REGION.ZELDRIN_STARPORT:
-                # Veldin: Problems with F-sector
-                # Tyhrranosis: Entrance coordinates in the first section that gets unloaded after leaving
+            case RAC3REGION.ZELDRIN_STARPORT:
                 # Zeldrin: only one respawn point, that is right next to the ship, and we don't want anything to happen
                 #          while aboard the leviathan
                 return False
             case RAC3REGION.MARCADIA:
-                return self._read32(RAC3STATUS.MARCADIA_SECTION) < 3  # 1: Main, 2: Rangers, 3: LDF
+                return self._read32(RAC3STATUS.MARCADIA_SECTION) < 2  # 1: Main, 2: Rangers, 3: LDF
             case _:
                 return True
 
-    def force_respawn(self):
+    def force_respawn(self, ship: bool | None = None):
         """Force the game to reload the current planet, respawning the player"""
         self.self_respawning = True
-        self._write8(RAC3STATUS.FORCE_RELOAD, 1)
+        if ship:
+            self._write8(RAC3STATUS.FORCE_RELOAD, 2)
+        else:
+            self._write8(RAC3STATUS.FORCE_RELOAD, 1)
 
     def check_intro(self) -> bool:
         """Checks if the player has reached the end of the intro by collecting the phoenix coordinates"""
@@ -1694,13 +1698,13 @@ class Rac3Interface(GameInterface):
         new_inventory = []
         match self.vendor_type:
             case RAC3VENDORTYPE.WEAPON:
-                # Clear pending item if it is a locked weapon, so they dont equip it
+                # Clear pending item if it is a locked weapon, so they don't equip it
                 pending_item = self._read8(RAC3STATUS.PENDING_ITEM)
                 if (pending_item and
                     pending_item in ITEM_NAME_FROM_ID and
                     ITEM_NAME_FROM_ID[pending_item] in non_prog_weapon_data and
                     self.UnlockItem[ITEM_NAME_FROM_ID[pending_item]] == 0):
-                        self._write8(RAC3STATUS.PENDING_ITEM, 0)
+                    self._write8(RAC3STATUS.PENDING_ITEM, 0)
 
                 progressive_weapons_mode = self.options.progressive_weapons
                 if self.options.weapon_level_locations and progressive_weapons_mode == 2:
@@ -2116,16 +2120,16 @@ class Rac3Interface(GameInterface):
         later_story = bool(self.UnlockItem[RAC3ITEM.MASTER_PLAN])
         if not later_story:
             later_story_addresses = [
-                        RAC3STATUS.METROPOLIS_KLUNK_COMPLETE,
-                        RAC3STATUS.ESCAPED_LEVIATHAN,
-                        RAC3STATUS.TYHRRANOSIS_MOMMA_TYHRRANOID_COMPLETE,
-                    ]
+                RAC3STATUS.METROPOLIS_KLUNK_COMPLETE,
+                RAC3STATUS.ESCAPED_LEVIATHAN,
+                RAC3STATUS.TYHRRANOSIS_MOMMA_TYHRRANOID_COMPLETE,
+            ]
             for address in later_story_addresses:
                 if self._read8(address):
                     later_story = True
                     break
 
-        # Mark these events as completed since the game wont do it
+        # Mark these events as completed since the game won't do it
         if later_story or self._read8(RAC3STATUS.AQUATOS_LANDED):
             self._write_bits(RAC3CUTSCENEFLAG.PHOENIX_AQUATOS_MISSION_BRIEFING_CUTSCENE)
 
@@ -2193,7 +2197,7 @@ class Rac3Interface(GameInterface):
         """Control the wrench variant through data after disabling its automatic Nanotech store."""
         if not self.options.progressive_wrench:
             return
-        if (self.planet == RAC3REGION.MENU or self.between_planets):
+        if self.planet == RAC3REGION.MENU or self.between_planets:
             return
 
         wrench_addresses = RAC3WRENCH.get_wrench_addresses(self.planet, self.current_game)
@@ -2201,7 +2205,8 @@ class Rac3Interface(GameInterface):
             return
         wrench_instruction = wrench_addresses[0] + RAC3WRENCH.BASE_ITEM_ID_OFFSET
         write_wrench_lvl_instruction = self._read32(wrench_instruction)
-        if write_wrench_lvl_instruction not in (RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE, RAC3WRENCH.PATCHED_INSTRUCTION_VALUE):
+        if write_wrench_lvl_instruction not in (RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE,
+                                                RAC3WRENCH.PATCHED_INSTRUCTION_VALUE):
             return
 
         wrench_levels = UPGRADE_DICT[RAC3ITEM.WRENCH]
@@ -2220,7 +2225,7 @@ class Rac3Interface(GameInterface):
                                  (equip_instruction == RAC3WRENCH.PATCHED_EQUIP_VALUE or
                                   swing_instruction == RAC3WRENCH.PATCHED_SWING_VALUE))
 
-        if (write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE or should_restore_wrench):
+        if write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE or should_restore_wrench:
             self._write8(RAC3STATUS.WRENCH_LEVEL, target_level)
 
         if write_wrench_lvl_instruction == RAC3WRENCH.ORIGINAL_INSTRUCTION_VALUE:
@@ -2302,12 +2307,10 @@ class Rac3Interface(GameInterface):
         """Cycle through the timer dictionary, check their duration, and handle their effects"""
         timers = list(self.timers.items())
         for name, _time in timers:
-            if name.endswith(str(_time)):
-                _name = name[:-len(str(_time))]
-            else:
-                _name = name
+            is_jackpot = name.startswith(RAC3ITEM.JACKPOT)
+            _name = RAC3ITEM.JACKPOT if is_jackpot else name
             if time.time() < _time:
-                if _name == name:
+                if not is_jackpot:
                     status = item_to_status[name]
                     if status == RAC3STATUS.BLACK_SCREEN and self._read8(RAC3STATUS.PROGRESSIVE_SCAN):
                         status = RAC3STATUS.BLACK_SCREEN_PROG_SCAN
@@ -2328,7 +2331,7 @@ class Rac3Interface(GameInterface):
                         self._write32(self.vehicle + 0x34, flags | 0x01)
             else:
                 self.timers.pop(name)
-                if "Jackpot" in name:
+                if is_jackpot:
                     self.enqueue_notification(
                         f"{RAC3TEXTFORMATSTRING.WHITE}Jackpot x{2 ** self.bolt_and_xp_multiplier_value} "
                         f"{RAC3TEXTFORMATSTRING.NORMAL}effect has worn off.")
@@ -2345,8 +2348,9 @@ class Rac3Interface(GameInterface):
                         self.bolt_and_xp_multiplier_value -= 1
                         # Clean up the jackpot status if the multiplier is now 0
                         # Allows x1 mult YAML option to also have jackpot working
-                        if self.bolt_and_xp_multiplier_value != 0:
-                            continue
+                        if self.bolt_and_xp_multiplier_value == 0:
+                            self._write8(RAC3STATUS.JACKPOT, 0)
+                        continue
                     case _:
                         pass
                 status = item_to_status[name]
@@ -2395,6 +2399,10 @@ class Rac3Interface(GameInterface):
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
+                if current_id not in ITEM_NAME_FROM_ID:
+                    logger.warning(f"Weapon {weapon_name} with level address {hex(weapon_data.LEVEL_ADDRESS)} returned "
+                                   f"{hex(current_id)} rather than a valid ID. This should not happen, skipping.")
+                    continue
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL
                 prev_saved = min(self.weapon_levels.get(weapon_name, 1), target_level)
                 self.weapon_levels[weapon_name] = prev_saved
@@ -2503,7 +2511,7 @@ class Rac3Interface(GameInterface):
                     self._write8(addr, 0)
 
     def clank_cycler(self):
-        """Checks the current state to see if clank needs to be disabled"""
+        """Handle Clank removal and replace a locked Thruster-Pack with Heli-Pack"""
         # Special cases where Clank is already removed
         if ((self.planet == RAC3REGION.HOLOSTAR_STUDIOS and not self._read8(RAC3STATUS.HOLOSTAR_CLANK_FIX))
             or self.planet == RAC3REGION.AQUATOS_BASE
@@ -2513,18 +2521,32 @@ class Rac3Interface(GameInterface):
         # No special case:
         else:
             self._write8(RAC3STATUS.NO_CLANK, 0)
-        if self.UnlockItem[RAC3ITEM.HELI_PACK]:
-            if self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
-                if not self.unfreeze_packs:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
-                self.unfreeze_packs = True
-            else:
-                if self.game_state_value == RAC3GAMESTATE.PAUSED:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 3)  # Set pack freeze
-                else:
-                    self._write8(RAC3STATUS.PACK_EQUIP, 2)  # Unset pack freeze
-        elif self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
-            self.unfreeze_packs = True
+        if self.UnlockItem[RAC3ITEM.THRUSTER_PACK]:
+            return
+
+        heli_pack_id = gadget_data[RAC3ITEM.HELI_PACK].ID
+        thruster_pack_id = gadget_data[RAC3ITEM.THRUSTER_PACK].ID
+        self._write8(RAC3STATUS.PREFER_THRUSTER_PACK, 0)  # Prevents accidentally spawning with the Thruster-Pack
+        for address in [RAC3STATUS.SELECTED_PACK, RAC3STATUS.STORED_PACK]:
+            if self._read32(address) == thruster_pack_id:
+                self._write32(address, heli_pack_id)
+
+        pending_pack_id = self._read32(RAC3STATUS.PENDING_PACK)
+        if pending_pack_id == thruster_pack_id:
+            self._write32(RAC3STATUS.PENDING_PACK, heli_pack_id)
+            pending_pack_id = heli_pack_id
+
+        # Do not do anything if it is the hydro-pack
+        if pending_pack_id > heli_pack_id:
+            return
+
+        if (self._read32(RAC3STATUS.ACTIVE_PACK) != thruster_pack_id
+            or self._read32(RAC3STATUS.PACK_STATE) != 2):  # Not ready for new pack
+            return
+
+        # Restore compares against the active pack, even if PACK_EQUIP is already Heli-Pack.
+        self._write32(RAC3STATUS.STORED_PACK, heli_pack_id)
+        self._write32(RAC3STATUS.RESTORE_PACK, 1)
 
     def multiplier_cycler(self):
         """Update the Bolt+EXP multiplier based on settings"""
@@ -2712,14 +2734,12 @@ class Rac3Interface(GameInterface):
                             self._unwrite_bits(data.FLAG_ADDRESSES[0])
                             # logger.debug("UnSet Metro Dropship")
                         continue
-                    # Todo: check for the player opening the final door
                     if name == RAC3SHORTCUTS.HOLOSTAR_TELEPORTER and data.FLAG_ADDRESSES is not None:
                         if self.holo_teleport == 0 and self.short_pause:
                             self.holo_teleport += 1
                             self._write_bits(data.FLAG_ADDRESSES[0])
                             logger.debug("Set Holostar Teleporter")
-                        elif self.holo_teleport == 1 and self.holo_door > 1 and 278.0 < self._read_float(
-                            RESPAWN_COORDS_OFFSET[self.planet] + RAC3STATUS.RESPAWN_BASE + 4) < 279:
+                        elif self.holo_teleport == 1 and self.holo_door > 1:
                             logger.debug("Trigger Holostar Cutscene")
                             self.holo_teleport += 1
                             self._unwrite_bits(data.FLAG_ADDRESSES[0])
@@ -2811,8 +2831,10 @@ class Rac3Interface(GameInterface):
     # TODO: Add moby scanning for Phoenix Rescue and Command Center Refractor doors since they dont have a progress flag
     def puzzle_cycler(self, item: str | None, option: str, check: str, planets: list[str], table: dict[tuple[int, int],
     str], already: bool | None = False):
-        """General function for handling updating any puzzle type during the cycler iterations.
-           If we pass in an item, we will check if the item is unlocked and if the option is enabled before processing."""
+        """
+        General function for handling updating any puzzle type during the cycler iterations.
+        If we pass in an item, we will check if the item is unlocked and if the option is enabled before processing.
+        """
         if ((item is not None and not self.UnlockItem[item] and not already)
             or not self.options.speedups.get(option, False)):
             return
@@ -2875,33 +2897,37 @@ class Rac3Interface(GameInterface):
         return 0
 
     def find_moby_by_id_iteration(self, target_id: int) -> int:
-        """Traverse the moby table on the current planet to find a moby with the given ID and return its
-        address"""
-        if not self.ratchet_moby:
-            logger.debug("Ratchet pointer is null")
-            return 0
+        """Find a Moby by UID, stopping at the empty moby with a 0xFF state value at the end of the active moby list."""
         addr = self.ratchet_moby
-        iteration_count = 0
-        while iteration_count < 2000:
-            current_id_addr = addr + 0xB2
-            if current_id_addr < 0 or current_id_addr > 0xFFFFFFFF:
-                logger.debug(
-                    f"Moby with ID {target_id} not found, current id address out of range at {hex(current_id_addr)}")
-                return 0
-            # noinspection PyBroadException
-            try:
-                current_id = self._read16(current_id_addr)
-            except Exception:
-                logger.debug(f"Failed reading moby id at {hex(current_id_addr)}")
-                return 0
-            if current_id == target_id:
-                logger.debug(
-                    f"Moby with ID {target_id} found at address: {hex(addr)} after {iteration_count} iterations")
-                return addr
-            addr += 0x100
-            iteration_count += 1
+        ram_end = 0x02000000
 
-        logger.debug(f"Moby with ID {target_id} not found after {iteration_count} iterations")
+        if not 0 < addr < ram_end:
+            return 0
+
+        while addr + 0x100 <= ram_end:
+            # Read a batch of up to 128 moby addresses at once
+            count = min(128, (ram_end - addr) // 0x100)
+            moby_addresses = [addr + i * 0x100 for i in range(count)]
+
+            # Read state and UID together using batching
+            read_addresses = [moby_addr + offset for moby_addr in moby_addresses for offset in [0x20, 0xB2]]
+
+            # Odd indices are the state, even indices are the UID
+            moby_state_uid_pairs = self._read16_batch(read_addresses)
+
+            for i, moby_addr in enumerate(moby_addresses):
+                # Since we cant use read8 and read16 together in a batch,
+                # so we have to extract the state from the halfword at +0x20.
+                state = moby_state_uid_pairs[i * 2] & 0xFF
+                # If the state is 0xFF, we've reached the end of the active moby list.
+                if state == 0xFF:
+                    return 0
+
+                if moby_state_uid_pairs[i * 2 + 1] == target_id:
+                    return moby_addr
+
+            addr += count * 0x100
+
         return 0
 
     def pda_vendor_cycler(self):

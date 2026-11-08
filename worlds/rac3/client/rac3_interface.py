@@ -2400,7 +2400,7 @@ class Rac3Interface(GameInterface):
                     target_level = self.ryno
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 if current_id not in ITEM_NAME_FROM_ID:
-                    logger.warning(f"Weapon {weapon_name} with level address {hex(weapon_data.LEVEL_ADDRESS)} returned "
+                    logger.warning(f"Weapon {weapon_name} with level address {hex(self.address_convert(weapon_data.LEVEL_ADDRESS))} returned "
                                    f"{hex(current_id)} rather than a valid ID. This should not happen, skipping.")
                     continue
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL

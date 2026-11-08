@@ -2398,13 +2398,15 @@ class Rac3Interface(GameInterface):
                 # Todo: update the ryno special cases to handle any weapon
                 if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
                     target_level = self.ryno
+                prev_saved = min(self.weapon_levels.get(weapon_name, 1), target_level)
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 if current_id not in ITEM_NAME_FROM_ID:
-                    logger.warning(f"Weapon {weapon_name} with level address {hex(self.address_convert(weapon_data.LEVEL_ADDRESS))} returned "
-                                   f"{hex(current_id)} rather than a valid ID. This should not happen, skipping.")
-                    continue
+                    # Recover the last tracked level without granting unearned upgrades.
+                    current_id = UPGRADE_DICT[weapon_name][prev_saved - 1]
+                    self._write8(weapon_data.LEVEL_ADDRESS, current_id)
+                    logger.warning(f"Invalid weapon level ID {hex(current_id)} detected for {weapon_name}. "
+                                   f"Restoring to last tracked level {prev_saved}.")
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL
-                prev_saved = min(self.weapon_levels.get(weapon_name, 1), target_level)
                 self.weapon_levels[weapon_name] = prev_saved
                 if prev_saved < current_level <= target_level:
                     self.weapon_levels[weapon_name] = current_level

@@ -374,7 +374,7 @@ class CommandProcessor(ClientCommandProcessor):
 
     def _cmd_goal_status(self) -> None:
         """Displays the current status of the goal requirements"""
-        if not self.verify(2):
+        if not self.verify():
             return
         if isinstance(self.ctx, Rac3Context):
             self.ctx.game_interface.get_goal_status(self.ctx.server_locations)

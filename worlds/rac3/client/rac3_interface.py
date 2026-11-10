@@ -724,7 +724,8 @@ class Rac3Interface(GameInterface):
         self.boss_warship = self._read_flag(RAC3PROGRESSFLAG.DAXX_DEFEAT_WARSHIP)
         self.boss_scorpio = self._read8(RAC3_LOCATION_DATA_TABLE[
                                             RAC3LOCATION.NATION_MEET_COURTNEY].CHECK_ADDRESS[0].ADDRESS)
-        self.boss_talos = self._read_flag(RAC3PROGRESSFLAG.HOLOSTAR_STUDIOS_CLANK_FINISH_CLANK_SECTION)
+        self.boss_talos = (self.options.shortcuts.get(RAC3SHORTCUTS.HOLOSTAR_CLANK, False)
+                           or self._read_flag(RAC3PROGRESSFLAG.HOLOSTAR_STUDIOS_CLANK_FINISH_CLANK_SECTION))
         self.boss_gears = self._read_flag(RAC3PROGRESSFLAG.OBANI_DRACO_DEFEAT_COURTNEY)
         self.boss_klunk = self._read_flag(RAC3PROGRESSFLAG.METROPOLIS_DEFEATED_KLUNK)
         self.boss_nef = self._read8(RAC3STATUS.NEFARIOUS)
@@ -3371,10 +3372,12 @@ class Rac3Interface(GameInterface):
             else:
                 completed_requirements += f"\n- Scorpio defeated!"
         if self.options.goal_boss_talos:
-            if not self.boss_talos:
-                goal_conditions += f"\n- Defeat the Terror of Talos as Giant Clank on Holostar Studios!"
+            if self.options.shortcuts.get(RAC3SHORTCUTS.HOLOSTAR_CLANK, False):
+                completed_requirements += "\n- Terror of Talos skipped via Holostar Skip Clank!"
+            elif self.boss_talos:
+                completed_requirements += "\n- Terror of Talos defeated!"
             else:
-                completed_requirements += f"\n- Terror of Talos defeated!"
+                goal_conditions += "\n- Defeat the Terror of Talos as Giant Clank on Holostar Studios!"
         if self.options.goal_boss_gears:
             if not self.boss_gears:
                 goal_conditions += f"\n- Defeat Courtney Gears on Obani Draco!"

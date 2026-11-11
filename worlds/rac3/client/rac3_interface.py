@@ -229,7 +229,7 @@ class Rac3Interface(GameInterface):
     should_restore_vendor_item_names: bool = True
     tyhrra_dropship: bool = False
     tyhrra_intro: int = 0
-    metro_dropship: int = 0
+    metro_dropship: int = 0  # 0 is ready, 1 owns the temporary bit, 2 is done for this pause.
     holo_teleport: int = 0
     holo_final_door: int = 0
     holo_door: int = 0
@@ -2700,6 +2700,11 @@ class Rac3Interface(GameInterface):
         # if ((self.planet != RAC3REGION.TYHRRANOSIS or self.short_pause)
         #     and RAC3LOCATION.TYHRRANOSIS_BOSS not in self.checked_locations):
         #     self.tyhrra_dropship = 0
+        # Release the shortcut's temporary bit even if the pause ended between updates.
+        if self.metro_dropship == 1:
+            if not (self._read8(RAC3STATUS.METROPOLIS_KLUNK_COMPLETE) & 1):
+                self._unwrite_bits(RAC3PROGRESSFLAG.METROPOLIS_DEFEATED_KLUNK)
+            self.metro_dropship = 2
         if ((self.planet != RAC3REGION.METROPOLIS or not self.short_pause)
             and RAC3LOCATION.METROPOLIS_DEFEAT_KLUNK not in self.checked_locations):
             self.metro_dropship = 0
@@ -2730,15 +2735,13 @@ class Rac3Interface(GameInterface):
                         #     self._unwrite_bits(data.FLAG_ADDRESSES[0])
                         # continue
                     if name == RAC3SHORTCUTS.METROPOLIS_DROPSHIP and data.FLAG_ADDRESSES is not None:
-                        # logger.debug(f"Pause state: {self.pause_state_value}, latch state: {self.metro_dropship}")
-                        if self.metro_dropship < 1 and self.short_pause:
-                            self.metro_dropship += 1
-                            self._write_bits(data.FLAG_ADDRESSES[0])
-                            # logger.debug("Set Metro Dropship")
-                        elif self.metro_dropship == 1 and self.short_pause:
-                            self.metro_dropship += 1
-                            self._unwrite_bits(data.FLAG_ADDRESSES[0])
-                            # logger.debug("UnSet Metro Dropship")
+                        if self.metro_dropship == 0 and self.short_pause:
+                            flag = data.FLAG_ADDRESSES[0]
+                            if self._read8(RAC3STATUS.METROPOLIS_KLUNK_COMPLETE) & 1 or self._read_flag(flag):
+                                self.metro_dropship = 2
+                            else:
+                                self._write_bits(flag)
+                                self.metro_dropship = 1
                         continue
                     if name == RAC3SHORTCUTS.HOLOSTAR_TELEPORTER and data.FLAG_ADDRESSES is not None:
                         if self.holo_teleport == 0 and self.short_pause:

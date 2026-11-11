@@ -175,7 +175,8 @@ class Rac3Interface(GameInterface):
     crystals_traded: int = 0
     skillpoints: int = 0
     qwarktastic: int = 0
-    museum: int = 0
+    museum_unlocked: bool = False
+    museum_visited: bool = False
     boss_qwark: int = 0
     boss_two: int = 0
     boss_noid: int = 0
@@ -716,7 +717,9 @@ class Rac3Interface(GameInterface):
         self.crystals_traded = self._read8(RAC3STATUS.CRYSTALS_TRADED)
         self.skillpoints = len([byte for byte in self._read_bytes(RAC3STATUS.SKILLPOINTS, 30) if byte])
         self.qwarktastic = self._read8(RAC3STATUS.QWARKTASTIC)
-        self.museum = self._read8(RAC3_ITEM_DATA_TABLE[RAC3ITEM.MUSEUM].UNLOCK_ADDRESS)
+        if self.options.goal_museum:
+            self.museum_unlocked = all(self._read_bytes(RAC3STATUS.TROPHY_FLAGS, 15))
+            self.museum_visited = bool(self._read8(RAC3_REGION_DATA_TABLE[RAC3REGION.MUSEUM].VISIT_ADDRESS))
         self.boss_qwark = self._read_flag(RAC3PROGRESSFLAG.FLORANA_DEFEAT_QWARK)
         self.boss_two = self._read8(RAC3_LOCATION_DATA_TABLE[
                                         RAC3LOCATION.NATION_THE_TERRIBLE_TWO].CHECK_ADDRESS[0].ADDRESS)
@@ -1484,7 +1487,7 @@ class Rac3Interface(GameInterface):
                     return False
             if self.options.goal_qwark and not self.qwarktastic:
                 return False
-            if self.options.goal_museum and not self.museum:
+            if self.options.goal_museum and not (self.museum_unlocked and self.museum_visited):
                 return False
             if self.options.goal_boss_qwark and not self.boss_qwark:
                 return False
@@ -3342,10 +3345,14 @@ class Rac3Interface(GameInterface):
             else:
                 completed_requirements += f"\n- Qwarktastic battle completed!"
         if self.options.goal_museum:
-            if not self.museum:
-                goal_conditions += f"\n- Unlock the Insomniac Museum teleporter in the Phoenix Trophy Room!"
+            if not self.museum_unlocked:
+                goal_conditions += "\n- Unlock the Insomniac Museum teleporter in the Phoenix Trophy Room!"
             else:
-                completed_requirements += f"\n- Insomniac Museum teleporter unlocked!"
+                completed_requirements += "\n- Insomniac Museum teleporter unlocked!"
+            if not self.museum_visited:
+                goal_conditions += "\n- Visit the Insomniac Museum!"
+            else:
+                completed_requirements += "\n- Insomniac Museum visited!"
         if self.options.goal_boss_qwark:
             if not self.boss_qwark:
                 goal_conditions += f"\n- Defeat Captain Qwark on Florana!"

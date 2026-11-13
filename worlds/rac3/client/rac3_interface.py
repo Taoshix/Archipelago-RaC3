@@ -1,5 +1,6 @@
 """This module provides an RAC3 interface to control the game"""
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from random import choice, randint
 from typing import Any
@@ -11,8 +12,10 @@ from CommonClient import logger
 from Utils import __version__
 from worlds.rac3.client.general_interface import GameInterface
 from worlds.rac3.client.notification import RAC3NOTIFICATION
-from worlds.rac3.client.texthelper import (ITEM_TO_ORIGINAL_STRING_POINTER_OFFSET, ITEM_TO_STRING_TABLE_INDEX_OFFSET,
-                                           remove_accents, TEXT_BYTE_TO_EXPECTED_WIDTH)
+from worlds.rac3.client.string_table import StringTable
+from worlds.rac3.client.string_table_entry import StringTableEntry
+from worlds.rac3.client.texthelper import TEXT_BYTE_TO_EXPECTED_WIDTH, VENDOR_ITEM_NAME_TEXT_IDS, remove_accents
+from worlds.rac3.client.vendor_name_patch import VendorNamePatch
 from worlds.rac3.constants.action_type import ACTION_TYPE_NAMES, RAC3ACTIONTYPE
 from worlds.rac3.constants.check_type import CHECKTYPE
 from worlds.rac3.constants.cutscene_flag import RAC3CUTSCENEFLAG
@@ -225,8 +228,11 @@ class Rac3Interface(GameInterface):
     vendor_type: RAC3VENDORTYPE | None = None
     vendor_string_pointers: dict[str, int] = {}
     vendor_cursor_pos: int = 0
-    should_overwrite_vendor_item_names: bool = True
-    should_restore_vendor_item_names: bool = True
+    string_table: StringTable | None = None
+    string_entries: dict[int, int] = {}
+    vendor_name_table: StringTable | None = None
+    vendor_name_patches: dict[int, VendorNamePatch] = {}
+    vendor_name_restore_pending: bool = False
     tyhrra_dropship: bool = False
     tyhrra_intro: int = 0
     metro_dropship: int = 0  # 0 is ready, 1 owns the temporary bit, 2 is done for this pause.
@@ -525,6 +531,7 @@ class Rac3Interface(GameInterface):
         self.clank_cycler()
         self.cheat_cycler()
         self.notification_cycler()
+        self.invalidate_string_table_cache()
 
     def undo_collections(self):
         """Unset flags in the game associated to randomizer locations"""
@@ -755,12 +762,15 @@ class Rac3Interface(GameInterface):
                 self.holo_door = self._read16(self.holo_final_door + 0xBE)
         else:
             self.holo_door = 0
+        self.pause_check()
+        if (self.new_planet or self.between_planets or self.is_reloading
+            or self.game_state_value == RAC3GAMESTATE.PLANET_CHANGE):
+            self.invalidate_string_table_cache()
         self.vendor_type = self.vendor_check()
         self.get_visited_planets()
         self.determine_weapon_vendor_items()
         self.determine_armor_vendor_items()
         self.vehicle_check()
-        self.pause_check()
         self.check_latches()
 
     def find_pda_vendor(self) -> int:
@@ -784,7 +794,9 @@ class Rac3Interface(GameInterface):
 
     def vendor_check(self) -> RAC3VENDORTYPE | None:
         """Returns the current vendor type if the vendor is open, else None"""
-        if self.game_state_value == RAC3GAMESTATE.VENDOR and self.planet in PLANET_VENDOR_OFFSET.keys():
+        vendor_open = self.game_state_value == RAC3GAMESTATE.VENDOR
+        self.update_vendor_name_restores(vendor_open)
+        if vendor_open and self.planet in PLANET_VENDOR_OFFSET:
             self.last_in_vendor_time = time.time()
             self.vendor_cursor_pos = self._read32(
                 RAC3VENDOR.get_vendor_property_address(self.planet, RAC3VENDOR.CURSOR_OFFSET, self.current_game))
@@ -793,27 +805,33 @@ class Rac3Interface(GameInterface):
                     self.planet, RAC3VENDOR.VENDOR_TYPE_OFFSET, self.current_game)))
             except ValueError:
                 return None
-        self.restore_vendor_item_names()
         return None
 
-    def restore_vendor_item_names(self):
-        """Restore the names of the weapons in the weapon vendor to their original values"""
-        if not self.should_restore_vendor_item_names or self.planet not in PLANET_VENDOR_OFFSET.keys():
+    def update_vendor_name_restores(self, vendor_open: bool):
+        """Recheck pending name restores and queue any still needed while the vendor is closed."""
+        if not self.vendor_name_patches or (vendor_open and not self.vendor_name_restore_pending):
             return
-        string_id_table_start = self._read32(PLANET_LOAD_OFFSET[self.planet] + RAC3STATUS.PLANET_STRING_TABLE_BASE)
-        all_strings_start = self._read32(string_id_table_start)
-        for item in non_prog_weapon_data.keys() | armor_data.keys():
-            item_string_offset = ITEM_TO_STRING_TABLE_INDEX_OFFSET.get(item, None)
-            if item_string_offset is not None:
-                item_string_address = string_id_table_start + item_string_offset
-                if self._read32(item_string_address) not in self.vendor_string_pointers.values():
-                    continue
-                original_string_ptr = all_strings_start + ITEM_TO_ORIGINAL_STRING_POINTER_OFFSET[item]
-                if self.current_game == RAC3VERSION.EU_ID:
-                    original_string_ptr += 0x11
-                self._write32(item_string_address, original_string_ptr)
-        self.should_restore_vendor_item_names = False
-        self.should_overwrite_vendor_item_names = True
+        self.vendor_name_restore_pending = True
+        for patch in self.vendor_name_patches.values():
+            self.write_batcher.pop((patch.address, self.DataType.INT32), None)
+        if self.get_string_table() != self.vendor_name_table:
+            return
+
+        remaining = {}
+        addresses = [patch.address for patch in self.vendor_name_patches.values()]
+        for (text_id, patch), entry in zip(self.vendor_name_patches.items(), self.read_string_entries(addresses)):
+            if entry.text_id == text_id and entry.text_pointer == patch.replacement:
+                remaining[text_id] = patch
+        if self.get_string_table() != self.vendor_name_table:
+            return
+
+        self.vendor_name_patches = remaining
+        self.vendor_name_restore_pending = bool(remaining) and not vendor_open
+        if not remaining:
+            self.vendor_name_table = None
+        if self.vendor_name_restore_pending:
+            for patch in remaining.values():
+                self.write_batcher[(patch.address, self.DataType.INT32)] = patch.original
 
     def get_visited_planets(self):
         """Returns a set of all planets the player has visited"""
@@ -1719,13 +1737,13 @@ class Rac3Interface(GameInterface):
                 is_slimcognito = (self.planet == RAC3REGION.AQUATOS
                                   and bool(self._read8(RAC3WEAPONVENDOR.get_vendor_property_address(
                         self.planet, RAC3WEAPONVENDOR.VENDOR_WEAPON_TYPE_OFFSET))))
+                randomized_items = [item for item in self.weapon_vendor_items
+                                    if (item in MEGACORP_WEAPONS) == is_slimcognito]
 
                 # Slim Cognito does not have a max ammo item, so we just replace the entire inventory
                 if is_slimcognito:
-                    # Only show megacorp weapons
-                    megacorp_weapons = [item for item in self.weapon_vendor_items if item in MEGACORP_WEAPONS]
                     new_inventory.extend(
-                        [RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID) for item in megacorp_weapons])
+                        RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID) for item in randomized_items)
                 else:
                     # Only show gadgetron weapons, keep current inventory up to all_ammo
                     vendor_size = self._read32(RAC3VENDOR.get_vendor_property_address(
@@ -1746,8 +1764,8 @@ class Rac3Interface(GameInterface):
                     if not found_all_ammo:
                         new_inventory = [RAC3WEAPONVENDORSLOTDATA(all_ammo=1)]
                     if self.options.weapon_vendors:
-                        new_inventory.extend([RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID) for item in
-                                              self.weapon_vendor_items if item not in MEGACORP_WEAPONS])
+                        new_inventory.extend(RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID)
+                                             for item in randomized_items)
                     if should_add_ngplus_items:
                         new_inventory.extend([RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID, mega=1)
                                               for item in self.omega_weapon_vendors_items])
@@ -1755,13 +1773,13 @@ class Rac3Interface(GameInterface):
                     # add memory card item
                     new_inventory.append(RAC3WEAPONVENDORSLOTDATA(memcard=1))
                 if self.options.weapon_vendors:
-                    self.overwrite_vendor_item_names()
+                    self.overwrite_vendor_item_names(randomized_items, ITEM_TO_WEAPON_VENDOR_LOCATION)
             case RAC3VENDORTYPE.ARMOR:
                 if not self.options.armor_vendor:
                     return
                 new_inventory = [ARMOR_VENDOR_INVENTORY[ITEM_TO_ARMOR_VENDOR_LOCATION[item]] for item in
                                  self.armor_vendor_items]
-                self.overwrite_vendor_item_names()
+                self.overwrite_vendor_item_names(self.armor_vendor_items, ITEM_TO_ARMOR_VENDOR_LOCATION)
             case RAC3VENDORTYPE.SHIP:
                 if not self.options.ship_vendor:
                     return
@@ -1885,21 +1903,89 @@ class Rac3Interface(GameInterface):
             return True
         return False
 
-    def overwrite_vendor_item_names(self):
-        """Overwrite the names of the weapons in the weapon vendor with the provided list of weapon names"""
-        if not self.should_overwrite_vendor_item_names or self.planet not in PLANET_VENDOR_OFFSET.keys():
+    def invalidate_string_table_cache(self):
+        """Discard cached rows, vendor backups, and queued name writes when the game reloads its table."""
+        for patch in self.vendor_name_patches.values():
+            self.write_batcher.pop((patch.address, self.DataType.INT32), None)
+        self.vendor_name_patches = {}
+        self.vendor_name_table = None
+        self.vendor_name_restore_pending = False
+        self.string_entries = {}
+        self.string_table = None
+
+    def get_string_table(self) -> StringTable | None:
+        if (self.planet not in PLANET_LOAD_OFFSET or self.between_planets or self.is_reloading
+            or self.game_state_value == RAC3GAMESTATE.PLANET_CHANGE):
+            return None
+        base = self._read32(PLANET_LOAD_OFFSET[self.planet] + RAC3STATUS.PLANET_STRING_TABLE_BASE)
+        if not 0 < base <= 0x02000000 - StringTableEntry.SIZE or base % StringTableEntry.SIZE:
+            return None
+        first = self.read_string_entries([base])[0]
+        # In a loaded level text asset, the ID 0 string starts just after the last entry.
+        first_text = first.text_pointer
+        count, remainder = divmod(first_text - base, StringTableEntry.SIZE)
+        if first.text_id != 0 or remainder or not 0 < count <= StringTable.MAX_ENTRIES or first_text >= 0x02000000:
+            return None
+        return StringTable(
+            game_id=self.current_game,
+            planet=self.planet,
+            base_address=base,
+            first_text_address=first_text,
+        )
+
+    def read_string_entries(self, addresses: list[int]) -> list[StringTableEntry]:
+        """Read the requested rows from the string table."""
+        if not addresses:
+            return []
+        start = min(addresses)
+        end = max(addresses) + StringTableEntry.SIZE
+        data = super()._read_bytes(start, end - start) # addresses are already converted
+        return [StringTableEntry.from_bytes(data, address - start) for address in addresses]
+
+    def find_string_by_id(self, text_id: int) -> int | None:
+        """Return the string pointer for the given string ID."""
+        return self.find_strings_by_id((text_id,)).get(text_id)
+
+    def find_strings_by_id(self, text_ids: Iterable[int]) -> dict[int, int]:
+        """Find text entries with one table scan per loaded table."""
+        table = self.get_string_table()
+        if table is None:
+            return {}
+        if table != self.string_table:
+            addresses = list(range(table.base_address, table.first_text_address, StringTableEntry.SIZE))
+            entries = {}
+            for address, entry in zip(addresses, self.read_string_entries(addresses)):
+                # The game's lookup uses the first entry when an ID occurs twice.
+                entries.setdefault(entry.text_id, address)
+            self.string_entries = entries
+            self.string_table = table
+        return {text_id: self.string_entries[text_id] for text_id in text_ids if text_id in self.string_entries}
+
+    def overwrite_vendor_item_names(self, items: list[str], locations: dict[str, str]):
+        """Overwrite string pointers of item names to the code cave strings."""
+        replacements = {}
+        for item in items:
+            text_id = VENDOR_ITEM_NAME_TEXT_IDS.get(item)
+            replacement = self.vendor_string_pointers.get(locations.get(item, ""), 0)
+            if text_id is not None and text_id not in self.vendor_name_patches and replacement:
+                replacements[text_id] = self.address_convert(replacement)
+        if not replacements:
             return
-        string_id_table_start = self._read32(PLANET_LOAD_OFFSET[self.planet] + RAC3STATUS.PLANET_STRING_TABLE_BASE)
-        combined_locations = ITEM_TO_WEAPON_VENDOR_LOCATION | ITEM_TO_ARMOR_VENDOR_LOCATION
-        for item in self.weapon_vendor_items + self.armor_vendor_items:
-            item_string_offset = ITEM_TO_STRING_TABLE_INDEX_OFFSET.get(item, None)
-            if item_string_offset is not None:
-                item_string_address = string_id_table_start + item_string_offset
-                location = combined_locations[item]
-                ap_item_ptr = self.vendor_string_pointers[location]
-                self._write32(item_string_address, ap_item_ptr)
-        self.should_restore_vendor_item_names = True
-        self.should_overwrite_vendor_item_names = False
+
+        entries = self.find_strings_by_id(replacements)
+        table = self.string_table
+        if not entries or table is None or (self.vendor_name_patches and table != self.vendor_name_table):
+            return
+        self.vendor_name_patches = self.vendor_name_patches.copy()
+        for (text_id, address), entry in zip(entries.items(), self.read_string_entries(list(entries.values()))):
+            pointer = entry.text_pointer
+            # The original string is in the text asset. A code cave string pointer isn't a backup.
+            if entry.text_id != text_id or not table.first_text_address <= pointer < 0x02000000:
+                continue
+            replacement = replacements[text_id]
+            self.vendor_name_table = table
+            self.vendor_name_patches[text_id] = VendorNamePatch(address, pointer, replacement)
+            self.write_batcher[(address, self.DataType.INT32)] = replacement
 
     def get_vendor_apcodes(self) -> list | None:
         """Returns a list of apcodes for the open vendor. Returns None if no vendor is open"""

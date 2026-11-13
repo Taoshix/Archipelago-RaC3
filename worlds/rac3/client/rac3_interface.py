@@ -46,6 +46,10 @@ from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INST
                                                PATCHED_INSTRUCTIONS, RAC3INSTRUCTION)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
 from worlds.rac3.constants.items import QUICK_SELECT_LIST, RAC3ITEM, UPGRADE_DICT
+from worlds.rac3.constants.locations.challenge_description import (
+    GAUNTLET_DESCRIPTION, GAUNTLET_DESCRIPTORS, NATION_CHALLENGE_SIZE,
+    NATION_CHALLENGE_TABLE, VR_TRAINING_DESCRIPTION, VR_TRAINING_NAME, VR_TRAINING_NAME_ADDRESS,
+)
 from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION
 from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
@@ -75,7 +79,7 @@ from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION
                                            jp_get_pause_physical_address, PAL_SHIFTED_PLANETS, RAC3VERSION)
 from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEAPON_MODPACK, WEAPONMOD
 from worlds.rac3.constants.wrench import RAC3WRENCH
-from worlds.rac3.locations import get_completion_location_names
+from worlds.rac3.locations import get_challenge_locations, get_completion_location_names
 
 
 class Rac3Interface(GameInterface):
@@ -227,12 +231,14 @@ class Rac3Interface(GameInterface):
     omega_weapon_vendors_items: list[str] = []
     vendor_type: RAC3VENDORTYPE | None = None
     vendor_string_pointers: dict[str, int] = {}
+    challenge_string_pointers: dict[str, int] = {}
     vendor_cursor_pos: int = 0
     string_table: StringTable | None = None
     string_entries: dict[int, int] = {}
     vendor_name_table: StringTable | None = None
     vendor_name_patches: dict[int, VendorNamePatch] = {}
     vendor_name_restore_pending: bool = False
+    challenge_description_writes: dict[int, tuple[int, ...]] = {}
     tyhrra_dropship: bool = False
     tyhrra_intro: int = 0
     metro_dropship: int = 0  # 0 is ready, 1 owns the temporary bit, 2 is done for this pause.
@@ -268,100 +274,130 @@ class Rac3Interface(GameInterface):
     # Inherit functions #
     #####################
 
-    def _read8(self, address: int) -> int:
-        _address = self.address_convert(address)
+    def _read8(self, address: int, *, should_convert: bool = True) -> int:
+        _address = self.address_convert(address) if should_convert else address
         pending: int | None = self.write_batcher.get((_address, self.DataType.INT8))
         if pending is not None:
             return pending
         return super()._read8(_address)
 
-    def _read16(self, address: int) -> int:
-        _address = self.address_convert(address)
+    def _read16(self, address: int, *, should_convert: bool = True) -> int:
+        _address = self.address_convert(address) if should_convert else address
         pending: int | None = self.write_batcher.get((_address, self.DataType.INT16))
         if pending is not None:
             return pending
         return super()._read16(_address)
 
-    def _read32(self, address: int) -> int:
-        _address = self.address_convert(address)
+    def _read32(self, address: int, *, should_convert: bool = True) -> int:
+        _address = self.address_convert(address) if should_convert else address
         pending: int | None = self.write_batcher.get((_address, self.DataType.INT32))
         if pending is not None:
             return pending
         return super()._read32(_address)
 
-    def _read8_batch(self, addresses: list[int]) -> list[int]:
-        return super()._read8_batch([self.address_convert(address) for address in addresses])
+    def _read8_batch(self, addresses: list[int], *, should_convert: bool = True) -> list[int]:
+        if should_convert:
+            addresses = [self.address_convert(address) for address in addresses]
+        return super()._read8_batch(addresses)
 
-    def _read16_batch(self, addresses: list[int]) -> list[int]:
-        return super()._read16_batch([self.address_convert(address) for address in addresses])
+    def _read16_batch(self, addresses: list[int], *, should_convert: bool = True) -> list[int]:
+        if should_convert:
+            addresses = [self.address_convert(address) for address in addresses]
+        return super()._read16_batch(addresses)
 
-    def _read32_batch(self, addresses: list[int]) -> list[int]:
-        return super()._read32_batch([self.address_convert(address) for address in addresses])
+    def _read32_batch(self, addresses: list[int], *, should_convert: bool = True) -> list[int]:
+        if should_convert:
+            addresses = [self.address_convert(address) for address in addresses]
+        return super()._read32_batch(addresses)
 
-    def _read_bytes(self, address: int, n: int) -> bytes:
-        return super()._read_bytes(self.address_convert(address), n)
+    def _read_bytes(self, address: int, n: int, *, should_convert: bool = True) -> bytes:
+        if should_convert:
+            address = self.address_convert(address)
+        return super()._read_bytes(address, n)
 
-    def _read_float(self, address: int) -> float:
-        return super()._read_float(self.address_convert(address))
+    def _read_float(self, address: int, *, should_convert: bool = True) -> float:
+        if should_convert:
+            address = self.address_convert(address)
+        return super()._read_float(address)
 
-    def _read_string(self, address, n) -> str:
-        return super()._read_string(self.address_convert(address), n)
+    def _read_string(self, address: int, n: int, *, should_convert: bool = True) -> str:
+        if should_convert:
+            address = self.address_convert(address)
+        return super()._read_string(address, n)
 
-    def _write8(self, address: int, value: int):
-        return self.write_batcher.update({(self.address_convert(address), self.DataType.INT8): value})
+    def _write8(self, address: int, value: int, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        self.write_batcher[(address, self.DataType.INT8)] = value
 
-    def _write8_skip_cache(self, address: int, value: int):
-        return super()._write8(self.address_convert(address), value)
+    def _write8_skip_cache(self, address: int, value: int, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        return super()._write8(address, value)
 
-    def _write16_skip_cache(self, address: int, value: int):
-        return super()._write16(self.address_convert(address), value)
+    def _write16_skip_cache(self, address: int, value: int, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        return super()._write16(address, value)
 
-    def _write32_skip_cache(self, address: int, value: int):
-        return super()._write32(self.address_convert(address), value)
+    def _write32_skip_cache(self, address: int, value: int, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        return super()._write32(address, value)
 
-    def _write16(self, address: int, value: int):
-        return self.write_batcher.update({(self.address_convert(address), self.DataType.INT16): value})
+    def _write16(self, address: int, value: int, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        self.write_batcher[(address, self.DataType.INT16)] = value
 
-    def _write32(self, address: int, value: int):
-        return self.write_batcher.update({(self.address_convert(address), self.DataType.INT32): value})
+    def _write32(self, address: int, value: int, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        self.write_batcher[(address, self.DataType.INT32)] = value
 
-    def _write_bytes(self, address: int, value: bytes):
-        return self.write_batcher.update({(self.address_convert(address), self.DataType.BYTES): value})
+    def _write_bytes(self, address: int, value: bytes, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        self.write_batcher[(address, self.DataType.BYTES)] = value
 
-    def _write_float(self, address: int, value: float):
-        return self.write_batcher.update({(self.address_convert(address), self.DataType.FLOAT): value})
+    def _write_float(self, address: int, value: float, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        self.write_batcher[(address, self.DataType.FLOAT)] = value
 
-    def _write_string(self, address: int, value: str):
-        return self.write_batcher.update({(self.address_convert(address), self.DataType.STRING): value})
+    def _write_string(self, address: int, value: str, *, should_convert: bool = True):
+        if should_convert:
+            address = self.address_convert(address)
+        self.write_batcher[(address, self.DataType.STRING)] = value
 
-    def _read_bits(self, address: int) -> set[int]:
-        value = self._read8(address)
+    def _read_bits(self, address: int, *, should_convert: bool = True) -> set[int]:
+        value = self._read8(address, should_convert=should_convert)
         bits = self.value_to_bits(value)
         return bits
 
-    def _read_flag(self, check: tuple[int, int]) -> bool:
-        return check[1] in self._read_bits(check[0])
+    def _read_flag(self, check: tuple[int, int], *, should_convert: bool = True) -> bool:
+        return check[1] in self._read_bits(check[0], should_convert=should_convert)
 
-    def _write_bits(self, data: tuple[int, set[int] | int]):
+    def _write_bits(self, data: tuple[int, set[int] | int], *, should_convert: bool = True):
         address, value = data
         _value: set[int] = {value} if isinstance(value, int) else value
-        bits: set[int] = self._read_bits(address)
+        bits: set[int] = self._read_bits(address, should_convert=should_convert)
         if _value.issubset(bits):
             return
         bits |= _value
         write = self.bits_to_value(bits)
-        self._write8(address, write)
+        self._write8(address, write, should_convert=should_convert)
         return
 
-    def _unwrite_bits(self, data: tuple[int, set[int] | int]):
+    def _unwrite_bits(self, data: tuple[int, set[int] | int], *, should_convert: bool = True):
         address, value = data
         _value: set[int] = {value} if isinstance(value, int) else value
-        bits: set[int] = self._read_bits(address)
+        bits: set[int] = self._read_bits(address, should_convert=should_convert)
         if _value.isdisjoint(bits):
             return
         bits -= _value
         write = self.bits_to_value(bits)
-        self._write8(address, write)
+        self._write8(address, write, should_convert=should_convert)
         return
 
     def address_convert(self, address: int | str) -> int:
@@ -636,33 +672,38 @@ class Rac3Interface(GameInterface):
         if self.options.ngplus_start:
             self._write8(RAC3STATUS.SEEN_NGPLUS_POPUP, 1)
 
-    def setup_code_cave(self, location_data: list[tuple[str, str]]):
-        """Write item data to the code cave to be used later by vendors"""
+    def setup_code_cave(self, vendor_strings: dict[str, str], challenge_strings: dict[str, str]):
+        """Write item data to the code cave to be used later by vendors and challenges"""
+        previous_challenge_pointers = self.challenge_string_pointers
         self.vendor_string_pointers = {}
-        offset = 0x10
-
-        no_items_addr = RAC3INSTRUCTION.CODECAVE_START + offset
-        self._write_string(no_items_addr, RAC3VENDOR.NO_ITEMS_AVAILABLE_MSG)
-        offset += len(RAC3VENDOR.NO_ITEMS_AVAILABLE_MSG) + 1
-
-        all_sold_out_addr = RAC3INSTRUCTION.CODECAVE_START + offset
-        self._write_string(all_sold_out_addr, RAC3VENDOR.ALL_ITEMS_SOLD_OUT_MSG)
-        offset += len(RAC3VENDOR.ALL_ITEMS_SOLD_OUT_MSG) + 1
-
-        if self.options.ship_vendor:
-            self.vendor_string_pointers[RAC3VENDOR.NO_ITEMS_AVAILABLE_LOC_KEY] = no_items_addr
-            self.vendor_string_pointers[RAC3VENDOR.ALL_ITEMS_SOLD_OUT_LOC_KEY] = all_sold_out_addr
-
-        for loc_key, string in location_data:
-            addr = RAC3INSTRUCTION.CODECAVE_START + offset
-            format_string = self.format_color_string(string)
-            # Ensure null terminator at end of byte array
-            byte_array = format_string[0]
-            if not byte_array or byte_array[-1] != 0:
-                byte_array += bytes([0])
-            self._write_bytes(addr, byte_array)
-            self.vendor_string_pointers[loc_key] = addr
-            offset += len(byte_array)
+        self.challenge_string_pointers = {}
+        start = RAC3INSTRUCTION.CODECAVE_START + 0x10  # The first bytes hold armor purchase flags.
+        data = bytearray()
+        strings = {
+            RAC3VENDOR.NO_ITEMS_AVAILABLE_LOC_KEY: RAC3VENDOR.NO_ITEMS_AVAILABLE_MSG,
+            RAC3VENDOR.ALL_ITEMS_SOLD_OUT_LOC_KEY: RAC3VENDOR.ALL_ITEMS_SOLD_OUT_MSG,
+            **vendor_strings,
+            **challenge_strings,
+        }
+        packed_challenges: dict[bytes, int] = {}
+        for key, string in strings.items():
+            is_challenge = key in challenge_strings
+            encoded, _ = self.format_color_string(string)
+            encoded = encoded.rstrip(b"\x00") + b"\x00"
+            if is_challenge and encoded in packed_challenges:
+                self.challenge_string_pointers[key] = packed_challenges[encoded]
+                continue
+            address = start + len(data)
+            data.extend(encoded)
+            if is_challenge:
+                pointer = self.address_convert(address)
+                self.challenge_string_pointers[key] = pointer
+                packed_challenges[encoded] = pointer
+            else:
+                self.vendor_string_pointers[key] = address
+        self._write_bytes(start, bytes(data))
+        if self.challenge_string_pointers != previous_challenge_pointers:
+            self.challenge_description_writes = {}
 
     def speedup_setup(self):
         """One time setup of speedup options when starting a new session"""
@@ -831,7 +872,7 @@ class Rac3Interface(GameInterface):
             self.vendor_name_table = None
         if self.vendor_name_restore_pending:
             for patch in remaining.values():
-                self.write_batcher[(patch.address, self.DataType.INT32)] = patch.original
+                self._write32(patch.address, patch.original, should_convert=False)
 
     def get_visited_planets(self):
         """Returns a set of all planets the player has visited"""
@@ -1904,12 +1945,13 @@ class Rac3Interface(GameInterface):
         return False
 
     def invalidate_string_table_cache(self):
-        """Discard cached rows, vendor backups, and queued name writes when the game reloads its table."""
+        """Discard string table state and queued writes."""
         for patch in self.vendor_name_patches.values():
             self.write_batcher.pop((patch.address, self.DataType.INT32), None)
         self.vendor_name_patches = {}
         self.vendor_name_table = None
         self.vendor_name_restore_pending = False
+        self.challenge_description_writes = {}
         self.string_entries = {}
         self.string_table = None
 
@@ -1939,7 +1981,7 @@ class Rac3Interface(GameInterface):
             return []
         start = min(addresses)
         end = max(addresses) + StringTableEntry.SIZE
-        data = super()._read_bytes(start, end - start) # addresses are already converted
+        data = self._read_bytes(start, end - start, should_convert=False)
         return [StringTableEntry.from_bytes(data, address - start) for address in addresses]
 
     def find_string_by_id(self, text_id: int) -> int | None:
@@ -1947,7 +1989,7 @@ class Rac3Interface(GameInterface):
         return self.find_strings_by_id((text_id,)).get(text_id)
 
     def find_strings_by_id(self, text_ids: Iterable[int]) -> dict[int, int]:
-        """Find text entries with one table scan per loaded table."""
+        """Find text entries with one table scan per loaded table. Returns a dict of string id to string pointer."""
         table = self.get_string_table()
         if table is None:
             return {}
@@ -1960,6 +2002,56 @@ class Rac3Interface(GameInterface):
             self.string_entries = entries
             self.string_table = table
         return {text_id: self.string_entries[text_id] for text_id in text_ids if text_id in self.string_entries}
+
+    def overwrite_challenge_descriptions(self):
+        """Overwrite challenge description strings with the archipelago item names."""
+        if self.between_planets:
+            return
+
+        # Only overwrite descriptions for challenges that have not already been written to the string table.
+        pending_challenge_descriptions = {
+            text_id: self.challenge_string_pointers[location.NAME]
+            for location in get_challenge_locations(self.planet)
+            if location.NAME in self.challenge_string_pointers
+            for text_id in location.DESCRIPTION_TEXT_IDS
+            if text_id not in self.challenge_description_writes
+        }
+        if not pending_challenge_descriptions:
+            return
+
+        challenge_string_rows = self.find_strings_by_id(pending_challenge_descriptions)
+        if not challenge_string_rows or self.string_table is None:
+            return
+
+        description_writes = {}
+        for text_id, row in challenge_string_rows.items():
+            descriptor = self.challenge_description_descriptor(text_id)
+            if descriptor is None:
+                description_writes[text_id] = (row,)
+                continue
+            name_address, title_id, original_id = descriptor
+            description_address = name_address + 4
+            live_title, live_description = self._read32_batch(
+                [name_address, description_address], should_convert=False)
+            if live_title == title_id and live_description in (original_id, text_id):
+                description_writes[text_id] = (row, description_address)
+
+        if description_writes and self.get_string_table() == self.string_table:
+            for text_id, (row, *descriptors) in description_writes.items():
+                self._write32(row, pending_challenge_descriptions[text_id], should_convert=False)
+                for address in descriptors:
+                    self._write32(address, text_id, should_convert=False)
+            self.challenge_description_writes = {**self.challenge_description_writes, **description_writes}
+
+    def challenge_description_descriptor(self, text_id: int) -> tuple[int, int, int] | None:
+        """Return the name field and the expected title and description IDs."""
+        if self.planet == RAC3REGION.STARSHIP_PHOENIX and text_id == VR_TRAINING_DESCRIPTION:
+            return VR_TRAINING_NAME_ADDRESS[self.current_game], VR_TRAINING_NAME, VR_TRAINING_NAME
+        if self.planet == RAC3REGION.ANNIHILATION_NATION and text_id in GAUNTLET_DESCRIPTORS:
+            index, title = GAUNTLET_DESCRIPTORS[text_id]
+            address = NATION_CHALLENGE_TABLE[self.current_game] + index * NATION_CHALLENGE_SIZE
+            return address, title, GAUNTLET_DESCRIPTION
+        return None
 
     def overwrite_vendor_item_names(self, items: list[str], locations: dict[str, str]):
         """Overwrite string pointers of item names to the code cave strings."""
@@ -1985,7 +2077,7 @@ class Rac3Interface(GameInterface):
             replacement = replacements[text_id]
             self.vendor_name_table = table
             self.vendor_name_patches[text_id] = VendorNamePatch(address, pointer, replacement)
-            self.write_batcher[(address, self.DataType.INT32)] = replacement
+            self._write32(address, replacement, should_convert=False)
 
     def get_vendor_apcodes(self) -> list | None:
         """Returns a list of apcodes for the open vendor. Returns None if no vendor is open"""

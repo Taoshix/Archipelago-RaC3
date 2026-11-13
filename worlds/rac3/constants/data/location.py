@@ -6,6 +6,7 @@ from worlds.rac3.constants.check_type import CHECKTYPE
 from worlds.rac3.constants.data.address import RAC3ADDRESSDATA
 from worlds.rac3.constants.data.region import RAC3_REGION_DATA_TABLE
 from worlds.rac3.constants.instruction import RAC3INSTRUCTION
+from worlds.rac3.constants.locations.challenge_description import LOCATION_DESCRIPTION_TEXT_IDS
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.nanotech import RAC3NANOTECH
 from worlds.rac3.constants.locations.sewers import RAC3SEWER
@@ -3567,18 +3568,21 @@ class RAC3LOCATIONDATA:
     CHECK_ADDRESS: list[RAC3ADDRESSDATA]
     AP_CODE: int
     TAGS: set[str]
+    DESCRIPTION_TEXT_IDS: tuple[int, ...]
 
     def __init__(self,
                  name: str = "NO NAME LOCATION",
                  idx: int = 0,
                  region: str = RAC3REGION.GALAXY,
                  check: list[RAC3ADDRESSDATA] | None = None,
-                 tags: set[str] | None = None):
+                 tags: set[str] | None = None,
+                 description_text_ids: tuple[int, ...] = ()):
         """
         :param idx: ID
         :param region: Planet
         :param check: Memory Address Data
         :param tags: Category of location
+        :param description_text_ids: Text IDs of challenge descriptions that show this reward
         :rtype: RAC3LOCATIONDATA
         """
         self.NAME = name
@@ -3587,6 +3591,7 @@ class RAC3LOCATIONDATA:
         self.CHECK_ADDRESS = check if check else []
         self.AP_CODE = idx + RAC3STATUS.APCODE
         self.TAGS = tags if tags else set()
+        self.DESCRIPTION_TEXT_IDS = description_text_ids
 
     @staticmethod
     def construct(location_name: str):
@@ -3621,7 +3626,8 @@ class RAC3LOCATIONDATA:
         check: list[RAC3ADDRESSDATA] = []
         for item in _LOCATION_NAME_TO_ADDRESS[location_name]:
             check += [RAC3ADDRESSDATA(item)]
-        return RAC3LOCATIONDATA(location_name, loc_id, planet_name, check, tags)
+        return RAC3LOCATIONDATA(location_name, loc_id, planet_name, check, tags,
+                                LOCATION_DESCRIPTION_TEXT_IDS.get(location_name, ()))
 
 
 RAC3_LOCATION_DATA_TABLE: dict[str, RAC3LOCATIONDATA] = {name: RAC3LOCATIONDATA.construct(name) for name in
@@ -3636,7 +3642,7 @@ LOCATION_TO_INFOBOT_FLAG: dict[str, int] = {
     RAC3LOCATION.NATION_TYHRRA_GUISE: RAC3_REGION_DATA_TABLE[RAC3REGION.AQUATOS].ACCESS_ADDRESS,
     # Sewer unlock goes here
     RAC3LOCATION.AQUATOS_BASE: RAC3_REGION_DATA_TABLE[RAC3REGION.TYHRRANOSIS].ACCESS_ADDRESS,
-    RAC3LOCATION.TYHRRANOSIS_BOSS: RAC3_REGION_DATA_TABLE[RAC3REGION.DAXX].ACCESS_ADDRESS,
+    RAC3LOCATION.PHOENIX_VR_TRAINING: RAC3_REGION_DATA_TABLE[RAC3REGION.DAXX].ACCESS_ADDRESS,
     RAC3LOCATION.DAXX_FACILITY: RAC3_REGION_DATA_TABLE[RAC3REGION.OBANI_GEMINI].ACCESS_ADDRESS,
     RAC3LOCATION.OBANI_GEMINI_SKIDD: RAC3_REGION_DATA_TABLE[RAC3REGION.BLACKWATER_CITY].ACCESS_ADDRESS,
     RAC3LOCATION.NATION_MEET_COURTNEY: RAC3_REGION_DATA_TABLE[RAC3REGION.HOLOSTAR_STUDIOS].ACCESS_ADDRESS,
@@ -3658,7 +3664,7 @@ REGION_TO_INFOBOT_LOCATION: dict[str, str] = {
     RAC3REGION.ANNIHILATION_NATION: RAC3LOCATION.PHOENIX_VID_COMIC_1_CLEAR,
     RAC3REGION.AQUATOS: RAC3LOCATION.NATION_TYHRRA_GUISE,
     RAC3REGION.TYHRRANOSIS: RAC3LOCATION.AQUATOS_BASE,
-    RAC3REGION.DAXX: RAC3LOCATION.TYHRRANOSIS_BOSS,
+    RAC3REGION.DAXX: RAC3LOCATION.PHOENIX_VR_TRAINING,
     RAC3REGION.OBANI_GEMINI: RAC3LOCATION.DAXX_FACILITY,
     RAC3REGION.BLACKWATER_CITY: RAC3LOCATION.OBANI_GEMINI_SKIDD,
     RAC3REGION.HOLOSTAR_STUDIOS: RAC3LOCATION.NATION_MEET_COURTNEY,

@@ -21,7 +21,7 @@ from worlds.rac3.constants.locations.weapon_levels import RAC3WEAPONLEVEL
 from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.region import RAC3REGION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
-from worlds.rac3.locations import get_completion_location_names, get_end_locations, location_groups
+from worlds.rac3.locations import get_completion_location_names, location_groups
 
 if TYPE_CHECKING:
     from worlds.rac3.world import RaC3World
@@ -37,7 +37,6 @@ def set_rules(world: "RaC3World"):
     :param world: RaC3World of current generation"""
 
     locations_by_name = {loc.name: loc for loc in world.get_locations()}
-    end_locations = get_end_locations(world)
     completion_names = get_completion_location_names(
         (loc.name for loc in locations_by_name.values() if loc.address),
         bool(world.options.lock_command_center.value),
@@ -119,7 +118,7 @@ def set_rules(world: "RaC3World"):
     def can_reach_tags(state: CollectionState, tag: str, count: int) -> bool:
         """Check whether the requested number of eligible tagged locations is reachable.
 
-        :param state: current collection state of the multiworld
+        :param state: Current collection state of the multiworld
         :param tag: name of location tag to check
         :param count: location count required to be reachable
 

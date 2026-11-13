@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from CommonClient import logger
 from NetUtils import ClientStatus
 from worlds.rac3.client.message import ClientMessage
-from worlds.rac3.client.texthelper import colorize_item_name, get_sent_item_message, remove_accents
+from worlds.rac3.client.texthelper import colorize_item_name, get_sent_item_message
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.data.region import RAC3_REGION_DATA_TABLE
 from worlds.rac3.constants.data.vendorslot import (ITEM_TO_ARMOR_VENDOR_LOCATION, ITEM_TO_WEAPON_VENDOR_LOCATION,
@@ -22,6 +22,7 @@ from worlds.rac3.constants.player_action import PERMITTED_DEATHLINK_SHIP_TELEPOR
 from worlds.rac3.constants.region import PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES, RAC3REGION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS
+from worlds.rac3.locations import get_challenge_locations
 
 ##################################################
 # Only change point: Change filename/Class name  #
@@ -253,6 +254,8 @@ async def update(ctx: "Context") -> None:
     await handle_respawn(ctx)
     # Check the vendor
     await handle_vendors(ctx)
+    if ctx.code_cave_setup:
+        ctx.game_interface.overwrite_challenge_descriptions()
     # Check sequence breaks
     await handle_sequence_break(ctx)
     ctx.game_interface.late_update()
@@ -263,7 +266,7 @@ async def update(ctx: "Context") -> None:
 
 
 async def handle_codecave(ctx: "Context") -> None:
-    """Set up the codecave with the current item locations for use in the randomizer
+    """Write item data to the code cave to be used later by vendors and challenges.
     :param ctx: RAC3 context class"""
     if ctx.slot_data is None or ctx.code_cave_setup:
         return
@@ -274,28 +277,32 @@ async def handle_codecave(ctx: "Context") -> None:
         all_vendor_locations.extend(ITEM_TO_ARMOR_VENDOR_LOCATION.values())
     if ctx.slot_data.get(RAC3OPTION.SHIP_VENDOR, False):
         all_vendor_locations.extend(SHIP_VENDOR_INVENTORY.keys())
-    if not all_vendor_locations:
-        return
+    challenges = {location.NAME: location for location in get_challenge_locations()}
+    vendor_strings: dict[str, str] = {}
+    challenge_groups: dict[tuple[str, tuple[int, ...]], list[tuple[str, str]]] = {}
+    for name in (*all_vendor_locations, *challenges):
+        location = RAC3_LOCATION_DATA_TABLE[name]
+        if location.AP_CODE not in ctx.server_locations:
+            continue
+        net_item = ctx.locations_info.get(location.AP_CODE)
+        if net_item is None:
+            return
+        item_name = colorize_item_name(ctx.item_names.lookup_in_slot(net_item.item, net_item.player), net_item.flags)
+        if net_item.player != ctx.slot:
+            item_name = f"{RAC3TEXTFORMATSTRING.GREEN}{ctx.player_names.get(net_item.player, '???')}'s {item_name}"
+        if name in challenges:
+            group = (location.REGION, location.DESCRIPTION_TEXT_IDS)
+            challenge_groups.setdefault(group, []).append((name, item_name))
+        else:
+            vendor_strings[name] = item_name
 
-    ap_codes = [RAC3_LOCATION_DATA_TABLE[loc].AP_CODE for loc in all_vendor_locations]
-    location_data: list[tuple[str, str]] = []
-    for loc_key, ap_code in zip(all_vendor_locations, ap_codes):
-        net_item = ctx.locations_info.get(ap_code, None)
-        if net_item is not None:
-            item_name = colorize_item_name(
-                ctx.item_names.lookup_in_slot(net_item.item, net_item.player),
-                net_item.flags
-            )
-            if ctx.slot == net_item.player:
-                string = item_name
-            else:
-                player_name = ctx.player_names.get(net_item.player, "???")
-                string = f"{player_name}'s {item_name}"
-            location_data.append((loc_key, remove_accents(string)))
-
-    if location_data:
-        ctx.game_interface.setup_code_cave(location_data)
-        ctx.code_cave_setup = True
+    challenge_strings = {
+        name: "Obtain " + ", ".join(item_name for _, item_name in rewards) + " on challenge completion!"
+        for rewards in challenge_groups.values()
+        for name, _ in rewards
+    }
+    ctx.game_interface.setup_code_cave(vendor_strings, challenge_strings)
+    ctx.code_cave_setup = True
 
 
 async def handle_intro_skip(ctx: "Context") -> None:

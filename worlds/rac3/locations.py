@@ -2,7 +2,7 @@
 
 from typing import Iterable, TYPE_CHECKING
 
-from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
+from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.locations.trophies import RAC3TROPHY
@@ -11,6 +11,25 @@ from worlds.rac3.constants.region import RAC3REGION
 
 if TYPE_CHECKING:
     from worlds.rac3.world import RaC3World
+
+
+CHALLENGE_TAGS = {RAC3TAG.VR, RAC3TAG.RANGERS, RAC3TAG.ARENA}
+RANGER_REGIONS = {
+    RAC3REGION.TYHRRANOSIS_RANGERS: RAC3REGION.TYHRRANOSIS,
+    RAC3REGION.METROPOLIS_RANGERS: RAC3REGION.METROPOLIS,
+}
+CHALLENGE_LOCATIONS: dict[str, list[RAC3LOCATIONDATA]] = {}
+for location in RAC3_LOCATION_DATA_TABLE.values():
+    if location.DESCRIPTION_TEXT_IDS and location.TAGS & CHALLENGE_TAGS:
+        CHALLENGE_LOCATIONS.setdefault(location.REGION, []).append(location)
+
+
+def get_challenge_locations(region: str | None = None) -> Iterable[RAC3LOCATIONDATA]:
+    """Get locations that have challenge descriptions."""
+    if region is None:
+        return (location for locations in CHALLENGE_LOCATIONS.values() for location in locations)
+    region = RANGER_REGIONS.get(region, region)
+    return CHALLENGE_LOCATIONS.get(region, ())
 
 
 def get_total_locations(world: "RaC3World") -> int:

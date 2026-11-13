@@ -289,7 +289,7 @@ async def handle_codecave(ctx: "Context") -> None:
             return
         item_name = colorize_item_name(ctx.item_names.lookup_in_slot(net_item.item, net_item.player), net_item.flags)
         if net_item.player != ctx.slot:
-            item_name = f"{ctx.player_names.get(net_item.player, '???')}'s {item_name}"
+            item_name = f"{RAC3TEXTFORMATSTRING.GREEN}{ctx.player_names.get(net_item.player, '???')}'s {item_name}"
         if name in challenges:
             group = (location.REGION, location.DESCRIPTION_TEXT_IDS)
             challenge_groups.setdefault(group, []).append((name, item_name))
@@ -297,7 +297,7 @@ async def handle_codecave(ctx: "Context") -> None:
             vendor_strings[name] = item_name
 
     challenge_strings = {
-        name: "Reward:\1" + "\1".join(item_name for _, item_name in rewards)
+        name: "Obtain " + ", ".join(item_name for _, item_name in rewards) + " on challenge completion!"
         for rewards in challenge_groups.values()
         for name, _ in rewards
     }

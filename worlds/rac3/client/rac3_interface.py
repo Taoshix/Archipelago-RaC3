@@ -238,7 +238,6 @@ class Rac3Interface(GameInterface):
     vendor_name_table: StringTable | None = None
     vendor_name_patches: dict[int, VendorNamePatch] = {}
     vendor_name_restore_pending: bool = False
-    challenge_description_writes: dict[int, tuple[int, ...]] = {}
     tyhrra_dropship: bool = False
     tyhrra_intro: int = 0
     metro_dropship: int = 0  # 0 is ready, 1 owns the temporary bit, 2 is done for this pause.
@@ -674,7 +673,6 @@ class Rac3Interface(GameInterface):
 
     def setup_code_cave(self, vendor_strings: dict[str, str], challenge_strings: dict[str, str]):
         """Write item data to the code cave to be used later by vendors and challenges"""
-        previous_challenge_pointers = self.challenge_string_pointers
         self.vendor_string_pointers = {}
         self.challenge_string_pointers = {}
         start = RAC3INSTRUCTION.CODECAVE_START + 0x10  # The first bytes hold armor purchase flags.
@@ -702,8 +700,6 @@ class Rac3Interface(GameInterface):
             else:
                 self.vendor_string_pointers[key] = address
         self._write_bytes(start, bytes(data))
-        if self.challenge_string_pointers != previous_challenge_pointers:
-            self.challenge_description_writes = {}
 
     def speedup_setup(self):
         """One time setup of speedup options when starting a new session"""
@@ -1951,7 +1947,6 @@ class Rac3Interface(GameInterface):
         self.vendor_name_patches = {}
         self.vendor_name_table = None
         self.vendor_name_restore_pending = False
-        self.challenge_description_writes = {}
         self.string_entries = {}
         self.string_table = None
 
@@ -2008,40 +2003,44 @@ class Rac3Interface(GameInterface):
         if self.between_planets:
             return
 
-        # Only overwrite descriptions for challenges that have not already been written to the string table.
-        pending_challenge_descriptions = {
+        replacements = {
             text_id: self.challenge_string_pointers[location.NAME]
             for location in get_challenge_locations(self.planet)
             if location.NAME in self.challenge_string_pointers
             for text_id in location.DESCRIPTION_TEXT_IDS
-            if text_id not in self.challenge_description_writes
         }
-        if not pending_challenge_descriptions:
+        if not replacements:
             return
 
-        challenge_string_rows = self.find_strings_by_id(pending_challenge_descriptions)
-        if not challenge_string_rows or self.string_table is None:
+        rows = self.find_strings_by_id(replacements)
+        table = self.string_table
+        if not rows or table is None:
             return
 
-        description_writes = {}
-        for text_id, row in challenge_string_rows.items():
-            descriptor = self.challenge_description_descriptor(text_id)
-            if descriptor is None:
-                description_writes[text_id] = (row,)
-                continue
-            name_address, title_id, original_id = descriptor
-            description_address = name_address + 4
-            live_title, live_description = self._read32_batch(
-                [name_address, description_address], should_convert=False)
-            if live_title == title_id and live_description in (original_id, text_id):
-                description_writes[text_id] = (row, description_address)
+        descriptors = {text_id: self.challenge_description_descriptor(text_id) for text_id in rows}
+        addresses = list(rows.values())
+        for descriptor in descriptors.values():
+            if descriptor is not None:
+                name_address, _, _ = descriptor
+                addresses.extend((name_address, name_address + 4))
+        # The game can restore the original pointers at the same string table address.
+        live = dict(zip(addresses, self._read32_batch(addresses, should_convert=False)))
+        writes = {}
+        for text_id, row in rows.items():
+            descriptor = descriptors[text_id]
+            if descriptor is not None:
+                name_address, title_id, original_id = descriptor
+                description_address = name_address + 4
+                if live[name_address] != title_id or live[description_address] not in (original_id, text_id):
+                    continue
+            if live[row] != replacements[text_id]:
+                writes[row] = replacements[text_id]
+            if descriptor is not None and live[description_address] != text_id:
+                writes[description_address] = text_id
 
-        if description_writes and self.get_string_table() == self.string_table:
-            for text_id, (row, *descriptors) in description_writes.items():
-                self._write32(row, pending_challenge_descriptions[text_id], should_convert=False)
-                for address in descriptors:
-                    self._write32(address, text_id, should_convert=False)
-            self.challenge_description_writes = {**self.challenge_description_writes, **description_writes}
+        if writes and self.get_string_table() == table:
+            for address, value in writes.items():
+                self._write32(address, value, should_convert=False)
 
     def challenge_description_descriptor(self, text_id: int) -> tuple[int, int, int] | None:
         """Return the name field and the expected title and description IDs."""

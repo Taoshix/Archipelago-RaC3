@@ -1,6 +1,7 @@
 """Campaign menu description IDs and their Archipelago reward locations."""
 
 from worlds.rac3.constants.locations.general import RAC3LOCATION
+from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
 from worlds.rac3.constants.version import RAC3VERSION
 
 
@@ -46,6 +47,7 @@ LOCATION_DESCRIPTION_TEXT_IDS: dict[str, tuple[int, ...]] = {
     RAC3LOCATION.PHOENIX_VR_SHOCKER: (0x0C2F,),
     RAC3LOCATION.PHOENIX_VR_WRENCH: (0x0C30,),
     RAC3LOCATION.PHOENIX_VR_NERVES: (0x0C31,),
+    RAC3TBOLT.PHOENIX_VR_NERVES: (0x0C31,),
     RAC3LOCATION.NATION_TYHRRA_GUISE: (0x0C3B, 0x12A3),
     RAC3LOCATION.NATION_GRAND_PRIZE_BOUT: (0x0C3B, 0x12A3),
     RAC3LOCATION.NATION_THE_TERRIBLE_TWO: (0x0C3C,),

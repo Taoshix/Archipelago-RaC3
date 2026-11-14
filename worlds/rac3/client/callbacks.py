@@ -23,6 +23,7 @@ from worlds.rac3.constants.player_action import PERMITTED_DEATHLINK_SHIP_TELEPOR
 from worlds.rac3.constants.region import PLANET_VENDOR_OFFSET, PLANETS_WITH_HACKER_PUZZLES, RAC3REGION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.constants.speedups import RAC3SPEEDUPS
+from worlds.rac3.constants.vendors.vendor import RAC3VENDOR
 from worlds.rac3.locations import get_challenge_locations
 
 ##################################################
@@ -257,7 +258,7 @@ async def update(ctx: "Context") -> None:
     await handle_vendors(ctx)
     if ctx.code_cave_setup:
         ctx.game_interface.overwrite_challenge_descriptions()
-        ctx.game_interface.overwrite_pda_vendor_prompt()
+        ctx.game_interface.overwrite_pda_vendor_prompts()
     # Check sequence breaks
     await handle_sequence_break(ctx)
     ctx.game_interface.late_update()
@@ -294,8 +295,11 @@ async def handle_codecave(ctx: "Context") -> None:
         if not own_item:
             item_name = f"{RAC3TEXTFORMATSTRING.GREEN}{ctx.player_names.get(net_item.player, '???')}'s {item_name}"
         if name == RAC3LOCATION.HIDEOUT_PDA:
-            purchase = "Buy a" if own_item else "Buy"
-            vendor_strings[name] = f"{RAC3TEXTFORMATSTRING.TRIANGLE} {purchase} {item_name} for 250,000 bolts"
+            purchase_item_name = f"a {item_name}" if own_item else item_name
+            vendor_strings[name] = f"{RAC3TEXTFORMATSTRING.TRIANGLE} Buy {purchase_item_name} for 250,000 bolts"
+            vendor_strings[RAC3VENDOR.PDA_INSUFFICIENT_BOLTS_KEY] = (
+                f"You need 250,000 bolts to buy {purchase_item_name}"
+            )
         elif name in challenges:
             group = (location.REGION, location.DESCRIPTION_TEXT_IDS)
             challenge_groups.setdefault(group, []).append((name, item_name))

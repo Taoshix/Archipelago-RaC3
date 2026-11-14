@@ -14,6 +14,7 @@ from worlds.rac3.constants.data.vendorslot import (ITEM_TO_ARMOR_VENDOR_LOCATION
                                                    SHIP_VENDOR_INVENTORY)
 from worlds.rac3.constants.input import RAC3INPUT
 from worlds.rac3.constants.items import RAC3ITEM
+from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.messages.box_theme import RAC3BOXTHEME
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
 from worlds.rac3.constants.moby_flag import HACKER_PUZZLE_TO_REGION
@@ -256,6 +257,7 @@ async def update(ctx: "Context") -> None:
     await handle_vendors(ctx)
     if ctx.code_cave_setup:
         ctx.game_interface.overwrite_challenge_descriptions()
+        ctx.game_interface.overwrite_pda_vendor_prompt()
     # Check sequence breaks
     await handle_sequence_break(ctx)
     ctx.game_interface.late_update()
@@ -270,7 +272,7 @@ async def handle_codecave(ctx: "Context") -> None:
     :param ctx: RAC3 context class"""
     if ctx.slot_data is None or ctx.code_cave_setup:
         return
-    all_vendor_locations: list[str] = []
+    all_vendor_locations: list[str] = [RAC3LOCATION.HIDEOUT_PDA]
     if ctx.slot_data.get(RAC3OPTION.WEAPON_VENDORS, False):
         all_vendor_locations.extend(ITEM_TO_WEAPON_VENDOR_LOCATION.values())
     if ctx.slot_data.get(RAC3OPTION.ARMOR_VENDOR, False):
@@ -288,9 +290,13 @@ async def handle_codecave(ctx: "Context") -> None:
         if net_item is None:
             return
         item_name = colorize_item_name(ctx.item_names.lookup_in_slot(net_item.item, net_item.player), net_item.flags)
-        if net_item.player != ctx.slot:
+        own_item = net_item.player == ctx.slot
+        if not own_item:
             item_name = f"{RAC3TEXTFORMATSTRING.GREEN}{ctx.player_names.get(net_item.player, '???')}'s {item_name}"
-        if name in challenges:
+        if name == RAC3LOCATION.HIDEOUT_PDA:
+            purchase = "Buy a" if own_item else "Buy"
+            vendor_strings[name] = f"{RAC3TEXTFORMATSTRING.TRIANGLE} {purchase} {item_name} for 250,000 bolts"
+        elif name in challenges:
             group = (location.REGION, location.DESCRIPTION_TEXT_IDS)
             challenge_groups.setdefault(group, []).append((name, item_name))
         else:

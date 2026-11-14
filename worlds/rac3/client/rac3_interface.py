@@ -2053,6 +2053,20 @@ class Rac3Interface(GameInterface):
             return address, title, GAUNTLET_DESCRIPTION
         return None
 
+    def overwrite_pda_vendor_prompt(self):
+        """Show the randomized reward in the PDA purchase prompt on Qwark's Hideout."""
+        if self.planet != RAC3REGION.QWARKS_HIDEOUT:
+            return
+        replacement = self.vendor_string_pointers.get(RAC3LOCATION.HIDEOUT_PDA)
+        if replacement is None:
+            return
+        row = self.find_string_by_id(RAC3VENDOR.PDA_PURCHASE_PROMPT_TEXT_ID)
+        if row is None:
+            return
+        pointer = self.address_convert(replacement)
+        if self._read32(row, should_convert=False) != pointer:
+            self._write32(row, pointer, should_convert=False)
+
     def overwrite_vendor_item_names(self, items: list[str], locations: dict[str, str]):
         """Overwrite string pointers of item names to the code cave strings."""
         replacements = {}

@@ -15,6 +15,7 @@ class RAC3VENDOR:
     NEW_ARMOR_OFFSET: int = 0x628
     VENDOR_TYPE_OFFSET: int = -0xF0
     IS_PDA_OFFSET: int = -0xE4
+    PDA_PURCHASE_PROMPT_TEXT_ID: int = 0x0F02
     SLOT_SIZE: int = 0
     NO_ITEMS_AVAILABLE_LOC_KEY: str = "NO_VENDOR_ITEMS"
     NO_ITEMS_AVAILABLE_MSG: str = "No items available. 1 infobot = 2 items in stock!"

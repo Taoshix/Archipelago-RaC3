@@ -2053,19 +2053,26 @@ class Rac3Interface(GameInterface):
             return address, title, GAUNTLET_DESCRIPTION
         return None
 
-    def overwrite_pda_vendor_prompt(self):
-        """Show the randomized reward in the PDA purchase prompt on Qwark's Hideout."""
+    def overwrite_pda_vendor_prompts(self):
+        """Show the randomized reward in both PDA vendor prompts on Qwark's Hideout."""
         if self.planet != RAC3REGION.QWARKS_HIDEOUT:
             return
-        replacement = self.vendor_string_pointers.get(RAC3LOCATION.HIDEOUT_PDA)
-        if replacement is None:
+
+        replacements = {
+            text_id: self.address_convert(self.vendor_string_pointers[key])
+            for text_id, key in (
+                (RAC3VENDOR.PDA_PURCHASE_PROMPT_TEXT_ID, RAC3LOCATION.HIDEOUT_PDA),
+                (RAC3VENDOR.PDA_INSUFFICIENT_BOLTS_TEXT_ID, RAC3VENDOR.PDA_INSUFFICIENT_BOLTS_KEY),
+            )
+            if key in self.vendor_string_pointers
+        }
+        if not replacements:
             return
-        row = self.find_string_by_id(RAC3VENDOR.PDA_PURCHASE_PROMPT_TEXT_ID)
-        if row is None:
-            return
-        pointer = self.address_convert(replacement)
-        if self._read32(row, should_convert=False) != pointer:
-            self._write32(row, pointer, should_convert=False)
+
+        for text_id, row in self.find_strings_by_id(replacements).items():
+            pointer = replacements[text_id]
+            if self._read32(row, should_convert=False) != pointer:
+                self._write32(row, pointer, should_convert=False)
 
     def overwrite_vendor_item_names(self, items: list[str], locations: dict[str, str]):
         """Overwrite string pointers of item names to the code cave strings."""

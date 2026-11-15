@@ -311,6 +311,12 @@ async def handle_codecave(ctx: "Context") -> None:
         for rewards in challenge_groups.values()
         for name, _ in rewards
     }
+    qwarktastic = RAC3LOCATION.NATION_QWARKTASTIC_BATTLE
+    if RAC3_LOCATION_DATA_TABLE[qwarktastic].AP_CODE not in ctx.server_locations:
+        challenge_strings[qwarktastic] = (
+            f"To make this a location, enable {RAC3OPTION.GOAL_QWARK} "
+            f"and set {RAC3OPTION.ARENA} to All in a new seed."
+        )
     ctx.game_interface.setup_code_cave(vendor_strings, challenge_strings)
     ctx.code_cave_setup = True
 

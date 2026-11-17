@@ -2000,7 +2000,7 @@ class Rac3Interface(GameInterface):
         return {text_id: self.string_entries[text_id] for text_id in text_ids if text_id in self.string_entries}
 
     def overwrite_planet_location_counts(self, server_locations: set[int], checked_locations: set[int]):
-        """Show enabled location progress on up to two Galactic Map objective lines."""
+        """Show enabled location progress in the Galactic Map objective text."""
         if self.between_planets or self.is_reloading or self.game_state_value != RAC3GAMESTATE.PAUSED:
             return
         if self.current_game not in (RAC3VERSION.US_ID, RAC3VERSION.EU_ID, RAC3VERSION.JP_ID):

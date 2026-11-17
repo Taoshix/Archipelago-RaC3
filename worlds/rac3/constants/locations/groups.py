@@ -7,6 +7,7 @@ from worlds.rac3.constants.options import RAC3OPTION
 class RAC3LOCATIONGROUP:
     """String constants for location groups and their compact display names."""
 
+    TOTAL = "Total"
     STORY = "Story"
     GENERAL = "General"
     VENDOR = "Vendor"
@@ -31,4 +32,13 @@ class RAC3LOCATIONGROUP:
         VID_COMICS: "VC",
         GAUNTLET: "Gaunt",
         VENDOR: "Vend",
+    }
+    COMPACT_NAMES = {
+        **SHORTER_NAMES,
+        VENDOR: "V",
+        COLLECTIBLES: "C",
+        RANGERS: "Rng",
+        GAUNTLET: "Gnt",
+        ARENA: "Ar",
+        SEWERS: "Sew",
     }

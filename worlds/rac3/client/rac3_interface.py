@@ -39,6 +39,7 @@ from worlds.rac3.constants.data.vendorslot import (ARMOR_VENDOR_INVENTORY, ARMOR
                                                    SHIP_VENDOR_INVENTORY, WEAPON_VENDOR_LOCATION_TO_ITEM,
                                                    WEAPON_VENDOR_LOCATION_TO_UNLOCK_REGION)
 from worlds.rac3.constants.deaths import CLANK_DEATH_FROM_ACTION, DEATH_FROM_ACTION
+from worlds.rac3.constants.galactic_map import GAUNTLET_LOCATIONS, LDF_LOCATIONS, RAC3GALACTICMAP
 from worlds.rac3.constants.game_state import RAC3GAMESTATE
 from worlds.rac3.constants.input import RAC3INPUT
 from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INSTRUCTION_TO_GAME_IDS,
@@ -52,6 +53,7 @@ from worlds.rac3.constants.locations.challenge_description import (
 )
 from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION
 from worlds.rac3.constants.locations.tags import RAC3TAG
+from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
 from worlds.rac3.constants.messages.box_theme import RAC3BOXTHEME
 from worlds.rac3.constants.messages.messagebox import RAC3MESSAGEBOX
@@ -76,7 +78,7 @@ from worlds.rac3.constants.vendors.name import RAC3VENDORNAME, VENDOR_TYPES
 from worlds.rac3.constants.vendors.type import RAC3VENDORTYPE
 from worlds.rac3.constants.vendors.vendor import RAC3SHIPVENDOR, RAC3VENDOR, RAC3WEAPONVENDOR, VENDORTYPE_TO_SLOT_SIZE
 from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION, jp_convert_address,
-                                           jp_get_pause_physical_address, PAL_SHIFTED_PLANETS, RAC3VERSION)
+                                           PAL_SHIFTED_PLANETS, RAC3VERSION)
 from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEAPON_MODPACK, WEAPONMOD
 from worlds.rac3.constants.wrench import RAC3WRENCH
 from worlds.rac3.locations import get_challenge_locations, get_completion_location_names
@@ -400,7 +402,7 @@ class Rac3Interface(GameInterface):
         return
 
     def address_convert(self, address: int | str) -> int:
-        """Address conversion from str to int, and for version correction (with US/JP/EU)"""
+        """Convert a US address for the current planet to the active game version."""
         _addr = int(address, 0) if isinstance(address, str) else address
         if (0x001DC7C0 <= _addr <= 0x00300000
             and self.planet in PAL_SHIFTED_PLANETS
@@ -961,19 +963,15 @@ class Rac3Interface(GameInterface):
 
     def pause_check(self):
         """Update the current pause data, depending on the current planet"""
-        planet_data = RAC3_REGION_DATA_TABLE[self.planet]
+        planet_data = RAC3_REGION_DATA_TABLE.get(self.planet)
         if planet_data:
             pause_addr = planet_data.PAUSE_ADDRESS
             game_state = self._read8(RAC3STATUS.GAME_STATE + planet_data.PLANET_SPECIAL_OFFSET)
             self.game_state_value = RAC3GAMESTATE(
                 game_state) if game_state <= 9 and game_state != 1 else RAC3GAMESTATE.INVALID
             self.pausing_game_state = True if self.game_state_value > RAC3GAMESTATE.UNPAUSED else False
-            self.pause_menu = bool(self._read8(pause_addr)) if pause_addr else False
-            if self.current_game == RAC3VERSION.JP_ID:
-                if self.game_state_value != RAC3GAMESTATE.PAUSED:
-                    self.pause_menu = False
-                elif pause_addr and (jp_addr := jp_get_pause_physical_address(pause_addr, self.planet)) is not None:
-                    self.pause_menu = bool(super()._read8(jp_addr))
+            self.pause_menu = bool(pause_addr and self.game_state_value == RAC3GAMESTATE.PAUSED
+                                   and self._read8(pause_addr))
         else:
             # Unknown planet, assume paused to be safe
             self.pause_menu = True
@@ -1997,6 +1995,76 @@ class Rac3Interface(GameInterface):
             self.string_entries = entries
             self.string_table = table
         return {text_id: self.string_entries[text_id] for text_id in text_ids if text_id in self.string_entries}
+
+    def overwrite_planet_location_counts(self, server_locations: set[int], checked_locations: set[int]):
+        """Show enabled location progress on up to two Galactic Map objective lines."""
+        if self.between_planets or self.is_reloading or self.game_state_value != RAC3GAMESTATE.PAUSED:
+            return
+        if self.current_game not in (RAC3VERSION.US_ID, RAC3VERSION.EU_ID, RAC3VERSION.JP_ID):
+            return
+        base = RAC3GALACTICMAP.get_rows_address(self.planet)
+        if base is None:
+            return
+
+        separate_groups = {
+            RAC3REGION.STARSHIP_PHOENIX: ("VR", "Vid-Comics"),
+            RAC3REGION.AQUATOS: ("Sewers",),
+            RAC3REGION.MARCADIA: ("Rangers", "LDF"),
+            RAC3REGION.ANNIHILATION_NATION: ("Gauntlet", "Arena"),
+        }
+        default_groups = ("Rangers",)
+        group_tags = {
+            "VR": RAC3TAG.VR,
+            "Vid-Comics": RAC3TAG.VIDCOMIC,
+            "Sewers": RAC3TAG.SEWER,
+            "Rangers": RAC3TAG.RANGERS,
+            "Arena": RAC3TAG.ARENA,
+        }
+        counts: dict[tuple[str, str], tuple[int, int]] = {}
+        for ap_code in server_locations:
+            name = LOCATION_FROM_AP_CODE.get(ap_code)
+            if name is None:
+                continue
+            location = RAC3_LOCATION_DATA_TABLE[name]
+            if name in GAUNTLET_LOCATIONS:
+                group = "Gauntlet"
+            elif name in LDF_LOCATIONS:
+                group = "LDF"
+            elif name in (RAC3TBOLT.SEWER_PIPE, RAC3TBOLT.SEWER_SWING):
+                group = "Sewers"
+            else:
+                group = "Locations"
+                for label in separate_groups.get(location.REGION, default_groups):
+                    if group_tags.get(label) in location.TAGS:
+                        group = label
+                        break
+            key = (location.REGION, group)
+            checked, total = counts.get(key, (0, 0))
+            collected = ap_code in checked_locations or name in self.checked_locations
+            counts[key] = (checked + int(collected), total + 1)
+
+        rows = self._read_bytes(base, RAC3GALACTICMAP.MAX_ROWS * RAC3GALACTICMAP.ROW_SIZE)
+        for offset in range(0, len(rows), RAC3GALACTICMAP.ROW_SIZE):
+            row = rows[offset:offset + RAC3GALACTICMAP.ROW_SIZE]
+            region = PLANET_NAME_FROM_ID.get(int.from_bytes(row[:4], "little"))
+            if region not in INFOBOT_FROM_PLANET or row[4] != 1:
+                continue
+            checked, total = counts.get((region, "Locations"), (0, 0))
+            secondary_counts = []
+            for group in separate_groups.get(region, default_groups):
+                group_checked, group_total = counts.get((region, group), (0, 0))
+                checked += group_checked
+                total += group_total
+                if group_total:
+                    secondary_counts.append(f"{group}: {group_checked}/{group_total}")
+            text = f"Total Locations: {checked}/{total}"
+            if secondary_counts:
+                text += "\x01" + " | ".join(secondary_counts)
+            encoded = (text.encode("ascii")[:RAC3GALACTICMAP.OBJECTIVE_SIZE - 1] + b"\x00").ljust(
+                RAC3GALACTICMAP.OBJECTIVE_SIZE, b"\x00")
+            start = RAC3GALACTICMAP.OBJECTIVE_OFFSET
+            if row[start:start + RAC3GALACTICMAP.OBJECTIVE_SIZE] != encoded:
+                self._write_bytes(base + offset + start, encoded)
 
     def overwrite_challenge_descriptions(self):
         """Overwrite challenge description strings with the archipelago item names."""

@@ -13,14 +13,14 @@ if TYPE_CHECKING:
     from worlds.rac3.world import RaC3World
 
 
-CHALLENGE_TAGS = {RAC3TAG.VR, RAC3TAG.RANGERS, RAC3TAG.ARENA}
-RANGER_REGIONS = {
+CHALLENGE_REGIONS = {
     RAC3REGION.TYHRRANOSIS_RANGERS: RAC3REGION.TYHRRANOSIS,
     RAC3REGION.METROPOLIS_RANGERS: RAC3REGION.METROPOLIS,
+    RAC3REGION.COMMAND_CENTER_2: RAC3REGION.COMMAND_CENTER,
 }
 CHALLENGE_LOCATIONS: dict[str, list[RAC3LOCATIONDATA]] = {}
 for location in RAC3_LOCATION_DATA_TABLE.values():
-    if location.DESCRIPTION_TEXT_IDS and location.TAGS & CHALLENGE_TAGS:
+    if location.DESCRIPTION_TEXT_IDS:
         CHALLENGE_LOCATIONS.setdefault(location.REGION, []).append(location)
 
 
@@ -28,7 +28,7 @@ def get_challenge_locations(region: str | None = None) -> Iterable[RAC3LOCATIOND
     """Get locations that have challenge descriptions."""
     if region is None:
         return (location for locations in CHALLENGE_LOCATIONS.values() for location in locations)
-    region = RANGER_REGIONS.get(region, region)
+    region = CHALLENGE_REGIONS.get(region, region)
     return CHALLENGE_LOCATIONS.get(region, ())
 
 

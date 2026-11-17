@@ -14,7 +14,8 @@ from worlds.rac3.client.general_interface import GameInterface
 from worlds.rac3.client.notification import RAC3NOTIFICATION
 from worlds.rac3.client.string_table import StringTable
 from worlds.rac3.client.string_table_entry import StringTableEntry
-from worlds.rac3.client.texthelper import TEXT_BYTE_TO_EXPECTED_WIDTH, VENDOR_ITEM_NAME_TEXT_IDS, remove_accents
+from worlds.rac3.client.texthelper import (TEXT_BYTE_TO_EXPECTED_WIDTH, VENDOR_ITEM_NAME_TEXT_IDS,
+                                           format_planet_location_counts, remove_accents)
 from worlds.rac3.client.vendor_name_patch import VendorNamePatch
 from worlds.rac3.constants.action_type import ACTION_TYPE_NAMES, RAC3ACTIONTYPE
 from worlds.rac3.constants.check_type import CHECKTYPE
@@ -39,7 +40,9 @@ from worlds.rac3.constants.data.vendorslot import (ARMOR_VENDOR_INVENTORY, ARMOR
                                                    SHIP_VENDOR_INVENTORY, WEAPON_VENDOR_LOCATION_TO_ITEM,
                                                    WEAPON_VENDOR_LOCATION_TO_UNLOCK_REGION)
 from worlds.rac3.constants.deaths import CLANK_DEATH_FROM_ACTION, DEATH_FROM_ACTION
-from worlds.rac3.constants.galactic_map import GAUNTLET_LOCATIONS, LDF_LOCATIONS, RAC3GALACTICMAP
+from worlds.rac3.constants.galactic_map import (GADGET_PICKUP_LOCATIONS, GAUNTLET_LOCATIONS,
+                                                LDF_LOCATIONS, RAC3GALACTICMAP, STORY_LOCATIONS,
+                                                VENDOR_LOCATIONS)
 from worlds.rac3.constants.game_state import RAC3GAMESTATE
 from worlds.rac3.constants.input import RAC3INPUT
 from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INSTRUCTION_TO_GAME_IDS,
@@ -52,8 +55,8 @@ from worlds.rac3.constants.locations.challenge_description import (
     NATION_CHALLENGE_TABLE, VR_TRAINING_DESCRIPTION, VR_TRAINING_NAME, VR_TRAINING_NAME_ADDRESS,
 )
 from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION
+from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.locations.tags import RAC3TAG
-from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
 from worlds.rac3.constants.messages.box_theme import RAC3BOXTHEME
 from worlds.rac3.constants.messages.messagebox import RAC3MESSAGEBOX
@@ -2007,18 +2010,19 @@ class Rac3Interface(GameInterface):
             return
 
         separate_groups = {
-            RAC3REGION.STARSHIP_PHOENIX: ("VR", "Vid-Comics"),
-            RAC3REGION.AQUATOS: ("Sewers",),
-            RAC3REGION.MARCADIA: ("Rangers", "LDF"),
-            RAC3REGION.ANNIHILATION_NATION: ("Gauntlet", "Arena"),
+            RAC3REGION.STARSHIP_PHOENIX: (RAC3LOCATIONGROUP.VR, RAC3LOCATIONGROUP.VID_COMICS),
+            RAC3REGION.AQUATOS: (RAC3LOCATIONGROUP.SEWERS,),
+            RAC3REGION.MARCADIA: (RAC3LOCATIONGROUP.RANGERS, RAC3LOCATIONGROUP.LDF),
+            RAC3REGION.ANNIHILATION_NATION: (RAC3LOCATIONGROUP.GAUNTLET, RAC3LOCATIONGROUP.ARENA),
         }
-        default_groups = ("Rangers",)
+        default_groups = (RAC3LOCATIONGROUP.RANGERS,)
+        common_groups = (RAC3LOCATIONGROUP.VENDOR, RAC3LOCATIONGROUP.COLLECTIBLES, RAC3LOCATIONGROUP.SKILL_POINTS)
         group_tags = {
-            "VR": RAC3TAG.VR,
-            "Vid-Comics": RAC3TAG.VIDCOMIC,
-            "Sewers": RAC3TAG.SEWER,
-            "Rangers": RAC3TAG.RANGERS,
-            "Arena": RAC3TAG.ARENA,
+            RAC3LOCATIONGROUP.VR: RAC3TAG.VR,
+            RAC3LOCATIONGROUP.VID_COMICS: RAC3TAG.VIDCOMIC,
+            RAC3LOCATIONGROUP.SEWERS: RAC3TAG.SEWER,
+            RAC3LOCATIONGROUP.RANGERS: RAC3TAG.RANGERS,
+            RAC3LOCATIONGROUP.ARENA: RAC3TAG.ARENA,
         }
         counts: dict[tuple[str, str], tuple[int, int]] = {}
         for ap_code in server_locations:
@@ -2026,14 +2030,21 @@ class Rac3Interface(GameInterface):
             if name is None:
                 continue
             location = RAC3_LOCATION_DATA_TABLE[name]
-            if name in GAUNTLET_LOCATIONS:
-                group = "Gauntlet"
+            if name in VENDOR_LOCATIONS:
+                group = RAC3LOCATIONGROUP.VENDOR
+            elif (name in GADGET_PICKUP_LOCATIONS or RAC3TAG.T_BOLT in location.TAGS
+                  or RAC3TAG.TROPHY in location.TAGS):
+                group = RAC3LOCATIONGROUP.COLLECTIBLES
+            elif RAC3TAG.SKILLPOINT in location.TAGS:
+                group = RAC3LOCATIONGROUP.SKILL_POINTS
+            elif name in STORY_LOCATIONS or RAC3TAG.INFOBOT in location.TAGS:
+                group = RAC3LOCATIONGROUP.STORY
+            elif name in GAUNTLET_LOCATIONS:
+                group = RAC3LOCATIONGROUP.GAUNTLET
             elif name in LDF_LOCATIONS:
-                group = "LDF"
-            elif name in (RAC3TBOLT.SEWER_PIPE, RAC3TBOLT.SEWER_SWING):
-                group = "Sewers"
+                group = RAC3LOCATIONGROUP.LDF
             else:
-                group = "Locations"
+                group = RAC3LOCATIONGROUP.GENERAL
                 for label in separate_groups.get(location.REGION, default_groups):
                     if group_tags.get(label) in location.TAGS:
                         group = label
@@ -2049,17 +2060,17 @@ class Rac3Interface(GameInterface):
             region = PLANET_NAME_FROM_ID.get(int.from_bytes(row[:4], "little"))
             if region not in INFOBOT_FROM_PLANET or row[4] != 1:
                 continue
-            checked, total = counts.get((region, "Locations"), (0, 0))
+            checked, total = 0, 0
             secondary_counts = []
-            for group in separate_groups.get(region, default_groups):
+            for group in ((RAC3LOCATIONGROUP.STORY, RAC3LOCATIONGROUP.GENERAL)
+                          + separate_groups.get(region, default_groups) + common_groups):
                 group_checked, group_total = counts.get((region, group), (0, 0))
                 checked += group_checked
                 total += group_total
                 if group_total:
-                    secondary_counts.append(f"{group}: {group_checked}/{group_total}")
-            text = f"Total Locations: {checked}/{total}"
-            if secondary_counts:
-                text += "\x01" + " | ".join(secondary_counts)
+                    secondary_counts.append((group, group_checked, group_total))
+            text = format_planet_location_counts(checked, total, secondary_counts,
+                                                 RAC3GALACTICMAP.OBJECTIVE_SIZE - 1)
             encoded = (text.encode("ascii")[:RAC3GALACTICMAP.OBJECTIVE_SIZE - 1] + b"\x00").ljust(
                 RAC3GALACTICMAP.OBJECTIVE_SIZE, b"\x00")
             start = RAC3GALACTICMAP.OBJECTIVE_OFFSET

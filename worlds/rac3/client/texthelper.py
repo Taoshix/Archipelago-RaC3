@@ -7,7 +7,9 @@ import unicodedata
 from BaseClasses import ItemClassification
 from NetUtils import NetworkItem
 from worlds.rac3.constants.items import RAC3ITEM
+from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
+from worlds.rac3.constants.options import RAC3OPTION
 
 if TYPE_CHECKING:
     from worlds.rac3.client.client import Rac3Context
@@ -42,6 +44,23 @@ def remove_accents(input_str):
     """Converts Unicode accented characters to their base ASCII equivalent"""
     nfkd_form = unicodedata.normalize("NFKD", input_str)
     return nfkd_form.encode("ascii", "ignore").decode("ascii")
+
+
+def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]],
+                                 max_length: int) -> str:
+    """Fit the total and category counts into two lines of the objective text field."""
+    header = f"{RAC3OPTION.TOTAL_LOCATIONS}: {checked}/{total}"
+    for separator, spacing, names in ((" | ", " ", {}), (" ", "", {}),
+                                      (" ", "", RAC3LOCATIONGROUP.SHORT_NAMES),
+                                      (" ", "", RAC3LOCATIONGROUP.SHORTER_NAMES)):
+        parts = [
+            f"{names.get(name, name)}:{spacing}{collected}/{available}"
+            for name, collected, available in groups if available
+        ]
+        text = header + ("\x01" + separator.join(parts) if parts else "")
+        if len(text) <= max_length:
+            return text
+    return text
 
 
 TEXT_BYTE_TO_EXPECTED_WIDTH = {

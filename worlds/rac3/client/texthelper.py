@@ -8,8 +8,8 @@ from BaseClasses import ItemClassification
 from NetUtils import NetworkItem
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
+from worlds.rac3.constants.messages.text_format import RAC3TEXTFORMATBYTE
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
-from worlds.rac3.constants.options import RAC3OPTION
 
 if TYPE_CHECKING:
     from worlds.rac3.client.client import Rac3Context
@@ -48,16 +48,26 @@ def remove_accents(input_str):
 
 def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]],
                                  max_length: int) -> str:
-    """Fit the total and category counts into two lines of the objective text field."""
-    header = f"{RAC3OPTION.TOTAL_LOCATIONS}: {checked}/{total}"
-    for separator, spacing, names in ((" | ", " ", {}), (" ", "", {}),
-                                      (" ", "", RAC3LOCATIONGROUP.SHORT_NAMES),
-                                      (" ", "", RAC3LOCATIONGROUP.SHORTER_NAMES)):
+    """Fit colored counts in the objective buffer and let the game wrap the text."""
+    green = chr(RAC3TEXTFORMATBYTE.GREEN)
+    white = chr(RAC3TEXTFORMATBYTE.WHITE)
+    normal = chr(RAC3TEXTFORMATBYTE.NORMAL)
+    total_color = green if checked == total else white
+    header = f"{RAC3LOCATIONGROUP.TOTAL}: {total_color}{checked}/{total}{normal}"
+    for count_separator, names in ((": ", {}), (":", {}),
+                                    (": ", RAC3LOCATIONGROUP.SHORT_NAMES),
+                                    (":", RAC3LOCATIONGROUP.SHORT_NAMES),
+                                    (": ", RAC3LOCATIONGROUP.SHORTER_NAMES),
+                                    (":", RAC3LOCATIONGROUP.SHORTER_NAMES),
+                                    (": ", RAC3LOCATIONGROUP.COMPACT_NAMES),
+                                    (":", RAC3LOCATIONGROUP.COMPACT_NAMES),
+                                    ("", RAC3LOCATIONGROUP.COMPACT_NAMES)):
         parts = [
-            f"{names.get(name, name)}:{spacing}{collected}/{available}"
+            f"{names.get(name, name)}{count_separator}"
+            f"{green if collected == available else white}{collected}/{available}{normal}"
             for name, collected, available in groups if available
         ]
-        text = header + ("\x01" + separator.join(parts) if parts else "")
+        text = " ".join([header, *parts])
         if len(text) <= max_length:
             return text
     return text

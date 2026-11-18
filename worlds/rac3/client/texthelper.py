@@ -6,7 +6,9 @@ import unicodedata
 
 from BaseClasses import ItemClassification
 from NetUtils import NetworkItem
+from worlds.rac3.constants.galactic_map import RAC3GALACTICMAP
 from worlds.rac3.constants.items import RAC3ITEM
+from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.messages.text_format import RAC3TEXTFORMATBYTE
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
 
@@ -46,18 +48,19 @@ def remove_accents(input_str):
 
 
 def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]]) -> str:
-    """Format the total and per group counts, each segment colored by completion."""
-    segments = [(f"{checked}/{total}", checked == total)]
-    segments.extend((f"{name}:{collected}/{available}", collected == available)
-                    for name, collected, available in groups if available)
-
-    parts = []
-    current = RAC3TEXTFORMATBYTE.NORMAL
-    for text, complete in segments:
-        color = RAC3TEXTFORMATBYTE.GREEN if complete else RAC3TEXTFORMATBYTE.WHITE
-        parts.append(text if color == current else chr(color) + text)
-        current = color
-    return " ".join(parts)
+    """Keep group labels in the normal color and color the counts by completion."""
+    normal = chr(RAC3TEXTFORMATBYTE.NORMAL)
+    green = chr(RAC3TEXTFORMATBYTE.GREEN)
+    white = chr(RAC3TEXTFORMATBYTE.WHITE)
+    parts = [f"{green if checked == total else white}{checked}/{total}"]
+    for name, collected, available in groups:
+        if available:
+            color = green if collected == available else white
+            parts.append(f"{normal}{name}:{color}{collected}/{available}")
+    text = " ".join(parts)
+    if len(text) >= RAC3GALACTICMAP.OBJECTIVE_SIZE:
+        text = text.replace(f"{normal}{RAC3LOCATIONGROUP.VENDOR}:", f"{normal}{RAC3LOCATIONGROUP.VENDOR_SHORT}:", 1)
+    return text
 
 
 TEXT_BYTE_TO_EXPECTED_WIDTH = {

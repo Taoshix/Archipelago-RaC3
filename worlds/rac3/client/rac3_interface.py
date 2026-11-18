@@ -41,8 +41,8 @@ from worlds.rac3.constants.data.vendorslot import (ARMOR_VENDOR_INVENTORY, ARMOR
                                                    WEAPON_VENDOR_LOCATION_TO_UNLOCK_REGION)
 from worlds.rac3.constants.deaths import CLANK_DEATH_FROM_ACTION, DEATH_FROM_ACTION
 from worlds.rac3.constants.galactic_map import (COMMON_GROUPS, DEFAULT_GROUPS, GADGET_PICKUP_LOCATIONS,
-                                                GAUNTLET_LOCATIONS, GROUP_TAGS, RAC3GALACTICMAP,
-                                                SEPARATE_GROUPS, STORY_LOCATIONS, VENDOR_LOCATIONS)
+                                                GAUNTLET_LOCATIONS, GROUP_TAGS, MAP_LOCATION_REGION_OVERRIDES,
+                                                RAC3GALACTICMAP, SEPARATE_GROUPS, STORY_LOCATIONS, VENDOR_LOCATIONS)
 from worlds.rac3.constants.game_state import RAC3GAMESTATE
 from worlds.rac3.constants.input import RAC3INPUT
 from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INSTRUCTION_TO_GAME_IDS,
@@ -2017,11 +2017,9 @@ class Rac3Interface(GameInterface):
             location = RAC3_LOCATION_DATA_TABLE[name]
             if RAC3TAG.GOAL in location.TAGS:
                 continue
+            region = MAP_LOCATION_REGION_OVERRIDES.get(name, location.REGION)
             if name in VENDOR_LOCATIONS:
                 group = RAC3LOCATIONGROUP.VENDOR
-            elif (name in GADGET_PICKUP_LOCATIONS or RAC3TAG.T_BOLT in location.TAGS
-                  or RAC3TAG.TROPHY in location.TAGS):
-                group = RAC3LOCATIONGROUP.COLLECTIBLES
             elif RAC3TAG.SKILLPOINT in location.TAGS:
                 group = RAC3LOCATIONGROUP.SKILL_POINTS
             elif name in STORY_LOCATIONS or RAC3TAG.INFOBOT in location.TAGS:
@@ -2030,11 +2028,15 @@ class Rac3Interface(GameInterface):
                 group = RAC3LOCATIONGROUP.GAUNTLET
             else:
                 group = RAC3LOCATIONGROUP.OTHER
-                for label in SEPARATE_GROUPS.get(location.REGION, DEFAULT_GROUPS):
+                for label in SEPARATE_GROUPS.get(region, DEFAULT_GROUPS):
                     if GROUP_TAGS.get(label) in location.TAGS:
                         group = label
                         break
-            key = (location.REGION, group)
+                if (group not in (RAC3LOCATIONGROUP.VR, RAC3LOCATIONGROUP.VID_COMICS, RAC3LOCATIONGROUP.ARENA)
+                    and (name in GADGET_PICKUP_LOCATIONS or RAC3TAG.T_BOLT in location.TAGS
+                         or RAC3TAG.TROPHY in location.TAGS)):
+                    group = RAC3LOCATIONGROUP.COLLECTIBLES
+            key = (region, group)
             checked, total = counts.get(key, (0, 0))
             collected = ap_code in checked_locations or name in self.checked_locations
             counts[key] = (checked + int(collected), total + 1)

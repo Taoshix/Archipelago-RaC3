@@ -2,13 +2,14 @@
 
 from worlds.rac3.constants.data.region import INFOBOT_FROM_PLANET
 from worlds.rac3.constants.locations.general import RAC3LOCATION
+from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
+from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.locations.vendors import RAC3VENDORLOCATION
 from worlds.rac3.constants.region import PLANET_VENDOR_OFFSET, RAC3REGION
-
+from worlds.rac3.constants.status import RAC3STATUS
 
 PLANET_ROWS_OFFSET = {
     **PLANET_VENDOR_OFFSET,
-    RAC3REGION.VELDIN: 0x2FC0,
     RAC3REGION.MUSEUM: 0xE80,
 }
 
@@ -75,6 +76,29 @@ GAUNTLET_LOCATIONS = [
 ]
 
 
+SEPARATE_GROUPS = {
+    RAC3REGION.STARSHIP_PHOENIX: (RAC3LOCATIONGROUP.VR, RAC3LOCATIONGROUP.VID_COMICS),
+    RAC3REGION.AQUATOS: (RAC3LOCATIONGROUP.SEWERS,),
+    RAC3REGION.MARCADIA: (RAC3LOCATIONGROUP.RANGERS, RAC3LOCATIONGROUP.LDF),
+    RAC3REGION.ANNIHILATION_NATION: (RAC3LOCATIONGROUP.GAUNTLET, RAC3LOCATIONGROUP.ARENA),
+}
+
+
+DEFAULT_GROUPS = (RAC3LOCATIONGROUP.RANGERS,)
+
+
+COMMON_GROUPS = (RAC3LOCATIONGROUP.VENDOR, RAC3LOCATIONGROUP.COLLECTIBLES, RAC3LOCATIONGROUP.SKILL_POINTS)
+
+
+GROUP_TAGS = {
+    RAC3LOCATIONGROUP.VR: RAC3TAG.VR,
+    RAC3LOCATIONGROUP.VID_COMICS: RAC3TAG.VIDCOMIC,
+    RAC3LOCATIONGROUP.SEWERS: RAC3TAG.SEWER,
+    RAC3LOCATIONGROUP.RANGERS: RAC3TAG.RANGERS,
+    RAC3LOCATIONGROUP.ARENA: RAC3TAG.ARENA,
+}
+
+
 class RAC3GALACTICMAP:
     """Layout and US-relative addresses of the Galactic Map destination rows."""
 
@@ -82,11 +106,10 @@ class RAC3GALACTICMAP:
     MAX_ROWS = 0x3C
     OBJECTIVE_OFFSET = 0x55
     OBJECTIVE_SIZE = 0x50
-    ROWS_BASE = 0x00230E98
 
     @staticmethod
     def get_rows_address(planet: str) -> int | None:
         """Return the US-relative row address for use with address_convert."""
         if planet not in INFOBOT_FROM_PLANET:
             return None
-        return RAC3GALACTICMAP.ROWS_BASE + PLANET_ROWS_OFFSET[planet]
+        return RAC3STATUS.GALACTIC_MAP_ROWS_BASE + PLANET_ROWS_OFFSET[planet]

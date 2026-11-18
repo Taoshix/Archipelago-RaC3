@@ -7,7 +7,6 @@ import unicodedata
 from BaseClasses import ItemClassification
 from NetUtils import NetworkItem
 from worlds.rac3.constants.items import RAC3ITEM
-from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.messages.text_format import RAC3TEXTFORMATBYTE
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
 
@@ -46,31 +45,15 @@ def remove_accents(input_str):
     return nfkd_form.encode("ascii", "ignore").decode("ascii")
 
 
-def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]],
-                                 max_length: int) -> str:
-    """Fit colored counts in the objective buffer and let the game wrap the text."""
-    green = chr(RAC3TEXTFORMATBYTE.GREEN)
-    white = chr(RAC3TEXTFORMATBYTE.WHITE)
-    normal = chr(RAC3TEXTFORMATBYTE.NORMAL)
-    total_color = green if checked == total else white
-    header = f"{RAC3LOCATIONGROUP.TOTAL}: {total_color}{checked}/{total}{normal}"
-    for count_separator, names in ((": ", {}), (":", {}),
-                                    (": ", RAC3LOCATIONGROUP.SHORT_NAMES),
-                                    (":", RAC3LOCATIONGROUP.SHORT_NAMES),
-                                    (": ", RAC3LOCATIONGROUP.SHORTER_NAMES),
-                                    (":", RAC3LOCATIONGROUP.SHORTER_NAMES),
-                                    (": ", RAC3LOCATIONGROUP.COMPACT_NAMES),
-                                    (":", RAC3LOCATIONGROUP.COMPACT_NAMES),
-                                    ("", RAC3LOCATIONGROUP.COMPACT_NAMES)):
-        parts = [
-            f"{names.get(name, name)}{count_separator}"
-            f"{green if collected == available else white}{collected}/{available}{normal}"
-            for name, collected, available in groups if available
-        ]
-        text = " ".join([header, *parts])
-        if len(text) <= max_length:
-            return text
-    return text
+def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]]) -> str:
+    """Format the total and per group counts, each segment colored by completion."""
+    def color(collected: int, available: int) -> str:
+        return chr(RAC3TEXTFORMATBYTE.GREEN if collected == available else RAC3TEXTFORMATBYTE.WHITE)
+
+    parts = [f"{color(checked, total)}{checked}/{total}"]
+    parts.extend(f"{color(collected, available)}{name}:{collected}/{available}"
+                 for name, collected, available in groups if available)
+    return " ".join(parts)
 
 
 TEXT_BYTE_TO_EXPECTED_WIDTH = {

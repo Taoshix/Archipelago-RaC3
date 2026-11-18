@@ -15,6 +15,5 @@ class RAC3LOCATIONGROUP:
     VID_COMICS = "VC"
     SEWERS = "Sewers"
     RANGERS = "Rangers"
-    LDF = "LDF"
     GAUNTLET = "Gaunt"
     ARENA = "Arena"

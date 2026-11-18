@@ -41,7 +41,7 @@ from worlds.rac3.constants.data.vendorslot import (ARMOR_VENDOR_INVENTORY, ARMOR
                                                    WEAPON_VENDOR_LOCATION_TO_UNLOCK_REGION)
 from worlds.rac3.constants.deaths import CLANK_DEATH_FROM_ACTION, DEATH_FROM_ACTION
 from worlds.rac3.constants.galactic_map import (COMMON_GROUPS, DEFAULT_GROUPS, GADGET_PICKUP_LOCATIONS,
-                                                GAUNTLET_LOCATIONS, GROUP_TAGS, LDF_LOCATIONS, RAC3GALACTICMAP,
+                                                GAUNTLET_LOCATIONS, GROUP_TAGS, RAC3GALACTICMAP,
                                                 SEPARATE_GROUPS, STORY_LOCATIONS, VENDOR_LOCATIONS)
 from worlds.rac3.constants.game_state import RAC3GAMESTATE
 from worlds.rac3.constants.input import RAC3INPUT
@@ -2015,6 +2015,8 @@ class Rac3Interface(GameInterface):
             if name is None:
                 continue
             location = RAC3_LOCATION_DATA_TABLE[name]
+            if RAC3TAG.GOAL in location.TAGS:
+                continue
             if name in VENDOR_LOCATIONS:
                 group = RAC3LOCATIONGROUP.VENDOR
             elif (name in GADGET_PICKUP_LOCATIONS or RAC3TAG.T_BOLT in location.TAGS
@@ -2026,8 +2028,6 @@ class Rac3Interface(GameInterface):
                 group = RAC3LOCATIONGROUP.STORY
             elif name in GAUNTLET_LOCATIONS:
                 group = RAC3LOCATIONGROUP.GAUNTLET
-            elif name in LDF_LOCATIONS:
-                group = RAC3LOCATIONGROUP.LDF
             else:
                 group = RAC3LOCATIONGROUP.GENERAL
                 for label in SEPARATE_GROUPS.get(location.REGION, DEFAULT_GROUPS):

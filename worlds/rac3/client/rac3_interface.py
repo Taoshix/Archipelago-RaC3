@@ -55,7 +55,7 @@ from worlds.rac3.constants.locations.challenge_description import (
     GAUNTLET_DESCRIPTION, GAUNTLET_DESCRIPTORS, NATION_CHALLENGE_SIZE,
     NATION_CHALLENGE_TABLE, VR_TRAINING_DESCRIPTION, VR_TRAINING_NAME, VR_TRAINING_NAME_ADDRESS,
 )
-from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION
+from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION, RANGER_MISSION_CHAINS
 from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
@@ -622,8 +622,21 @@ class Rac3Interface(GameInterface):
             self.enqueue_notification(notification_message.removesuffix("\n"), duration=5.0)
 
     def collect_locations(self, locations: set[str]) -> set[str]:
-        """Set the in game flags for this location for it to act as if the player has already collected the item here"""
+        """Record collected locations and restore the flags that can safely be set in game."""
         checks: dict[int, set[int]] = {}
+        ranger_flags: set[tuple[int, int]] = set()
+        for missions in RANGER_MISSION_CHAINS:
+            restore_mission = True
+            for mission in missions:
+                restore_mission = restore_mission and mission in locations
+                for check in RAC3_LOCATION_DATA_TABLE[mission].CHECK_ADDRESS:
+                    if check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT:
+                        ranger_flags.add((check.ADDRESS, check.VALUE))
+                        if restore_mission:
+                            checks.setdefault(check.ADDRESS, set()).add(check.VALUE)
+
+        # Restore Ranger flags only through the ordered campaigns above. Some story
+        # locations also reference those flags as prerequisites for their checks.
         output: set[str] = set()
         for location in locations:
             self.checked_locations.add(location)
@@ -632,7 +645,8 @@ class Rac3Interface(GameInterface):
             if RAC3TAG.NANOTECH in loc_data.TAGS or RAC3TAG.SEWER in loc_data.TAGS:
                 continue
             for check in loc_data.CHECK_ADDRESS:
-                if check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT:
+                if (check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT
+                        and (check.ADDRESS, check.VALUE) not in ranger_flags):
                     checks.setdefault(check.ADDRESS, set()).add(check.VALUE)
         for bits in checks.items():
             self._write_bits(bits)

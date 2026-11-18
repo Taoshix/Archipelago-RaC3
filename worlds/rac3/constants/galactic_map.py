@@ -121,13 +121,11 @@ class RAC3GALACTICMAP:
     ALTERNATE_COUNT_OFFSET = 0x18
     ALTERNATE_HIGHLIGHT_OFFSET = 0x1A
     TEXT_SCALE_OFFSET = 0x28
-    DEFAULT_TEXT_SCALE = 0x3F800000  # 1.0f
+    DEFAULT_TEXT_SCALE = 1.0
     TEXT_LINE_WIDTH = 328  # The panel is 332.8 logical pixels wide. Allow for clipping and shadow.
 
-    # End of the existing code cave. Leave space before the aligned text buffers.
-    TEXT_POINTER_LIST = 0x0009FDF8
+    TEXT_BUFFER_OFFSET = 0x08  # Pointer list and alignment padding precede the two buffers.
     TEXT_BUFFER_SIZE = 0x100
-    TEXT_BUFFERS = (TEXT_POINTER_LIST + 0x08, TEXT_POINTER_LIST + 0x08 + TEXT_BUFFER_SIZE)
 
     @staticmethod
     def get_rows_address(planet: str) -> int | None:

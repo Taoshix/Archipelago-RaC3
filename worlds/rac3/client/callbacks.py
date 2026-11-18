@@ -275,6 +275,9 @@ async def handle_codecave(ctx: "Context") -> None:
     :param ctx: RAC3 context class"""
     if ctx.slot_data is None or ctx.code_cave_setup:
         return
+    # An open Galactic Map may still be reading the previous cave layout.
+    if ctx.game_interface.galactic_map_uses_code_cave():
+        return
     all_vendor_locations: list[str] = [RAC3LOCATION.HIDEOUT_PDA]
     if ctx.slot_data.get(RAC3OPTION.WEAPON_VENDORS, False):
         all_vendor_locations.extend(ITEM_TO_WEAPON_VENDOR_LOCATION.values())

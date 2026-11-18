@@ -624,6 +624,9 @@ class Rac3Interface(GameInterface):
     def collect_locations(self, locations: set[str]) -> set[str]:
         """Record collected locations and restore the flags that can safely be set in game."""
         checks: dict[int, set[int]] = {}
+
+        # Prevent softlocks by only collecting ranger mission flags in order
+        # Stop at the first gap
         ranger_flags: set[tuple[int, int]] = set()
         for missions in RANGER_MISSION_CHAINS:
             restore_mission = True
@@ -635,8 +638,6 @@ class Rac3Interface(GameInterface):
                         if restore_mission:
                             checks.setdefault(check.ADDRESS, set()).add(check.VALUE)
 
-        # Restore Ranger flags only through the ordered campaigns above. Some story
-        # locations also reference those flags as prerequisites for their checks.
         output: set[str] = set()
         for location in locations:
             self.checked_locations.add(location)

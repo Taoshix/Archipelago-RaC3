@@ -1,7 +1,5 @@
 """Display labels and abbreviations for Galactic Map location counts."""
 
-from worlds.rac3.constants.locations.tags import RAC3TAG
-from worlds.rac3.constants.options import RAC3OPTION
 
 
 class RAC3LOCATIONGROUP:

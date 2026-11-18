@@ -1119,10 +1119,12 @@ class Rac3Interface(GameInterface):
                     self._write32(RAC3STATUS.PENDING_PACK, gadget_data[RAC3ITEM.HELI_PACK].ID)
             case RAC3ITEM.HELI_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
-                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
+                if self.options.clank_options > 0:
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.THRUSTER_PACK:
                 self.UnlockItem[RAC3ITEM.CLANK] = 1
-                self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
+                if self.options.clank_options > 0:
+                    self._write32(RAC3STATUS.PENDING_PACK, gadget_data[name].ID)
             case RAC3ITEM.CLANK:
                 self.UnlockItem[RAC3ITEM.HELI_PACK] = 1
                 self.UnlockItem[RAC3ITEM.THRUSTER_PACK] = 1

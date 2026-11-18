@@ -4,6 +4,8 @@ from worlds.rac3.constants.data.region import INFOBOT_FROM_PLANET
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.locations.tags import RAC3TAG
+from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
+from worlds.rac3.constants.locations.trophies import RAC3TROPHY
 from worlds.rac3.constants.locations.vendors import RAC3VENDORLOCATION
 from worlds.rac3.constants.region import PLANET_VENDOR_OFFSET, RAC3REGION
 from worlds.rac3.constants.status import RAC3STATUS
@@ -68,9 +70,15 @@ GAUNTLET_LOCATIONS = [
     RAC3LOCATION.NATION_SUICIDE_RUN,
     RAC3LOCATION.NATION_BBQ_BOULEVARD,
     RAC3LOCATION.NATION_MAZE_OF_BLAZE,
+    RAC3TBOLT.NATION_PLATFORM,
     RAC3LOCATION.NATION_CREMATION_STATION,
     RAC3LOCATION.NATION_THE_ANNIHILATOR,
 ]
+
+
+MAP_LOCATION_REGION_OVERRIDES = {
+    RAC3TROPHY.PHOENIX_ANNIHILATION_NATION_CHAMPION: RAC3REGION.ANNIHILATION_NATION,
+}
 
 
 SEPARATE_GROUPS = {

@@ -3,6 +3,7 @@ import time
 from collections.abc import Iterable
 from dataclasses import dataclass
 from random import choice, randint
+from struct import pack
 from typing import Any
 
 from typing_extensions import deprecated
@@ -704,6 +705,11 @@ class Rac3Interface(GameInterface):
                 packed_challenges[encoded] = pointer
             else:
                 self.vendor_string_pointers[key] = address
+        if start + len(data) > RAC3GALACTICMAP.TEXT_POINTER_LIST:
+            logger.error("Vendor and challenge text exceeds the reserved code cave space.")
+            self.vendor_string_pointers = {}
+            self.challenge_string_pointers = {}
+            return
         self._write_bytes(start, bytes(data))
 
     def speedup_setup(self):
@@ -1999,17 +2005,100 @@ class Rac3Interface(GameInterface):
             self.string_table = table
         return {text_id: self.string_entries[text_id] for text_id in text_ids if text_id in self.string_entries}
 
+    def get_galactic_map_objective(self, rows_base: int) -> tuple[int, int] | None:
+        """Return the live text box state and the row it currently displays."""
+
+        def valid_pointer(address: int, size: int) -> bool:
+            return 0 < address <= 0x02000000 - size and address % 4 == 0
+
+        manager = self._read32(RAC3GALACTICMAP.get_ui_manager_state_address(self.planet))
+        if not valid_pointer(manager, RAC3GALACTICMAP.ACTIVE_CONTEXT_INDEX_OFFSET + 4):
+            return None
+        context_index = self._read32(manager + RAC3GALACTICMAP.ACTIVE_CONTEXT_INDEX_OFFSET, should_convert=False)
+        if context_index >= RAC3GALACTICMAP.CONTEXT_COUNT:
+            return None
+        context = self._read32(manager + context_index * 4, should_convert=False)
+        if not valid_pointer(context, 4):
+            return None
+        context_data = self._read32(context, should_convert=False)
+        capacity = RAC3GALACTICMAP.WIDGET_REGISTRY_CAPACITY
+        if not valid_pointer(context_data, RAC3GALACTICMAP.WIDGET_REGISTRY_SLOTS_OFFSET + capacity * 8):
+            return None
+        slots = context_data + RAC3GALACTICMAP.WIDGET_REGISTRY_SLOTS_OFFSET
+        widget_id = RAC3GALACTICMAP.OBJECTIVE_WIDGET_ID
+        step = widget_id % (capacity - 1) + 1
+        for probe in range(capacity):
+            slot = slots + ((widget_id + probe * step) % capacity) * 8
+            key, widget = self._read32_batch([slot, slot + 4], should_convert=False)
+            if not widget:
+                break
+            if key != widget_id or not valid_pointer(widget, RAC3GALACTICMAP.TEXT_BOX_STATE_OFFSET + 4):
+                continue
+            state = self._read32(widget + RAC3GALACTICMAP.TEXT_BOX_STATE_OFFSET, should_convert=False)
+            if not valid_pointer(state, RAC3GALACTICMAP.TEXT_SCALE_OFFSET + 4):
+                continue
+            primary = self._read32(state + RAC3GALACTICMAP.PRIMARY_TEXT_OFFSET, should_convert=False)
+            # Also rejects removed registry entries and the initial scratch text before the map binds a row.
+            row_offset = primary - RAC3GALACTICMAP.OBJECTIVE_OFFSET - rows_base
+            if 0 <= row_offset < RAC3GALACTICMAP.MAX_ROWS * RAC3GALACTICMAP.ROW_SIZE and row_offset % RAC3GALACTICMAP.ROW_SIZE == 0:
+                return state, rows_base + row_offset
+        return None
+
     def overwrite_planet_location_counts(self, server_locations: set[int], checked_locations: set[int]):
-        """Show enabled location progress in the Galactic Map objective text."""
+        """Show enabled location progress in the Galactic Map's alternate text source."""
         if self.between_planets or self.is_reloading or self.game_state_value != RAC3GAMESTATE.PAUSED:
             return
         if self.current_game not in (RAC3VERSION.US_ID, RAC3VERSION.EU_ID, RAC3VERSION.JP_ID):
             return
-        base = RAC3GALACTICMAP.get_rows_address(self.planet)
+        layout = RAC3GALACTICMAP
+        base = layout.get_rows_address(self.planet)
         if base is None:
             return
+        objective = self.get_galactic_map_objective(self.address_convert(base))
+        if objective is None:
+            return
+        state, row_address = objective
+        scale_address = state + layout.TEXT_SCALE_OFFSET
+        alternate, count_and_highlight, current_scale = self._read32_batch(
+            [state + layout.ALTERNATE_TEXT_OFFSET, state + layout.ALTERNATE_COUNT_OFFSET, scale_address],
+            should_convert=False)
+        count = count_and_highlight & 0xFFFF
+        pointer_list = layout.TEXT_POINTER_LIST
+        if count and (alternate != pointer_list or count != 1):
+            return
 
-        counts: dict[tuple[str, str], tuple[int, int]] = {}
+        row = self._read_bytes(row_address, 5, should_convert=False)
+        region = PLANET_NAME_FROM_ID.get(int.from_bytes(row[:4], "little"))
+        text = b"\x00"
+        text_scale = layout.DEFAULT_TEXT_SCALE
+        if region in INFOBOT_FROM_PLANET and row[4] == 1:
+            display, scale = self.format_galactic_map_counts(region, server_locations, checked_locations)
+            encoded = display.encode("ascii") + b"\x00"
+            if len(encoded) <= layout.TEXT_BUFFER_SIZE:
+                text = encoded
+                text_scale = int.from_bytes(pack("<f", scale), "little")
+
+        if self._read32(state + layout.PRIMARY_TEXT_OFFSET, should_convert=False) != row_address + layout.OBJECTIVE_OFFSET:
+            return
+        if current_scale != text_scale:
+            self._write32(scale_address, text_scale, should_convert=False)
+        active_buffer = self._read32(pointer_list, should_convert=False)
+        if (active_buffer not in layout.TEXT_BUFFERS
+            or self._read_bytes(active_buffer, len(text), should_convert=False) != text):
+            first, second = layout.TEXT_BUFFERS
+            target = second if active_buffer == first else first
+            # Publish the pointer only once the buffer is ready, in the existing ordered write batch.
+            self._write_bytes(target, text, should_convert=False)
+            self._write32(pointer_list, target, should_convert=False)
+        if not count:
+            self._write32(state + layout.ALTERNATE_TEXT_OFFSET, pointer_list, should_convert=False)
+            self._write16(state + layout.ALTERNATE_HIGHLIGHT_OFFSET, 0xFFFF, should_convert=False)
+            self._write16(state + layout.ALTERNATE_COUNT_OFFSET, 1, should_convert=False)
+
+    def format_galactic_map_counts(self, region: str, server_locations: set[int],
+                                   checked_locations: set[int]) -> tuple[str, float]:
+        """Build the destination's progress text and its font scale."""
+        counts: dict[str, tuple[int, int]] = {}
         for ap_code in server_locations:
             name = LOCATION_FROM_AP_CODE.get(ap_code)
             if name is None:
@@ -2017,7 +2106,8 @@ class Rac3Interface(GameInterface):
             location = RAC3_LOCATION_DATA_TABLE[name]
             if RAC3TAG.GOAL in location.TAGS:
                 continue
-            region = MAP_LOCATION_REGION_OVERRIDES.get(name, location.REGION)
+            if MAP_LOCATION_REGION_OVERRIDES.get(name, location.REGION) != region:
+                continue
             if name in VENDOR_LOCATIONS:
                 group = RAC3LOCATIONGROUP.VENDOR
             elif RAC3TAG.SKILLPOINT in location.TAGS:
@@ -2036,32 +2126,20 @@ class Rac3Interface(GameInterface):
                     and (name in GADGET_PICKUP_LOCATIONS or RAC3TAG.T_BOLT in location.TAGS
                          or RAC3TAG.TROPHY in location.TAGS)):
                     group = RAC3LOCATIONGROUP.COLLECTIBLES
-            key = (region, group)
-            checked, total = counts.get(key, (0, 0))
+            checked, total = counts.get(group, (0, 0))
             collected = ap_code in checked_locations or name in self.checked_locations
-            counts[key] = (checked + int(collected), total + 1)
+            counts[group] = (checked + int(collected), total + 1)
 
-        rows = self._read_bytes(base, RAC3GALACTICMAP.MAX_ROWS * RAC3GALACTICMAP.ROW_SIZE)
-        for offset in range(0, len(rows), RAC3GALACTICMAP.ROW_SIZE):
-            row = rows[offset:offset + RAC3GALACTICMAP.ROW_SIZE]
-            region = PLANET_NAME_FROM_ID.get(int.from_bytes(row[:4], "little"))
-            if region not in INFOBOT_FROM_PLANET or row[4] != 1:
-                continue
-            checked, total = 0, 0
-            secondary_counts = []
-            for group in (RAC3LOCATIONGROUP.STORY, *SEPARATE_GROUPS.get(region, DEFAULT_GROUPS), *COMMON_GROUPS,
-                          RAC3LOCATIONGROUP.OTHER):
-                group_checked, group_total = counts.get((region, group), (0, 0))
-                checked += group_checked
-                total += group_total
-                if group_total:
-                    secondary_counts.append((group, group_checked, group_total))
-            text = format_planet_location_counts(checked, total, secondary_counts)
-            encoded = (text.encode("ascii")[:RAC3GALACTICMAP.OBJECTIVE_SIZE - 1] + b"\x00").ljust(
-                RAC3GALACTICMAP.OBJECTIVE_SIZE, b"\x00")
-            start = RAC3GALACTICMAP.OBJECTIVE_OFFSET
-            if row[start:start + RAC3GALACTICMAP.OBJECTIVE_SIZE] != encoded:
-                self._write_bytes(base + offset + start, encoded)
+        checked, total = 0, 0
+        secondary_counts = []
+        for group in (RAC3LOCATIONGROUP.STORY, *SEPARATE_GROUPS.get(region, DEFAULT_GROUPS), *COMMON_GROUPS,
+                      RAC3LOCATIONGROUP.OTHER):
+            group_checked, group_total = counts.get(group, (0, 0))
+            checked += group_checked
+            total += group_total
+            if group_total:
+                secondary_counts.append((group, group_checked, group_total))
+        return format_planet_location_counts(checked, total, secondary_counts)
 
     def overwrite_challenge_descriptions(self):
         """Overwrite challenge description strings with the archipelago item names."""

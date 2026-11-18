@@ -1,4 +1,4 @@
-"""Galactic Map destination rows and their inline objective text."""
+"""Galactic Map destination rows and the objective text box."""
 
 from worlds.rac3.constants.data.region import INFOBOT_FROM_PLANET
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -7,7 +7,7 @@ from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.locations.tbolts import RAC3TBOLT
 from worlds.rac3.constants.locations.trophies import RAC3TROPHY
 from worlds.rac3.constants.locations.vendors import RAC3VENDORLOCATION
-from worlds.rac3.constants.region import PLANET_VENDOR_OFFSET, RAC3REGION
+from worlds.rac3.constants.region import PLANET_MENU_OFFSET, PLANET_VENDOR_OFFSET, RAC3REGION
 from worlds.rac3.constants.status import RAC3STATUS
 
 PLANET_ROWS_OFFSET = {
@@ -104,12 +104,30 @@ GROUP_TAGS = {
 
 
 class RAC3GALACTICMAP:
-    """Layout and US-relative addresses of the Galactic Map destination rows."""
+    """Layout of the destination rows and their objective text box."""
 
     ROW_SIZE = 0xB0
     MAX_ROWS = 0x3C
     OBJECTIVE_OFFSET = 0x55
-    OBJECTIVE_SIZE = 0x50
+    UI_MANAGER_STATE_BASE = 0x001DFFE4
+    ACTIVE_CONTEXT_INDEX_OFFSET = 0x14
+    CONTEXT_COUNT = 5
+    WIDGET_REGISTRY_SLOTS_OFFSET = 0x1CC
+    WIDGET_REGISTRY_CAPACITY = 0x400
+    OBJECTIVE_WIDGET_ID = 0x130005
+    TEXT_BOX_STATE_OFFSET = 0x2C
+    PRIMARY_TEXT_OFFSET = 0x10
+    ALTERNATE_TEXT_OFFSET = 0x14
+    ALTERNATE_COUNT_OFFSET = 0x18
+    ALTERNATE_HIGHLIGHT_OFFSET = 0x1A
+    TEXT_SCALE_OFFSET = 0x28
+    DEFAULT_TEXT_SCALE = 0x3F800000  # 1.0f
+    TEXT_LINE_WIDTH = 328  # The panel is 332.8 logical pixels wide. Allow for clipping and shadow.
+
+    # End of the existing code cave. Leave space before the aligned text buffers.
+    TEXT_POINTER_LIST = 0x0009FDF8
+    TEXT_BUFFER_SIZE = 0x100
+    TEXT_BUFFERS = (TEXT_POINTER_LIST + 0x08, TEXT_POINTER_LIST + 0x08 + TEXT_BUFFER_SIZE)
 
     @staticmethod
     def get_rows_address(planet: str) -> int | None:
@@ -117,3 +135,8 @@ class RAC3GALACTICMAP:
         if planet not in INFOBOT_FROM_PLANET:
             return None
         return RAC3STATUS.GALACTIC_MAP_ROWS_BASE + PLANET_ROWS_OFFSET[planet]
+
+    @staticmethod
+    def get_ui_manager_state_address(planet: str) -> int:
+        """Return the US-relative address holding the menu UI manager state pointer."""
+        return RAC3GALACTICMAP.UI_MANAGER_STATE_BASE + PLANET_MENU_OFFSET[planet]

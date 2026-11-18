@@ -47,12 +47,16 @@ def remove_accents(input_str):
 
 def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]]) -> str:
     """Format the total and per group counts, each segment colored by completion."""
-    def color(collected: int, available: int) -> str:
-        return chr(RAC3TEXTFORMATBYTE.GREEN if collected == available else RAC3TEXTFORMATBYTE.WHITE)
+    segments = [(f"{checked}/{total}", checked == total)]
+    segments.extend((f"{name}:{collected}/{available}", collected == available)
+                    for name, collected, available in groups if available)
 
-    parts = [f"{color(checked, total)}{checked}/{total}"]
-    parts.extend(f"{color(collected, available)}{name}:{collected}/{available}"
-                 for name, collected, available in groups if available)
+    parts = []
+    current = RAC3TEXTFORMATBYTE.NORMAL
+    for text, complete in segments:
+        color = RAC3TEXTFORMATBYTE.GREEN if complete else RAC3TEXTFORMATBYTE.WHITE
+        parts.append(text if color == current else chr(color) + text)
+        current = color
     return " ".join(parts)
 
 

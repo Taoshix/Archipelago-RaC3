@@ -113,12 +113,16 @@ def jp_convert_address(address: int, planet: str) -> int:
             if bolt_hud <= address < bolt_hud + 0x34:
                 return address + 0x9380
     rows_base = RAC3GALACTICMAP.get_rows_address(planet)
-    if rows_base is not None and rows_base <= address < rows_base + RAC3GALACTICMAP.MAX_ROWS * RAC3GALACTICMAP.ROW_SIZE:
-        # This array has one shift throughout, even across the generic ranges below.
-        offset = 0x93C0 + JP_VENDOR_OFFSET_CORRECTION.get(planet, 0)
-        if planet == RAC3REGION.MUSEUM:
-            offset -= 0x40
-        return address + offset
+    if rows_base is not None:
+        manager_state = RAC3GALACTICMAP.get_ui_manager_state_address(planet)
+        if manager_state <= address < manager_state + 4:
+            return address + 0x93A0
+        if rows_base <= address < rows_base + RAC3GALACTICMAP.MAX_ROWS * RAC3GALACTICMAP.ROW_SIZE:
+            # This array has one shift throughout, even across the generic ranges below.
+            offset = 0x93C0 + JP_VENDOR_OFFSET_CORRECTION.get(planet, 0)
+            if planet == RAC3REGION.MUSEUM:
+                offset -= 0x40
+            return address + offset
     addr = address
     if planet in JP_SHIFTED_PLANETS and 0x001DE000 <= addr < 0x001DF000:
         addr += 0x80

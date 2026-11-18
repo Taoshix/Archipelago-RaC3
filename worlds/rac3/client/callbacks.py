@@ -256,8 +256,6 @@ async def update(ctx: "Context") -> None:
     await handle_respawn(ctx)
     # Check the vendor
     await handle_vendors(ctx)
-    ctx.game_interface.overwrite_planet_location_counts(
-        ctx.server_locations, ctx.checked_locations | ctx.locations_checked)
     if ctx.code_cave_setup:
         ctx.game_interface.overwrite_challenge_descriptions()
         ctx.game_interface.overwrite_pda_vendor_prompts()
@@ -266,6 +264,8 @@ async def update(ctx: "Context") -> None:
     ctx.game_interface.late_update()
     # Save to the server
     await handle_save(ctx)
+    ctx.game_interface.overwrite_planet_location_counts(
+        ctx.server_locations, ctx.checked_locations | ctx.locations_checked)
     # logger.info(f"Update is called")
     ctx.game_interface.batch_write()
 

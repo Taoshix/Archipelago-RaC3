@@ -8,7 +8,6 @@ from BaseClasses import ItemClassification
 from NetUtils import NetworkItem
 from worlds.rac3.constants.galactic_map import RAC3GALACTICMAP
 from worlds.rac3.constants.items import RAC3ITEM
-from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.messages.text_format import RAC3TEXTFORMATBYTE
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
 
@@ -47,20 +46,35 @@ def remove_accents(input_str):
     return nfkd_form.encode("ascii", "ignore").decode("ascii")
 
 
-def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]]) -> str:
-    """Keep group labels in the normal color and color the counts by completion."""
+def format_planet_location_counts(checked: int, total: int, groups: list[tuple[str, int, int]]) -> tuple[str, float]:
+    """Format counts on up to two lines and calculate the font scale needed to fit."""
     normal = chr(RAC3TEXTFORMATBYTE.NORMAL)
     green = chr(RAC3TEXTFORMATBYTE.GREEN)
     white = chr(RAC3TEXTFORMATBYTE.WHITE)
-    parts = [f"{green if checked == total else white}{checked}/{total}"]
+    parts = [f"{normal}Total: {green if checked == total else white}{checked}/{total}"]
     for name, collected, available in groups:
         if available:
             color = green if collected == available else white
-            parts.append(f"{normal}{name}:{color}{collected}/{available}")
-    text = " ".join(parts)
-    if len(text) >= RAC3GALACTICMAP.OBJECTIVE_SIZE:
-        text = text.replace(f"{normal}{RAC3LOCATIONGROUP.VENDOR}:", f"{normal}{RAC3LOCATIONGROUP.VENDOR_SHORT}:", 1)
-    return text
+            parts.append(f"{normal}{name}: {color}{collected}/{available}")
+    # The Galactic Map font advances 10 pixels for '/', versus 6 in notification text.
+    widths = [sum(10 if char == "/" else TEXT_BYTE_TO_EXPECTED_WIDTH[ord(char)] for char in part) for part in parts]
+    space_width = TEXT_BYTE_TO_EXPECTED_WIDTH[ord(" ")]
+    line_width = RAC3GALACTICMAP.TEXT_LINE_WIDTH
+    total_width = sum(widths) + space_width * (len(parts) - 1)
+    if total_width <= line_width or len(parts) == 1:
+        return " ".join(parts), min(1.0, line_width / total_width)
+
+    # The in-game wrapper can split a count at '/'. Wrap only between complete categories.
+    split = len(parts)
+    widest_line = total_width
+    first_width = widths[0]
+    for index, next_width in enumerate(widths[1:], 1):
+        widest = max(first_width, total_width - first_width - space_width)
+        if widest < widest_line:
+            widest_line = widest
+            split = index
+        first_width += space_width + next_width
+    return "\x01".join((" ".join(parts[:split]), " ".join(parts[split:]))), min(1.0, line_width / widest_line)
 
 
 TEXT_BYTE_TO_EXPECTED_WIDTH = {

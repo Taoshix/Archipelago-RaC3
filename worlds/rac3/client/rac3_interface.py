@@ -2047,8 +2047,7 @@ class Rac3Interface(GameInterface):
                 continue
             checked, total = 0, 0
             secondary_counts = []
-            for group in ((RAC3LOCATIONGROUP.STORY, RAC3LOCATIONGROUP.GENERAL)
-                          + SEPARATE_GROUPS.get(region, DEFAULT_GROUPS) + COMMON_GROUPS):
+            for group in ((RAC3LOCATIONGROUP.STORY, RAC3LOCATIONGROUP.GENERAL, *SEPARATE_GROUPS.get(region, DEFAULT_GROUPS), *COMMON_GROUPS)):
                 group_checked, group_total = counts.get((region, group), (0, 0))
                 checked += group_checked
                 total += group_total

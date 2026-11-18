@@ -7,7 +7,7 @@ class RAC3LOCATIONGROUP:
 
     # Sized so the worst case (Phoenix/Nation) fits in the 79 byte objective text.
     STORY = "Story"
-    GENERAL = "General"
+    OTHER = "Other"
     VENDOR = "Vendor"
     COLLECTIBLES = "Collect"
     SKILL_POINTS = "Skill"

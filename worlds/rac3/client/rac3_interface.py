@@ -2029,7 +2029,7 @@ class Rac3Interface(GameInterface):
             elif name in GAUNTLET_LOCATIONS:
                 group = RAC3LOCATIONGROUP.GAUNTLET
             else:
-                group = RAC3LOCATIONGROUP.GENERAL
+                group = RAC3LOCATIONGROUP.OTHER
                 for label in SEPARATE_GROUPS.get(location.REGION, DEFAULT_GROUPS):
                     if GROUP_TAGS.get(label) in location.TAGS:
                         group = label
@@ -2047,7 +2047,8 @@ class Rac3Interface(GameInterface):
                 continue
             checked, total = 0, 0
             secondary_counts = []
-            for group in ((RAC3LOCATIONGROUP.STORY, RAC3LOCATIONGROUP.GENERAL, *SEPARATE_GROUPS.get(region, DEFAULT_GROUPS), *COMMON_GROUPS)):
+            for group in (RAC3LOCATIONGROUP.STORY, *SEPARATE_GROUPS.get(region, DEFAULT_GROUPS), *COMMON_GROUPS,
+                          RAC3LOCATIONGROUP.OTHER):
                 group_checked, group_total = counts.get((region, group), (0, 0))
                 checked += group_checked
                 total += group_total

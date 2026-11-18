@@ -2,8 +2,8 @@
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
+from math import isclose
 from random import choice, randint
-from struct import pack
 from typing import Any
 
 from typing_extensions import deprecated
@@ -238,6 +238,7 @@ class Rac3Interface(GameInterface):
     vendor_type: RAC3VENDORTYPE | None = None
     vendor_string_pointers: dict[str, int] = {}
     challenge_string_pointers: dict[str, int] = {}
+    galactic_map_text_pointer_list: int = 0
     vendor_cursor_pos: int = 0
     string_table: StringTable | None = None
     string_entries: dict[int, int] = {}
@@ -678,9 +679,10 @@ class Rac3Interface(GameInterface):
             self._write8(RAC3STATUS.SEEN_NGPLUS_POPUP, 1)
 
     def setup_code_cave(self, vendor_strings: dict[str, str], challenge_strings: dict[str, str]):
-        """Write item data to the code cave to be used later by vendors and challenges"""
+        """Pack vendor and challenge strings, then reserve the map's text buffers."""
         self.vendor_string_pointers = {}
         self.challenge_string_pointers = {}
+        self.galactic_map_text_pointer_list = 0
         start = RAC3INSTRUCTION.CODECAVE_START + 0x10  # The first bytes hold armor purchase flags.
         data = bytearray()
         strings = {
@@ -705,12 +707,16 @@ class Rac3Interface(GameInterface):
                 packed_challenges[encoded] = pointer
             else:
                 self.vendor_string_pointers[key] = address
-        if start + len(data) > RAC3GALACTICMAP.TEXT_POINTER_LIST:
-            logger.error("Vendor and challenge text exceeds the reserved code cave space.")
+        pointer_list = (start + len(data) + 7) & ~7
+        end = pointer_list + RAC3GALACTICMAP.TEXT_BUFFER_OFFSET + 2 * RAC3GALACTICMAP.TEXT_BUFFER_SIZE
+        if end > RAC3INSTRUCTION.CODECAVE_END:
+            logger.error("Vendor, challenge, and Galactic Map text exceeds the reserved code cave space.")
             self.vendor_string_pointers = {}
             self.challenge_string_pointers = {}
             return
+        data.extend(bytes(end - start - len(data)))
         self._write_bytes(start, bytes(data))
+        self.galactic_map_text_pointer_list = self.address_convert(pointer_list)
 
     def speedup_setup(self):
         """One time setup of speedup options when starting a new session"""
@@ -2044,56 +2050,75 @@ class Rac3Interface(GameInterface):
                 return state, rows_base + row_offset
         return None
 
+    def galactic_map_uses_code_cave(self) -> bool:
+        """Check whether repacking would invalidate the map's live text pointer list."""
+        if self.game_state_value != RAC3GAMESTATE.PAUSED:
+            return False
+        base = RAC3GALACTICMAP.get_rows_address(self.planet)
+        if base is None:
+            return False
+        objective = self.get_galactic_map_objective(self.address_convert(base))
+        if objective is None:
+            return False
+        state, _ = objective
+        alternate, count_and_highlight = self._read32_batch(
+            [state + RAC3GALACTICMAP.ALTERNATE_TEXT_OFFSET, state + RAC3GALACTICMAP.ALTERNATE_COUNT_OFFSET],
+            should_convert=False)
+        return (bool(count_and_highlight & 0xFFFF)
+                and RAC3INSTRUCTION.CODECAVE_START <= alternate < RAC3INSTRUCTION.CODECAVE_END)
+
     def overwrite_planet_location_counts(self, server_locations: set[int], checked_locations: set[int]):
         """Show enabled location progress in the Galactic Map's alternate text source."""
         if self.between_planets or self.is_reloading or self.game_state_value != RAC3GAMESTATE.PAUSED:
             return
-        if self.current_game not in (RAC3VERSION.US_ID, RAC3VERSION.EU_ID, RAC3VERSION.JP_ID):
+        pointer_list = self.galactic_map_text_pointer_list
+        if not pointer_list:
             return
-        layout = RAC3GALACTICMAP
-        base = layout.get_rows_address(self.planet)
+        base = RAC3GALACTICMAP.get_rows_address(self.planet)
         if base is None:
             return
         objective = self.get_galactic_map_objective(self.address_convert(base))
         if objective is None:
             return
         state, row_address = objective
-        scale_address = state + layout.TEXT_SCALE_OFFSET
-        alternate, count_and_highlight, current_scale = self._read32_batch(
-            [state + layout.ALTERNATE_TEXT_OFFSET, state + layout.ALTERNATE_COUNT_OFFSET, scale_address],
+        scale_address = state + RAC3GALACTICMAP.TEXT_SCALE_OFFSET
+        alternate, count_and_highlight = self._read32_batch(
+            [state + RAC3GALACTICMAP.ALTERNATE_TEXT_OFFSET, state + RAC3GALACTICMAP.ALTERNATE_COUNT_OFFSET],
             should_convert=False)
         count = count_and_highlight & 0xFFFF
-        pointer_list = layout.TEXT_POINTER_LIST
         if count and (alternate != pointer_list or count != 1):
             return
 
         row = self._read_bytes(row_address, 5, should_convert=False)
         region = PLANET_NAME_FROM_ID.get(int.from_bytes(row[:4], "little"))
         text = b"\x00"
-        text_scale = layout.DEFAULT_TEXT_SCALE
+        text_scale = RAC3GALACTICMAP.DEFAULT_TEXT_SCALE
         if region in INFOBOT_FROM_PLANET and row[4] == 1:
             display, scale = self.format_galactic_map_counts(region, server_locations, checked_locations)
             encoded = display.encode("ascii") + b"\x00"
-            if len(encoded) <= layout.TEXT_BUFFER_SIZE:
+            if len(encoded) <= RAC3GALACTICMAP.TEXT_BUFFER_SIZE:
                 text = encoded
-                text_scale = int.from_bytes(pack("<f", scale), "little")
+                text_scale = scale
 
-        if self._read32(state + layout.PRIMARY_TEXT_OFFSET, should_convert=False) != row_address + layout.OBJECTIVE_OFFSET:
+        if self._read32(state + RAC3GALACTICMAP.PRIMARY_TEXT_OFFSET, should_convert=False) != row_address + RAC3GALACTICMAP.OBJECTIVE_OFFSET:
             return
-        if current_scale != text_scale:
-            self._write32(scale_address, text_scale, should_convert=False)
-        active_buffer = self._read32(pointer_list, should_convert=False)
-        if (active_buffer not in layout.TEXT_BUFFERS
+        current_scale = self._read_float(scale_address, should_convert=False)
+        # Allow for the rounding of a 32-bit float in EE memory.
+        if not isclose(current_scale, text_scale, rel_tol=1e-7):
+            self._write_float(scale_address, text_scale, should_convert=False)
+        first = pointer_list + RAC3GALACTICMAP.TEXT_BUFFER_OFFSET
+        second = first + RAC3GALACTICMAP.TEXT_BUFFER_SIZE
+        active_buffer = self._read32(pointer_list, should_convert=False) if count else 0
+        if (active_buffer not in (first, second)
             or self._read_bytes(active_buffer, len(text), should_convert=False) != text):
-            first, second = layout.TEXT_BUFFERS
             target = second if active_buffer == first else first
             # Publish the pointer only once the buffer is ready, in the existing ordered write batch.
             self._write_bytes(target, text, should_convert=False)
             self._write32(pointer_list, target, should_convert=False)
         if not count:
-            self._write32(state + layout.ALTERNATE_TEXT_OFFSET, pointer_list, should_convert=False)
-            self._write16(state + layout.ALTERNATE_HIGHLIGHT_OFFSET, 0xFFFF, should_convert=False)
-            self._write16(state + layout.ALTERNATE_COUNT_OFFSET, 1, should_convert=False)
+            self._write32(state + RAC3GALACTICMAP.ALTERNATE_TEXT_OFFSET, pointer_list, should_convert=False)
+            self._write16(state + RAC3GALACTICMAP.ALTERNATE_HIGHLIGHT_OFFSET, 0xFFFF, should_convert=False)
+            self._write16(state + RAC3GALACTICMAP.ALTERNATE_COUNT_OFFSET, 1, should_convert=False)
 
     def format_galactic_map_counts(self, region: str, server_locations: set[int],
                                    checked_locations: set[int]) -> tuple[str, float]:

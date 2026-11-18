@@ -5,40 +5,18 @@ from worlds.rac3.constants.options import RAC3OPTION
 
 
 class RAC3LOCATIONGROUP:
-    """String constants for location groups and their compact display names."""
+    """Location groups, whose values are shown on the Galactic Map."""
 
-    TOTAL = "Total"
+    # Sized so the worst case (Phoenix/Nation) fits in the 79 byte objective text.
     STORY = "Story"
     GENERAL = "General"
     VENDOR = "Vendor"
-    COLLECTIBLES = "Collectibles"
-    SKILL_POINTS = "Skill Points"
+    COLLECTIBLES = "Collect"
+    SKILL_POINTS = "Skill"
     VR = "VR"
-    VID_COMICS = "Vid-Comics"
+    VID_COMICS = "VC"
     SEWERS = "Sewers"
     RANGERS = "Rangers"
     LDF = "LDF"
-    GAUNTLET = "Gauntlet"
+    GAUNTLET = "Gaunt"
     ARENA = "Arena"
-
-    SHORT_NAMES = {
-        GENERAL: "Gen",
-        COLLECTIBLES: "Coll",
-        SKILL_POINTS: "SP",
-        VID_COMICS: "Comics",
-    }
-    SHORTER_NAMES = {
-        **SHORT_NAMES,
-        VID_COMICS: "VC",
-        GAUNTLET: "Gaunt",
-        VENDOR: "Vend",
-    }
-    COMPACT_NAMES = {
-        **SHORTER_NAMES,
-        VENDOR: "V",
-        COLLECTIBLES: "C",
-        RANGERS: "Rng",
-        GAUNTLET: "Gnt",
-        ARENA: "Ar",
-        SEWERS: "Sew",
-    }

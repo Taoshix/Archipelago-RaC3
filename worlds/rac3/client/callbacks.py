@@ -127,6 +127,7 @@ async def _handle_game_ready(ctx: "Context") -> None:
         ctx.main_menu = ctx.game_interface.check_main_menu()
 
         if ctx.main_menu:
+            ctx.save_file_identity = None
             if menu:
                 ctx.game_interface.main_menu = True
             if ctx.last_game_message is None:
@@ -136,8 +137,11 @@ async def _handle_game_ready(ctx: "Context") -> None:
             await sleep(5)
 
         if menu is True and ctx.main_menu is False:
+            file_identity = ctx.connected_identity
             ctx.last_game_message = None
             await ctx.send_msgs([ClientMessage.status_update(ClientStatus.CLIENT_PLAYING)])
+            if ctx.connected_identity != file_identity:
+                return
             logger.info("Starting game...")
             ctx.game_interface.reset_file()
             logger.info("Old state removed!")
@@ -157,6 +161,8 @@ async def _handle_game_ready(ctx: "Context") -> None:
                 ctx.game_interface.filler_items(item.item)
             ctx.processed_item_count = min(counter, items_to_process)
             await ctx.send_msgs([ClientMessage.set_processed(ctx.processed_item_count)])
+            if ctx.connected_identity != file_identity:
+                return
             logger.info(f"Items Processed: {ctx.processed_item_count}")
             logger.info("Checking locations...")
             checks = set()
@@ -169,6 +175,7 @@ async def _handle_game_ready(ctx: "Context") -> None:
             ctx.game_interface.load_save(ctx.save_data)
             ctx.game_interface.init_stored_fillers()
             ctx.game_interface.process_offline_fillers(ctx.data_received)
+            ctx.save_file_identity = file_identity
             ctx.game_interface.reset_death_count()
             ctx.game_interface.setup_challenge_mode()
             ctx.game_interface.setup_settings()
@@ -502,7 +509,8 @@ async def handle_sequence_break(ctx: "Context") -> None:
 async def handle_save(ctx: "Context") -> None:
     """Checks if any memory values need to be saved to the server
     :param ctx: RAC3 context class"""
-    if ctx.slot_data is None or ctx.slot is None:
+    save_key = ctx.save_key
+    if ctx.slot_data is None or save_key is None or ctx.save_file_identity != ctx.connected_identity:
         return
     if ctx.data_received:
         local_save = ctx.game_interface.update_save()
@@ -515,6 +523,6 @@ async def handle_save(ctx: "Context") -> None:
             ctx.data_received = False
             ctx.skip_save_cooldown = False
             ctx.save_data = local_save
-            await ctx.send_msgs([ClientMessage.update_save(ctx.uuid, local_save)])
+            await ctx.send_msgs([ClientMessage.update_save(save_key, local_save)])
     else:
         logger.debug("Waiting for save data from server")

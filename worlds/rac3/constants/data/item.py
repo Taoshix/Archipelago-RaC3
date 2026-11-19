@@ -831,6 +831,7 @@ item_counts: dict[str, int] = {
 ngplus_item_counts: dict[str, int] = {
     **dict.fromkeys(non_prog_weapon_data.keys(), 1),
     **dict.fromkeys(prog_weapon_data.keys(), 8),
+    RAC3ITEM.PROGRESSIVE_RY3N0: 5,
     **dict.fromkeys(prog_wrench_data.keys(), 8),
     **dict.fromkeys(gadget_data.keys(), 1),
     **dict.fromkeys(cheat_data.keys(), 1),

@@ -147,19 +147,16 @@ async def _handle_game_ready(ctx: "Context") -> None:
             logger.info("Old state removed!")
             logger.info("Checking for items...")
             logger.debug(f"Data Package: {ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, 'Empty')}")
-            logger.info(f"Items Received: {len(ctx.items_received)}")
-            items_to_process = ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, len(ctx.items_received))
+            received_count = len(ctx.items_received)
+            logger.info(f"Items Received: {received_count}")
+            saved_count = ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, received_count)
+            items_to_restore = max(0, min(saved_count, received_count))
             ctx.game_interface.initial_fillers.clear()
-            counter = 0
-            for count, item in enumerate(ctx.items_received):
-                counter += 1
-                logger.debug(f"Processing item {count}: {ctx.item_names.lookup_in_slot(item.item, item.player)}")
-                if count > items_to_process:
-                    logger.debug("Handle Later")
-                    continue
+            for index, item in enumerate(ctx.items_received[:items_to_restore]):
+                logger.debug(f"Restoring item {index}: {ctx.item_names.lookup_in_slot(item.item, item.player)}")
                 ctx.game_interface.important_items(item.item, ctx.player_names[ctx.slot], item.location)
                 ctx.game_interface.filler_items(item.item)
-            ctx.processed_item_count = min(counter, items_to_process)
+            ctx.processed_item_count = items_to_restore
             await ctx.send_msgs([ClientMessage.set_processed(ctx.processed_item_count)])
             if ctx.connected_identity != file_identity:
                 return

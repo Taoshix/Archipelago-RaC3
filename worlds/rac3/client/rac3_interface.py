@@ -3727,8 +3727,8 @@ class Rac3Interface(GameInterface):
         completion_locations = get_completion_location_names(
             (LOCATION_FROM_AP_CODE[code] for code in server_locations), bool(self.options.lock_cc)
         )
-        required_locations = (self.options.goal_completion * len(completion_locations)) // 100
-        checked_locations = (100 * len(self.checked_locations & completion_locations)) // 100
+        required_locations = (self.options.goal_completion * len(completion_locations) + 99) // 100
+        checked_locations = len(self.checked_locations & completion_locations)
         if self.options.goal_nano > 10:
             if self.options.goal_nano > self.max_health:
                 goal_conditions += f"\n- Nanotech level requirement ({self.max_health}/{self.options.goal_nano})"
@@ -3755,8 +3755,7 @@ class Rac3Interface(GameInterface):
             else:
                 completed_requirements += "\n- Planet completion requirement completed!"
         if self.options.goal_completion > 0:
-            if self.options.goal_completion * len(completion_locations) > 100 * len(
-                    self.checked_locations & completion_locations):
+            if checked_locations < required_locations:
                 goal_conditions += (f"\n- Locations collected ({checked_locations}/{required_locations}) "
                                     f"for {self.options.goal_completion}% requirement")
             else:

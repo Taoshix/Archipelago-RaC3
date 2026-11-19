@@ -446,6 +446,7 @@ async def handle_planet_changed(ctx: "Context") -> None:
                                          HACKER_PUZZLE_TO_REGION, True)
         ctx.game_interface.softlock_warning()
         ctx.game_interface.region_disabled_warning()
+        ctx.game_interface.speedup_unavailable_warning()
         ctx.game_interface.tyhrranosis_fix()
 
     # Handle UT map changes

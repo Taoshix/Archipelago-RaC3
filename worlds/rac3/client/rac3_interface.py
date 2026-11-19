@@ -58,6 +58,7 @@ from worlds.rac3.constants.locations.challenge_description import (
 from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION, RANGER_MISSION_CHAINS
 from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.locations.tags import RAC3TAG
+from worlds.rac3.constants.locations.trophies import RAC3TROPHY
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
 from worlds.rac3.constants.messages.box_theme import RAC3BOXTHEME
 from worlds.rac3.constants.messages.messagebox import RAC3MESSAGEBOX
@@ -229,6 +230,7 @@ class Rac3Interface(GameInterface):
     nanotech_exp: int = 0
     homewarping: bool = False
     checked_locations: set[str] = set()
+    collected_tbolt_locations: set[str] = set()
     clank_disabled: bool = False
     clank_disabled_trap: bool = False
     visited_planets: set[str] = set()
@@ -560,6 +562,7 @@ class Rac3Interface(GameInterface):
         self.transporter_fixed = False
         self.timers.clear()
         self.checked_locations.clear()
+        self.collected_tbolt_locations.clear()
         self.visited_planets.clear()
         self.gadget_cycler()
         self.planet_cycler()
@@ -580,6 +583,9 @@ class Rac3Interface(GameInterface):
         checks: dict[int, set[int]] = {}
         for location in RAC3_LOCATION_DATA_TABLE.values():
             if RAC3TAG.SEWER in location.TAGS or RAC3TAG.NANOTECH in location.TAGS:
+                continue
+            # Unrandomized T-bolt pickups are kept in the save so they can count towards the goal.
+            if RAC3TAG.T_BOLT in location.TAGS and not self.options.titanium_bolts:
                 continue
             for check in location.CHECK_ADDRESS:
                 if check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT:
@@ -1393,6 +1399,14 @@ class Rac3Interface(GameInterface):
                 self.checked_locations.add(location)
                 return True
             return False
+        check_all = self.location_flags_set(loc_data)
+        if check_all:
+            logger.debug(f"{location} checked, {len(self.checked_locations) / self.pre_end}% completion")
+            self.checked_locations.add(location)
+        return check_all
+
+    def location_flags_set(self, loc_data: RAC3LOCATIONDATA) -> bool:
+        """Returns whether the game memory shows this location as collected"""
         check_all: bool = True
         for check in loc_data.CHECK_ADDRESS:
             value_to_check = 0
@@ -1409,10 +1423,17 @@ class Rac3Interface(GameInterface):
                 case CHECKTYPE.INT:
                     value_to_check = self._read32(check.ADDRESS)
             check_all &= check.check_condition(value_to_check)
-        if check_all:
-            logger.debug(f"{location} checked, {len(self.checked_locations) / self.pre_end}% completion")
-            self.checked_locations.add(location)
         return check_all
+
+    def titanium_bolt_count(self) -> int:
+        """Titanium Bolts towards the goal: received items, or collected pickups if they aren't randomized"""
+        if self.options.titanium_bolts:
+            return self.UnlockItem[RAC3ITEM.TITANIUM_BOLT]
+        for name, loc_data in RAC3_LOCATION_DATA_TABLE.items():
+            if (RAC3TAG.T_BOLT in loc_data.TAGS and name != RAC3TROPHY.PHOENIX_TITANIUM_COLLECTOR
+                and name not in self.collected_tbolt_locations and self.location_flags_set(loc_data)):
+                self.collected_tbolt_locations.add(name)
+        return len(self.collected_tbolt_locations)
 
     #############
     # Deathlink #
@@ -1556,7 +1577,7 @@ class Rac3Interface(GameInterface):
                 return False
             if self.options.goal_crystal > (self.crystals_current + self.crystals_traded):
                 return False
-            if self.options.goal_tbolts > self.UnlockItem[RAC3ITEM.TITANIUM_BOLT]:
+            if self.options.goal_tbolts > self.titanium_bolt_count():
                 return False
             if self.options.goal_skillpoints > self.skillpoints:
                 return False
@@ -3686,7 +3707,7 @@ class Rac3Interface(GameInterface):
         goal_conditions = "The current status of the unfinished goal requirements:"
         completed_requirements = "\n\nThe following requirements are already completed:"
         collected_sewer = self.crystals_current + self.crystals_traded
-        collected_tbolts = self.UnlockItem[RAC3ITEM.TITANIUM_BOLT]
+        collected_tbolts = self.titanium_bolt_count()
         completed_planets = len(self.visited_planets)
         completion_locations = get_completion_location_names(
             (LOCATION_FROM_AP_CODE[code] for code in server_locations), bool(self.options.lock_cc)

@@ -178,14 +178,15 @@ def process_start_inventory(world: "RaC3World") -> None:
 
 def starting_weapons(world: "RaC3World") -> None:
     """Chooses the weapons randomly selected for the player to start with"""
+    ngplus_items = world.options.ngplus_items.value
+    counts = ngplus_item_counts if ngplus_items else item_counts
     weapon_list: list[str] = []
-    for name in world.options.starting_weapons.value:
-        count = world.options.starting_weapons.value[name]
-        if count == 0:
+    for name, count in world.options.starting_weapons.value.items():
+        if count == 0 or (not ngplus_items and RAC3ITEMTAG.NGPLUS in item_table[name].TAGS):
             continue
         if world.options.progressive_weapons.value:
             new_name = NAME_TO_PROG_DICT[name]
-            item_cap = item_counts[new_name] if world.options.ngplus_items.value else ngplus_item_counts[new_name]
+            item_cap = counts[new_name]
             preplaced_count = world.options.start_inventory_from_pool.value.get(new_name, 0)
             if preplaced_count <= item_cap - 2:
                 weapon_list.extend(new_name for _ in range(count))
@@ -289,6 +290,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
     """Returns a list of items to be added to the item pool after checking options"""
     itempool: list[Item] = []
     options: type[RaC3Options] = world.options
+    counts = ngplus_item_counts if options.ngplus_items.value else item_counts
 
     for name, entry in item_table.items():
         item_type: ItemClassification = entry.AP_CLASSIFICATION
@@ -300,19 +302,7 @@ def create_itempool(world: "RaC3World") -> list[Item]:
         if RAC3ITEMTAG.UNUSED in item_tags:
             continue
         # Item counts
-        if options.ngplus_items.value:
-            if name == RAC3ITEM.PROGRESSIVE_RY3N0:
-                item_amount: int = 5
-            elif name == RAC3ITEM.PROGRESSIVE_WRENCH:
-                item_amount: int = 8
-            else:
-                item_amount: int = ngplus_item_counts.get(name, 1)
-        elif name != RAC3ITEM.PROGRESSIVE_RY3N0:
-            item_amount: int = item_counts.get(name, 1)
-        else:
-            continue
-        if not options.ngplus_items.value and name == RAC3ITEM.PROGRESSIVE_WRENCH:
-            item_amount: int = 5
+        item_amount = counts.get(name, 1)
         # Already placed items (Starting items and vanilla)
         if name in world.preplaced_items:
             count = world.preplaced_items.count(name)

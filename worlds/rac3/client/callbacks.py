@@ -43,45 +43,17 @@ async def pcsx2_sync_task(ctx: "Context") -> None:
                        "There may be bugs present and features that have not been tested fully.\n"
                        "These builds are meant for testing and bug reporting purposes "
                        "and should not be used for normal play!\n")
-    connected_to_game: bool = False
     connection_retry_attempts: int = 0
-    correct_version: bool = True
+    game_initialized = False
     while not ctx.exit_event.is_set():
         try:
-            connected_to_server = (ctx.server is not None) and (ctx.slot is not None)
-            if connected_to_server and not ctx.is_connected_to_server:
-                if ctx.slot_data:
-                    logger.info("Connected to server")
-                    ctx.is_connected_to_server = connected_to_server
-                    if ctx.slot_data.get(RAC3OPTION.VERSION, "0.0.0") < RAC3OPTION.VERSION_NUMBER:
-                        await ctx.disconnect()
-                        correct_version = False
-                        logger.warning(
-                            f"Client is v{RAC3OPTION.VERSION_NUMBER}, please downgrade to v"
-                            f"{ctx.slot_data[RAC3OPTION.VERSION]}")
-                        await sleep(10)
-                        continue
-                    if ctx.slot_data[RAC3OPTION.VERSION] > RAC3OPTION.VERSION_NUMBER:
-                        await ctx.disconnect()
-                        correct_version = False
-                        logger.warning(
-                            f"Client is v{RAC3OPTION.VERSION_NUMBER}, please upgrade to v"
-                            f"{ctx.slot_data[RAC3OPTION.VERSION]}")
-                        await sleep(10)
-                        continue
-                    if connected_to_game:
-                        ctx.game_interface.init()
-                    else:
-                        logger.info("Waiting for game connection...")
-
+            connected_to_server = ctx.server is not None and ctx.slot is not None and ctx.slot_data is not None
             connected_to_game = ctx.game_interface.get_connection_state()
             if connected_to_game and not ctx.is_connected_to_game:
                 logger.info(f"Connected to {RAC3OPTION.GAME_TITLE_FULL}")
                 ctx.last_pine_message = None
                 ctx.is_connected_to_game = connected_to_game
-                if connected_to_server:
-                    ctx.game_interface.init()
-                else:
+                if not connected_to_server:
                     logger.info("Waiting for server connection...")
 
             if not connected_to_game and not ctx.game_interface.is_connecting:
@@ -122,7 +94,10 @@ async def pcsx2_sync_task(ctx: "Context") -> None:
                     logger.info(message)
                     ctx.last_server_message = message
 
-            if connected_to_game and connected_to_server and correct_version:
+            if connected_to_game and connected_to_server:
+                if not game_initialized:
+                    ctx.game_interface.init()
+                    game_initialized = True
                 await _handle_game_ready(ctx)
 
         except ConnectionError:

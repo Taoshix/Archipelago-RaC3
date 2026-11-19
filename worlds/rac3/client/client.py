@@ -392,7 +392,6 @@ class Rac3Context(CommonContext):
     game: str = RAC3OPTION.GAME_TITLE_FULL
     game_interface: Rac3Interface
     is_connected_to_game: bool = False
-    is_connected_to_server: bool = False
     items_handling: int = 0b111  # This is mandatory
     last_game_message: str | None = None
     last_pine_message: str | None = None
@@ -453,6 +452,10 @@ class Rac3Context(CommonContext):
         await self.get_username()
         await self.send_connect()
 
+    def reset_server_state(self) -> None:
+        super().reset_server_state()
+        self.slot_data = None
+
     def on_package(self, cmd: str, args: dict) -> None:
         """Handle receiving a package from the server.
         :param cmd: Package Command
@@ -460,9 +463,24 @@ class Rac3Context(CommonContext):
         """
         super().on_package(cmd, args)
         if cmd == "Connected":
-            self.slot_data: dict[str, Any] = args["slot_data"]
+            self.slot_data = None
+            slot_data = args.get("slot_data") or {}
             # logger.info(f"Received data: {args}")
-            self.game_interface.proc_option(self.slot_data)
+            slot_data_apworld_version = slot_data.get(RAC3OPTION.VERSION)
+            if slot_data_apworld_version != RAC3OPTION.VERSION_NUMBER:
+                if slot_data_apworld_version is None:
+                    logger.warning("RaC3 version not found in slot data.")
+                else:
+                    logger.warning(f"This seed requires RaC3 client v{slot_data_apworld_version}. "
+                                   f"The current client is v{RAC3OPTION.VERSION_NUMBER}.")
+                async_start(self.disconnect())
+                return
+
+            self.game_interface.proc_option(slot_data)
+            self.slot_data = slot_data
+            logger.info("Connected to server")
+            if not self.is_connected_to_game:
+                logger.info("Waiting for game connection...")
             self.locations_scouted = self.server_locations
             self.code_cave_setup = False
             async_start(self.send_msgs([ClientMessage.location_scouts(list(self.server_locations))]))
@@ -478,6 +496,11 @@ class Rac3Context(CommonContext):
 
             # async_start(self.send_msgs([ClientMessage.location_scouts(
             #     [Locations.location_table[location].ap_code for location in Locations.location_groups["Purchase"]])]))
+
+        # Stop any other commands if we dont have slot data yet
+        if self.slot_data is None:
+            return
+
         if cmd == "DataPackage":
             logger.debug(f"Data Package received with args {args}")
             if RAC3OPTION.GAME_TITLE_FULL in args["data"]["games"]:

@@ -544,8 +544,16 @@ class Rac3Interface(GameInterface):
     # Called on Loading File #
     ##########################
 
+    def reset_tracked_progress(self) -> None:
+        """Clear the cached goal and location progress for the active file."""
+        self.end_game = False
+        self.checked_locations.clear()
+        self.collected_tbolt_locations.clear()
+        self.visited_planets.clear()
+
     def reset_file(self):
         """Remove all items and progress on the current file, ready to be set based on current slot progress"""
+        self.reset_tracked_progress()
         self.remove_all_items()
         self.undo_collections()
 
@@ -561,9 +569,6 @@ class Rac3Interface(GameInterface):
         # self.UnlockItem[RAC3ITEM.MUSEUM] = 1
         self.transporter_fixed = False
         self.timers.clear()
-        self.checked_locations.clear()
-        self.collected_tbolt_locations.clear()
-        self.visited_planets.clear()
         self.gadget_cycler()
         self.planet_cycler()
         self.weapon_cycler()

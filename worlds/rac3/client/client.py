@@ -456,6 +456,10 @@ class Rac3Context(CommonContext):
         super().reset_server_state()
         self.slot_data = None
 
+    def reset_session_state(self) -> None:
+        super().reset_session_state()
+        self.game_interface.reset_tracked_progress()
+
     def on_package(self, cmd: str, args: dict) -> None:
         """Handle receiving a package from the server.
         :param cmd: Package Command

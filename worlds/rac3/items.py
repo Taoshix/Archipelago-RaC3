@@ -147,30 +147,21 @@ def process_start_inventory(world: "RaC3World") -> None:
                     world.options.start_inventory.value[RAC3ITEM.THRUSTER_PACK] += 1
 
         case world.options.clank_options.option_shuffled_progressive:
-            for item in [RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK]:
-                if world.options.start_inventory_from_pool.value.get(item, None):
-                    count = world.options.start_inventory_from_pool.value[item]
-                    rac3_logger.warning(f"Player: {world.player_name}'s starting {item} from pool have been converted "
-                                        f"to {RAC3ITEM.PROGRESSIVE_PACK} to match their settings.")
-                    world.options.start_inventory_from_pool.value.pop(item)
-                    world.options.start_inventory_from_pool.value[RAC3ITEM.PROGRESSIVE_PACK] += count
-                if world.options.start_inventory.value.get(item, None):
-                    count = world.options.start_inventory.value[item]
-                    rac3_logger.warning(f"Player: {world.player_name}'s starting {item} have been converted "
-                                        f"to {RAC3ITEM.PROGRESSIVE_PACK} to match their settings.")
-                    world.options.start_inventory.value.pop(item)
-                    world.options.start_inventory.value[RAC3ITEM.PROGRESSIVE_PACK] += count
+            for inventory, source_label in [
+                (world.options.start_inventory_from_pool.value, " from pool"),
+                (world.options.start_inventory.value, ""),
+            ]:
+                for item in [RAC3ITEM.HELI_PACK, RAC3ITEM.THRUSTER_PACK]:
+                    count = inventory.pop(item, 0)
+                    if count:
+                        rac3_logger.warning(f"Player: {world.player_name}'s starting {item}{source_label} "
+                                            f"converted to {RAC3ITEM.PROGRESSIVE_PACK} to match their settings.")
+                        inventory[RAC3ITEM.PROGRESSIVE_PACK] += count
 
-            if world.options.start_inventory_from_pool.value.get(RAC3ITEM.CLANK, None):
-                rac3_logger.warning(f"Player: {world.player_name}'s starting {RAC3ITEM.CLANK} from pool has been "
-                                    f"converted to {RAC3ITEM.PROGRESSIVE_PACK}s to match their settings.")
-                world.options.start_inventory_from_pool.value.pop(item)
-                world.options.start_inventory_from_pool.value[RAC3ITEM.PROGRESSIVE_PACK] += 2
-            if world.options.start_inventory.value.get(item, None):
-                rac3_logger.warning(f"Player: {world.player_name}'s starting {RAC3ITEM.CLANK} has been converted "
-                                    f"to {RAC3ITEM.PROGRESSIVE_PACK}s to match their settings.")
-                world.options.start_inventory.value.pop(item)
-                world.options.start_inventory.value[RAC3ITEM.PROGRESSIVE_PACK] += 2
+                if inventory.pop(RAC3ITEM.CLANK, 0):
+                    rac3_logger.warning(f"Player: {world.player_name}'s starting {RAC3ITEM.CLANK}{source_label} "
+                                        f"converted to two {RAC3ITEM.PROGRESSIVE_PACK}s to match their settings.")
+                    inventory[RAC3ITEM.PROGRESSIVE_PACK] = max(2, inventory[RAC3ITEM.PROGRESSIVE_PACK])
 
     world.options.start_inventory_from_pool.value.pop(RAC3ITEM.VELDIN, None)
     world.options.start_inventory.value.pop(RAC3ITEM.VELDIN, None)

@@ -1720,6 +1720,21 @@ class Rac3Interface(GameInterface):
                     logger.info(log_message)
                     self.enqueue_notification(notification_message, RAC3BOXTHEME.WARNING, 5.0)
 
+    def speedup_unavailable_warning(self):
+        """Checks if the player went to a planet/region where an enabled speedup can't apply yet and informs them"""
+        match self.planet:
+            case RAC3REGION.AQUATOS_BASE:
+                if (self.options.speedups.get(RAC3SPEEDUPS.TYHRRAGUISE, False)
+                    and not self.UnlockItem[RAC3ITEM.TYHRRA_GUISE]):
+                    logger.info("The Tyhrra-Guise puzzles are not skipped automatically because you do not have the "
+                                "Tyhrra-Guise yet.")
+                    self.enqueue_notification(
+                        f"The {RAC3TEXTFORMATSTRING.WHITE}Tyhrra-Guise{RAC3TEXTFORMATSTRING.NORMAL} puzzles are not "
+                        f"skipped\nautomatically because you do not have\nthe "
+                        f"{RAC3TEXTFORMATSTRING.WHITE}Tyhrra-Guise{RAC3TEXTFORMATSTRING.NORMAL} yet.",
+                        RAC3BOXTHEME.WARNING,
+                        5.0)
+
     ##################
     # Player Respawn #
     ##################

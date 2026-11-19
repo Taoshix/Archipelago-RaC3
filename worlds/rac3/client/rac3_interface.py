@@ -1033,11 +1033,11 @@ class Rac3Interface(GameInterface):
             # Unknown planet, abort homewarp
             logger.error(f"Aborting homewarp, Unknown Planet: {self.planet}")
             return
-        if planet_id not in PLANET_NAME_FROM_ID.keys():
-            if PLANET_NAME_FROM_ID[planet_id] in INVALID_PLANETS:
-                # Invalid planet id, abort homewarp
-                logger.error(f"Aborting homewarp, Invalid Planet: {PLANET_NAME_FROM_ID[planet_id]}, ID: {planet_id}")
-                return
+        destination = PLANET_NAME_FROM_ID.get(planet_id)
+        if (destination is None or destination in INVALID_PLANETS
+            or destination in [RAC3REGION.GALAXY, RAC3REGION.MENU]):
+            logger.error(f"Aborting homewarp, invalid destination planet ID: {planet_id}")
+            return
         planet_data = RAC3_REGION_DATA_TABLE[self.planet]
         if planet_data.PLANET_TO_LOAD:
             self.homewarping = True

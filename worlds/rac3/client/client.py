@@ -406,6 +406,7 @@ class Rac3Context(CommonContext):
     data_package: int = 0
     data_received: bool = False
     save_data: dict[int, tuple[int, int]]
+    connected_identity: tuple[str, int, int] | None = None  # Archipelago 0.6.8+ sets this on the instance.
     save_file_identity: tuple[str, int, int] | None = None
     last_saved: float = 0.0
     skip_save_cooldown: bool = False

@@ -8,8 +8,8 @@ class ProgressiveWrench(Toggle):
     """
     Determines if Progressive OmniWrench items are included in the item pool.
     ------------------------------------------------------------------------------------
-    Disable for the vanilla OmniWrench behaviour.
-    Enable for OmniWrench upgrades to be included in the item pool.
+    No:  Vanilla OmniWrench behaviour. Wrench gets stronger as you get more nanotech levels.
+    Yes: Progressive OmniWrench upgrades are added in the item pool.
     ------------------------------------------------------------------------------------
     Note: Experimental feature. You will start with no wrench.
     May occasionally crash PCSX2 when landing on a planet,

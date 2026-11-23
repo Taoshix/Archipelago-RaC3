@@ -2410,6 +2410,7 @@ class Rac3Interface(GameInterface):
         self.timer_cycler()
         self.cheat_cycler()
         self.weapon_exp_cycler()
+        self.weapon_balance_cycler()
         self.verify_quick_select_and_last_used()
         self.clank_cycler()
         self.multiplier_cycler()
@@ -2962,6 +2963,24 @@ class Rac3Interface(GameInterface):
                 self._write8(non_prog_weapon_data[self.last_hovered_weapon].LEVEL_ADDRESS,
                              UPGRADE_DICT[self.last_hovered_weapon][restore_level - 1])
                 self.last_hovered_weapon = ""
+
+    def weapon_balance_cycler(self):
+        """Modify weapons in the GadgetDef table to balance them if weapon re-balance is enabled."""
+        pass
+        # for weapon in non_prog_weapon_data.keys():
+        #     progressive_weapon_mode = self.options.progressive_weapons
+        #     if progressive_weapon_mode:
+        #         highest_unlocked_level = self.UnlockItem[weapon]
+        #         for level in range(1, highest_unlocked_level + 1):
+        #             variant_id = UPGRADE_DICT[weapon][level - 1]
+        #             self._write_float(RAC3GADGETDEF.get_property_address(
+        #                 self.planet, variant_id, RAC3GADGETDEF.DAMAGE_OFFSET), 999999.0)
+        #     else:
+        #         if self.UnlockItem[weapon]:
+        #             for level in range(1, 5) if weapon == RAC3ITEM.RY3N0 else range(1, 9):
+        #                 variant_id = UPGRADE_DICT[weapon][level - 1]
+        #                 self._write_float(RAC3GADGETDEF.get_property_address(
+        #                     self.planet, variant_id, RAC3GADGETDEF.DAMAGE_OFFSET), 999999.0)
 
     def verify_quick_select_and_last_used(self):
         """Check each slot in quick select and held item history, reset if that item has not been collected yet."""

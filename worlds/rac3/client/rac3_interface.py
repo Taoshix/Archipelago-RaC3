@@ -41,6 +41,7 @@ from worlds.rac3.constants.data.vendorslot import (ARMOR_VENDOR_INVENTORY, ARMOR
                                                    SHIP_VENDOR_INVENTORY, WEAPON_VENDOR_LOCATION_TO_ITEM,
                                                    WEAPON_VENDOR_LOCATION_TO_UNLOCK_REGION)
 from worlds.rac3.constants.deaths import CLANK_DEATH_FROM_ACTION, DEATH_FROM_ACTION
+from worlds.rac3.constants.gadget_def import RAC3GADGETDEF
 from worlds.rac3.constants.galactic_map import (COMMON_GROUPS, DEFAULT_GROUPS, GADGET_PICKUP_LOCATIONS,
                                                 GAUNTLET_LOCATIONS, GROUP_TAGS, MAP_LOCATION_REGION_OVERRIDES,
                                                 RAC3GALACTICMAP, SEPARATE_GROUPS, STORY_LOCATIONS, VENDOR_LOCATIONS)
@@ -70,7 +71,8 @@ from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.player_action import PLAYER_ACTION_NAMES, RAC3PLAYERACTION
 from worlds.rac3.constants.player_type import ONE_HP_CHALLENGE_CHARACTERS, PLAYER_TYPE_TO_NAME, RAC3PLAYERTYPE
 from worlds.rac3.constants.progress_flag import HALO_JUMP_TO_REGION, RAC3PROGRESSFLAG
-from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_LOAD_OFFSET, PLANET_NAME_FROM_ID,
+from worlds.rac3.constants.region import (INVALID_PLANETS, PLANET_GADGETDEF_OFFSET, PLANET_LOAD_OFFSET,
+                                          PLANET_NAME_FROM_ID,
                                           PLANET_VENDOR_OFFSET, PLANETS_WITH_BOLT_CRANK_PUZZLES,
                                           PLANETS_WITH_HACKER_PUZZLES,
                                           PLANETS_WITH_REFRACTOR_PUZZLES, PLANETS_WITH_TYHRRANOID_PUZZLES, RAC3REGION,
@@ -83,7 +85,7 @@ from worlds.rac3.constants.vendors.name import RAC3VENDORNAME, VENDOR_TYPES
 from worlds.rac3.constants.vendors.type import RAC3VENDORTYPE
 from worlds.rac3.constants.vendors.vendor import RAC3SHIPVENDOR, RAC3VENDOR, RAC3WEAPONVENDOR, VENDORTYPE_TO_SLOT_SIZE
 from worlds.rac3.constants.version import (GAME_ID_TO_OFFSET, GAME_ID_TO_VERSION, jp_convert_address,
-                                           PAL_SHIFTED_PLANETS, RAC3VERSION)
+                                           PAL_GADGETDEF_OFFSET, PAL_SHIFTED_PLANETS, RAC3VERSION)
 from worlds.rac3.constants.weapon_mod import WEAPON_MOD_TO_WEAPON, WEAPON_TO_WEAPON_MODPACK, WEAPONMOD
 from worlds.rac3.constants.wrench import RAC3WRENCH
 from worlds.rac3.locations import get_challenge_locations, get_completion_location_names
@@ -411,13 +413,13 @@ class Rac3Interface(GameInterface):
     def address_convert(self, address: int | str) -> int:
         """Convert a US address for the current planet to the active game version."""
         _addr = int(address, 0) if isinstance(address, str) else address
-        if (0x001DC7C0 <= _addr <= 0x00300000
-            and self.planet in PAL_SHIFTED_PLANETS
-            and self.current_game == RAC3VERSION.EU_ID):
-            _addr += GAME_ID_TO_OFFSET[RAC3VERSION.EU_ID]
+        if self.current_game == RAC3VERSION.EU_ID:
+            gadgetdef_offset = PAL_GADGETDEF_OFFSET if RAC3GADGETDEF.contains_address(self.planet, _addr) else 0
+            if 0x001DC7C0 <= _addr <= 0x00300000 and self.planet in PAL_SHIFTED_PLANETS:
+                _addr += GAME_ID_TO_OFFSET[RAC3VERSION.EU_ID]
+            return _addr + gadgetdef_offset
         if self.current_game == RAC3VERSION.JP_ID:
-            _addr = jp_convert_address(_addr, self.planet)
-
+            return jp_convert_address(_addr, self.planet)
         return _addr
 
     ###############################
@@ -2797,6 +2799,39 @@ class Rac3Interface(GameInterface):
         #     if trap_name not in self.trap_timers and trap_name != RAC3ITEM.LOCK_TRAP:
         #         self._write8(status_address, 0)
 
+    def sync_weapon_xp_thresholds(self, progressive_weapon_mode: int):
+        """Block weapon levels the player has not unlocked."""
+        if (self.planet not in PLANET_GADGETDEF_OFFSET or self.between_planets or self.is_reloading
+            or self.game_state_value == RAC3GAMESTATE.PLANET_CHANGE):
+            return
+
+        locked_threshold = 0x7FFFFFFF
+        thresholds: dict[int, tuple[int, bool]] = {}
+        for weapon_name in non_prog_weapon_data:
+            variants = UPGRADE_DICT[weapon_name]
+            unlocked_level = self.UnlockItem[weapon_name]
+            if unlocked_level and not progressive_weapon_mode:
+                unlocked_level = len(variants)
+            if weapon_name == RAC3ITEM.RY3N0:
+                unlocked_level = min(unlocked_level, self.ryno)
+            elif progressive_weapon_mode and not self.options.ngplus_items:
+                unlocked_level = min(unlocked_level, 5)
+
+            for index, next_variant in enumerate(variants[1:]):
+                # GadgetDef stores the threshold to leave the current weapon level in units of XP >> 5.
+                original = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[next_variant]].XP_THRESHOLD >> 5
+                if original == 0:  # Maxed weapons have no XP-based upgrade.
+                    continue
+                address = RAC3GADGETDEF.get_property_address(
+                    self.planet, variants[index], RAC3GADGETDEF.CUMULATIVE_XP_THRESHOLD_OFFSET)
+                thresholds[address] = original, index + 2 > unlocked_level
+
+        current_values = self._read32_batch(list(thresholds))
+        for (address, (original, locked)), current in zip(thresholds.items(), current_values, strict=True):
+            before, after = (original, locked_threshold) if locked else (locked_threshold, original)
+            if current == before:
+                self._write32(address, after)
+
     def weapon_exp_cycler(self):
         """
         Synchronize weapon experience and level with the player's item collection and vendor state.
@@ -2812,6 +2847,7 @@ class Rac3Interface(GameInterface):
         progressive_weapon_mode = self.options.progressive_weapons
         if self.options.weapon_level_locations and progressive_weapon_mode == 2:
             progressive_weapon_mode = 1  # Force manual levelling if weapon level locations are enabled
+        self.sync_weapon_xp_thresholds(progressive_weapon_mode)
 
         # Manual weapon levelling for progressive weapons
         if progressive_weapon_mode == 1:

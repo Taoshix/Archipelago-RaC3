@@ -659,7 +659,7 @@ class Rac3Interface(GameInterface):
             if RAC3TAG.NANOTECH in loc_data.TAGS or RAC3TAG.SEWER in loc_data.TAGS:
                 continue
             if location == RAC3LOCATION.AQUATOS_BASE:
-                self._write8(RAC3_REGION_DATA_TABLE[RAC3REGION.AQUATOS_BASE].VISIT_ADDRESS, 1)
+                self._write_bits(RAC3PROGRESSFLAG.AQUATOS_SEWER_SHORTCUT_BUTTON)
             for check in loc_data.CHECK_ADDRESS:
                 if (check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT
                         and (check.ADDRESS, check.VALUE) not in ranger_flags):
@@ -1052,7 +1052,8 @@ class Rac3Interface(GameInterface):
             self.homewarping = True
             # Ensure the player is not softlocked from entering the sewers
             if self.planet == RAC3REGION.AQUATOS_BASE:
-                self._write8(RAC3_REGION_DATA_TABLE[RAC3REGION.AQUATOS_BASE].VISIT_ADDRESS, 1)
+                self._write8(planet_data.VISIT_ADDRESS, 1)
+                self._write_bits(RAC3PROGRESSFLAG.AQUATOS_SEWER_SHORTCUT_BUTTON)
             self._write8(planet_data.PLANET_TO_LOAD, planet_id)
             self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.PLANET_LOAD, 1)
             self._write8(planet_data.PLANET_SPECIAL_OFFSET + RAC3STATUS.GAME_STATE, RAC3GAMESTATE.PLANET_CHANGE)

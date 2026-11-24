@@ -659,7 +659,7 @@ class Rac3Interface(GameInterface):
             if RAC3TAG.NANOTECH in loc_data.TAGS or RAC3TAG.SEWER in loc_data.TAGS:
                 continue
             if location == RAC3LOCATION.AQUATOS_BASE:
-                self._write8(RAC3_REGION_DATA_TABLE[RAC3LOCATION.AQUATOS_BASE].VISIT_ADDRESS, 1)
+                self._write8(RAC3_REGION_DATA_TABLE[RAC3REGION.AQUATOS_BASE].VISIT_ADDRESS, 1)
             for check in loc_data.CHECK_ADDRESS:
                 if (check.TYPE & CHECKTYPE.SIZE == CHECKTYPE.BIT
                         and (check.ADDRESS, check.VALUE) not in ranger_flags):

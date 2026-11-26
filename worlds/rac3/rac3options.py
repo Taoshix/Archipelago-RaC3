@@ -33,9 +33,7 @@ from worlds.rac3.options.goal_skillpoints_options import GoalSkillpoints
 from worlds.rac3.options.goal_tbolts_options import GoalTbolts
 from worlds.rac3.options.helpdesk_options import HelpDesk
 from worlds.rac3.options.lock_cc_options import LockCommandCenter
-from worlds.rac3.options.multiplier_options import (
-    BoltAndXPMultiplier, RemoveBoltDiminishingReturns, RemoveXPDiminishingReturns,
-)
+from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
 from worlds.rac3.options.deathlink_behavior_options import DeathlinkBehavior
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
 from worlds.rac3.options.nanotech_options import NanotechMilestones
@@ -47,6 +45,8 @@ from worlds.rac3.options.prog_weapons_options import ProgressiveWeapons
 from worlds.rac3.options.prog_wrench_options import ProgressiveWrench
 from worlds.rac3.options.rangers_options import Rangers
 from worlds.rac3.options.ratchet_skins_options import RatchetSkin
+from worlds.rac3.options.remove_bolt_diminishing_returns_options import RemoveBoltDiminishingReturns
+from worlds.rac3.options.remove_xp_diminishing_returns_options import RemoveXPDiminishingReturns
 from worlds.rac3.options.scout_vendors_options import ScoutVendors
 from worlds.rac3.options.sewer_limitation_options import SewerLimitation
 from worlds.rac3.options.sewer_options import SewerCrystals

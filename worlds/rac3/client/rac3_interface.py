@@ -100,6 +100,8 @@ class Rac3Interface(GameInterface):
         start_inventory_from_pool: dict[str, int]
         starting_weapons: dict[str, int]
         bolt_and_xp_multiplier: int
+        remove_bolt_diminishing_returns: int
+        remove_xp_diminishing_returns: int
         progressive_weapons: int
         weapon_mods: int
         progressive_wrench: int
@@ -432,6 +434,8 @@ class Rac3Interface(GameInterface):
         self.options.start_inventory_from_pool = slot_data[RAC3OPTION.START_INVENTORY_FROM_POOL]
         self.options.starting_weapons = slot_data[RAC3OPTION.STARTING_WEAPONS]
         self.options.bolt_and_xp_multiplier = slot_data[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
+        self.options.remove_bolt_diminishing_returns = slot_data[RAC3OPTION.REMOVE_BOLT_DIMINISHING_RETURNS]
+        self.options.remove_xp_diminishing_returns = slot_data[RAC3OPTION.REMOVE_XP_DIMINISHING_RETURNS]
         self.options.progressive_weapons = slot_data[RAC3OPTION.PROGRESSIVE_WEAPONS]
         self.options.weapon_mods = slot_data[RAC3OPTION.WEAPON_MODS]
         self.options.progressive_wrench = slot_data[RAC3OPTION.PROGRESSIVE_WRENCH]
@@ -2417,6 +2421,7 @@ class Rac3Interface(GameInterface):
         self.verify_quick_select_and_last_used()
         self.clank_cycler()
         self.multiplier_cycler()
+        self.diminishing_returns_cycler()
         self.challenge_mode_cycler()
         self.patch_cycler()
         self.overflow_fix()
@@ -3046,6 +3051,13 @@ class Rac3Interface(GameInterface):
             if (not any("Jackpot" in key for key in self.timers.keys())
                 and self.bolt_and_xp_multiplier_value != self.options.bolt_and_xp_multiplier):
                 self.bolt_and_xp_multiplier_value = self.options.bolt_and_xp_multiplier
+
+    def diminishing_returns_cycler(self):
+        """Keep enabled revisit reward tables at 100%."""
+        if self.options.remove_bolt_diminishing_returns:
+            self._write_bytes(RAC3STATUS.BOLT_REVISIT_PERCENTAGES, b"\x64" * 8)
+        if self.options.remove_xp_diminishing_returns:
+            self._write_bytes(RAC3STATUS.XP_REVISIT_PERCENTAGES, b"\x64" * 8)
 
     def challenge_mode_cycler(self):
         """Update challenge mode related values based on settings"""

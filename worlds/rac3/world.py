@@ -397,6 +397,8 @@ class RaC3World(World):
             RAC3OPTION.START_INVENTORY_FROM_POOL: self.options.start_inventory_from_pool.value,
             RAC3OPTION.STARTING_WEAPONS: self.options.starting_weapons.value,
             RAC3OPTION.BOLT_AND_XP_MULTIPLIER: self.options.bolt_and_xp_multiplier.value,
+            RAC3OPTION.REMOVE_BOLT_DIMINISHING_RETURNS: self.options.remove_bolt_diminishing_returns.value,
+            RAC3OPTION.REMOVE_XP_DIMINISHING_RETURNS: self.options.remove_xp_diminishing_returns.value,
             RAC3OPTION.PROGRESSIVE_WEAPONS: self.options.progressive_weapons.value,
             RAC3OPTION.WEAPON_MODS: self.options.weapon_mods.value,
             RAC3OPTION.PROGRESSIVE_WRENCH: self.options.progressive_wrench.value,

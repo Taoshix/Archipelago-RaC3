@@ -37,7 +37,9 @@ from worlds.rac3.options.goal_skillpoints_options import GoalSkillpoints
 from worlds.rac3.options.goal_tbolts_options import GoalTbolts
 from worlds.rac3.options.helpdesk_options import HelpDesk
 from worlds.rac3.options.lock_cc_options import LockCommandCenter
-from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
+from worlds.rac3.options.multiplier_options import (
+    BoltAndXPMultiplier, RemoveBoltDiminishingReturns, RemoveXPDiminishingReturns,
+)
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
 from worlds.rac3.options.nanotech_options import NanotechMilestones
 from worlds.rac3.options.ngplus_item_options import NGPlusItems
@@ -217,6 +219,8 @@ class TestNotDefault(RAC3TestBase):
         "generation_behavior": GenerationBehavior.option_error,
         "starting_weapons": dict.fromkeys(StartingWeapons.valid_keys, StartingWeapons.max),
         "bolt_and_xp_multiplier": BoltAndXPMultiplier.option_x16,
+        "remove_bolt_diminishing_returns": RemoveBoltDiminishingReturns.option_true,
+        "remove_xp_diminishing_returns": RemoveXPDiminishingReturns.option_true,
         "progressive_weapons": ProgressiveWeapons.option_automatic_leveling,
         "weapon_mods": WeaponMods.option_individual_mods,
         "progressive_wrench": ProgressiveWrench.option_true,

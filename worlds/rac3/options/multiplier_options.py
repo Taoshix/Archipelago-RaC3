@@ -1,6 +1,6 @@
-"""This module contains options for the in game multiplier."""
+"""Options for in-game bolt and XP rewards."""
 
-from Options import Choice
+from Options import Choice, Toggle
 from worlds.rac3.constants.options import RAC3OPTION
 
 
@@ -16,3 +16,13 @@ class BoltAndXPMultiplier(Choice):
     option_x8 = 3
     option_x16 = 4
     default = 2
+
+
+class RemoveBoltDiminishingReturns(Toggle):
+    """Keep bolt rewards at 100% when revisiting planets."""
+    display_name = RAC3OPTION.REMOVE_BOLT_DIMINISHING_RETURNS
+
+
+class RemoveXPDiminishingReturns(Toggle):
+    """Keep XP rewards at 100% when revisiting planets."""
+    display_name = RAC3OPTION.REMOVE_XP_DIMINISHING_RETURNS

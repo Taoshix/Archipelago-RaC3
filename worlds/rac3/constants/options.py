@@ -12,6 +12,8 @@ class RAC3OPTION:
     GENERATION_BEHAVIOR = "Generation Behavior"
     STARTING_WEAPONS = "Starting Weapons"
     BOLT_AND_XP_MULTIPLIER = "Bolt and XP Multiplier"
+    REMOVE_BOLT_DIMINISHING_RETURNS = "Remove Bolt Diminishing Returns"
+    REMOVE_XP_DIMINISHING_RETURNS = "Remove XP Diminishing Returns"
     PROGRESSIVE_WEAPONS = "Progressive Weapons"
     PROGRESSIVE_WRENCH = "Progressive Wrench"
     ARMOR_UPGRADE = "Armor Upgrade"

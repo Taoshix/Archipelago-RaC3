@@ -33,7 +33,9 @@ from worlds.rac3.options.goal_skillpoints_options import GoalSkillpoints
 from worlds.rac3.options.goal_tbolts_options import GoalTbolts
 from worlds.rac3.options.helpdesk_options import HelpDesk
 from worlds.rac3.options.lock_cc_options import LockCommandCenter
-from worlds.rac3.options.multiplier_options import BoltAndXPMultiplier
+from worlds.rac3.options.multiplier_options import (
+    BoltAndXPMultiplier, RemoveBoltDiminishingReturns, RemoveXPDiminishingReturns,
+)
 from worlds.rac3.options.deathlink_behavior_options import DeathlinkBehavior
 from worlds.rac3.options.nanotech_limitation_options import NanotechLimitation
 from worlds.rac3.options.nanotech_options import NanotechMilestones
@@ -88,6 +90,8 @@ class RaC3Options(PerGameCommonOptions):
     generation_behavior: GenerationBehavior
     starting_weapons: StartingWeapons
     bolt_and_xp_multiplier: BoltAndXPMultiplier
+    remove_bolt_diminishing_returns: RemoveBoltDiminishingReturns
+    remove_xp_diminishing_returns: RemoveXPDiminishingReturns
     progressive_weapons: ProgressiveWeapons
     weapon_mods: WeaponMods
     progressive_wrench: ProgressiveWrench
@@ -187,6 +191,8 @@ rac3_option_groups = [
         Shortcuts,
         Speedups,
         BoltAndXPMultiplier,
+        RemoveBoltDiminishingReturns,
+        RemoveXPDiminishingReturns,
         OneHpChallenge,
         NGPlusStart,
     ]),
@@ -247,6 +253,8 @@ slot_data_options: list[str] = [
     RAC3OPTION.GENERATION_BEHAVIOR,
     RAC3OPTION.STARTING_WEAPONS,
     RAC3OPTION.BOLT_AND_XP_MULTIPLIER,
+    RAC3OPTION.REMOVE_BOLT_DIMINISHING_RETURNS,
+    RAC3OPTION.REMOVE_XP_DIMINISHING_RETURNS,
     RAC3OPTION.PROGRESSIVE_WEAPONS,
     RAC3OPTION.WEAPON_MODS,
     RAC3OPTION.PROGRESSIVE_WRENCH,

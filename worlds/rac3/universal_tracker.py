@@ -21,6 +21,8 @@ def setup_options_from_slot_data(world: "RaC3World") -> None:
             world.options.generation_behavior.value = world.passthrough[RAC3OPTION.GENERATION_BEHAVIOR]
             world.options.starting_weapons.value = world.passthrough[RAC3OPTION.STARTING_WEAPONS]
             world.options.bolt_and_xp_multiplier.value = world.passthrough[RAC3OPTION.BOLT_AND_XP_MULTIPLIER]
+            world.options.remove_bolt_diminishing_returns.value = world.passthrough[RAC3OPTION.REMOVE_BOLT_DIMINISHING_RETURNS]
+            world.options.remove_xp_diminishing_returns.value = world.passthrough[RAC3OPTION.REMOVE_XP_DIMINISHING_RETURNS]
             world.options.progressive_weapons.value = world.passthrough[RAC3OPTION.PROGRESSIVE_WEAPONS]
             world.options.weapon_mods.value = world.passthrough[RAC3OPTION.WEAPON_MODS]
             world.options.progressive_wrench.value = world.passthrough[RAC3OPTION.PROGRESSIVE_WRENCH]

@@ -176,6 +176,7 @@ class Rac3Interface(GameInterface):
     planet: str = RAC3REGION.GALAXY
     new_planet: bool = True
     transporter_fixed: bool = False
+    sewer_gravity_boots_enabled: bool = True
     player_type: str = RAC3PLAYERTYPE.RATCHET
     player_pos: RAC3POSITIONDATA
     vehicle: int = 0
@@ -2432,15 +2433,17 @@ class Rac3Interface(GameInterface):
         self.pda_vendor_cycler()
         self.notification_cycler()
 
-    def gadget_cycler(self):
+    def gadget_cycler(self) -> None:
         """Cycles through each gadget and updates their state"""
         if not self.should_cycle_gadgets() or self.near_pda_vendor():
             self.respawn_gadgets()
             return
 
-        for name in gadget_data.keys():
-            addr = gadget_data[name].UNLOCK_ADDRESS
-            self._write8(addr, 1 if self.UnlockItem[name] else 0)
+        for name, gadget in gadget_data.items():
+            unlocked = bool(self.UnlockItem[name])
+            if name == RAC3ITEM.GRAV_BOOTS and self.planet == RAC3REGION.AQUATOS_SEWERS:
+                unlocked = unlocked and self.sewer_gravity_boots_enabled
+            self._write8(gadget.UNLOCK_ADDRESS, int(unlocked))
 
     def should_cycle_gadgets(self) -> bool:
         """Check if it's safe to cycle gadgets used to ensure gadgets can respawn without the cycler interfering"""

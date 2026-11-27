@@ -42,7 +42,8 @@ def set_rules(world: "RaC3World"):
         bool(world.options.lock_command_center.value),
     )
     completion_locations = tuple(locations_by_name[name] for name in completion_names)
-    completion_percentage = world.options.goal_completion.value
+    completion_location_count = len(completion_locations)
+    required_completion_count = (world.options.goal_completion.value * completion_location_count + 99) // 100
     # The bolt tag also includes the collector trophy, so it must not count itself.
     # Locked Command Center checks cannot contribute to their own unlock condition.
     tag_locations = {
@@ -168,11 +169,22 @@ def set_rules(world: "RaC3World"):
         return lambda state: state.has_all(event_items, world.player)
 
     def collection(state: CollectionState) -> bool:
-        """Check the percentage of eligible locations reachable in the current state."""
-        if completion_percentage == 0:
+        """Check whether enough eligible locations are reachable to meet the goal."""
+        remaining_required = required_completion_count
+        if remaining_required == 0:
             return True
-        reachable = sum(loc.can_reach(state) for loc in completion_locations)
-        return reachable / len(completion_locations) >= completion_percentage / 100
+
+        unreachable_allowed = completion_location_count - remaining_required
+        for location in completion_locations:
+            if location.can_reach(state):
+                remaining_required -= 1
+                if remaining_required == 0:
+                    return True
+            else:
+                unreachable_allowed -= 1
+                if unreachable_allowed < 0:
+                    return False
+        return False
 
     progressive_requirement = 1
     ngplus_enabled = world.options.ngplus_start.value
@@ -1954,7 +1966,7 @@ def set_rules(world: "RaC3World"):
         RAC3EVENT.PLANETS[0]: lambda state: state.has_from_list(planets, world.player,
                                                                 world.options.goal_planets.value),
 
-        RAC3EVENT.COMPLETION[0]: lambda state: collection(state),
+        RAC3EVENT.COMPLETION[0]: collection,
 
         RAC3EVENT.MARCADIA_COMPLETE[0]: lambda state: state.has(RAC3ITEM.REFRACTOR, world.player),
 

@@ -2043,11 +2043,19 @@ def set_rules(world: "RaC3World"):
     }
     for region in world.multiworld.get_regions(world.player):
         for entrance in region.entrances:
-            add_rule(entrance, region_rules_dict.get(entrance.name, lambda _: True))
+            rule = region_rules_dict.get(entrance.name)
+            if rule is not None:
+                add_rule(entrance, rule)
 
     for location in world.get_locations():
-        add_rule(location, rules_dict.get(location.name, lambda _: True))
-        add_rule(location, event_rules_dict.get(location.name, lambda _: True))
+        location_rule = rules_dict.get(location.name)
+        if location_rule is not None:
+            add_rule(location, location_rule)
+
+        event_rule = event_rules_dict.get(location.name)
+        if event_rule is not None:
+            add_rule(location, event_rule)
+
         if location.name == RAC3EVENT.SEWER[0] and world.options.goal_crystal.value > 0:
             add_rule(location, lambda state: state.has(RAC3ITEM.AQUATOS, world.player))
 

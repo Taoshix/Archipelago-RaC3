@@ -3,9 +3,9 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from BaseClasses import Location, Region
-from worlds.rac3.constants.data.event import RAC3_EVENT_DATA_TABLE
+from worlds.rac3.constants.data.event import RAC3_EVENT_DATA_TABLE, RAC3EVENTDATA
 from worlds.rac3.constants.data.item import weapon_data
-from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA
+from worlds.rac3.constants.data.location import RAC3LOCATIONDATA
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.nanotech import NANOTECH_OPTION_TO_MOD, RAC3NANOTECH
 from worlds.rac3.constants.locations.sewers import RAC3SEWER
@@ -18,11 +18,16 @@ from worlds.rac3.constants.player_type import RAC3PLAYERTYPE
 from worlds.rac3.constants.region import RAC3REGION, REGIONS_WITH_LOCATIONS
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.items import GameItem
-from worlds.rac3.locations import get_end_locations
+from worlds.rac3.locations import get_end_locations, get_region_location_data
 from worlds.rac3.rac3options import RaC3Options
 
 if TYPE_CHECKING:
     from worlds.rac3.world import RaC3World
+
+
+EVENT_DATA_BY_REGION: dict[str, list[RAC3EVENTDATA]] = {}
+for event in RAC3_EVENT_DATA_TABLE.values():
+    EVENT_DATA_BY_REGION.setdefault(event.REGION, []).append(event)
 
 
 EVERY_SEWER_CRYSTALS: list[str] = [
@@ -329,58 +334,63 @@ def create_regions(world: "RaC3World"):
 
     :param world: RaC3World of current generation
     """
+    end_locations = get_end_locations(world)
+
     # ----- Introduction Sequence -----#
-    menu = create_region(world, RAC3REGION.MENU)
-    veldin = create_region_and_connect(world, RAC3REGION.VELDIN, f"{RAC3REGION.MENU} -> {RAC3REGION.VELDIN}", menu)
+    menu = create_region(world, RAC3REGION.MENU, end_locations)
+    veldin = create_region_and_connect(world, RAC3REGION.VELDIN,
+                                       f"{RAC3REGION.MENU} -> {RAC3REGION.VELDIN}", menu, end_locations)
     if world.options.shortcuts.value.get(RAC3SHORTCUTS.VELDIN_SKIP, False):
         phoenix = create_region_and_connect(world, RAC3REGION.STARSHIP_PHOENIX,
-                                            f"{RAC3REGION.MENU} -> {RAC3REGION.STARSHIP_PHOENIX}", menu)
+                                            f"{RAC3REGION.MENU} -> {RAC3REGION.STARSHIP_PHOENIX}", menu, end_locations)
         create_region_and_connect(world, RAC3REGION.FLORANA,
-                                  f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.FLORANA}", phoenix)
+                                  f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.FLORANA}", phoenix, end_locations)
     else:
         florana = create_region_and_connect(world, RAC3REGION.FLORANA,
-                                            f"{RAC3REGION.VELDIN} -> {RAC3REGION.FLORANA}", veldin)
+                                            f"{RAC3REGION.VELDIN} -> {RAC3REGION.FLORANA}", veldin, end_locations)
         phoenix = create_region_and_connect(world, RAC3REGION.STARSHIP_PHOENIX,
-                                            f"{RAC3REGION.FLORANA} -> {RAC3REGION.STARSHIP_PHOENIX}", florana)
+                                            f"{RAC3REGION.FLORANA} -> {RAC3REGION.STARSHIP_PHOENIX}", florana,
+                                            end_locations)
 
     # ----- Regions within the game -----#
     create_region_and_connect(world, RAC3REGION.MARCADIA,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.MARCADIA}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.MARCADIA}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.ANNIHILATION_NATION,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.ANNIHILATION_NATION}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.ANNIHILATION_NATION}", phoenix,
+                              end_locations)
     create_region_and_connect(world, RAC3REGION.AQUATOS,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.AQUATOS}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.AQUATOS}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.TYHRRANOSIS,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.TYHRRANOSIS}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.TYHRRANOSIS}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.DAXX,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.DAXX}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.DAXX}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.OBANI_GEMINI,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.OBANI_GEMINI}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.OBANI_GEMINI}", phoenix, end_locations)
     blackwater = create_region_and_connect(
         world, RAC3REGION.BLACKWATER_CITY,
-        f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.BLACKWATER_CITY}", phoenix)
+        f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.BLACKWATER_CITY}", phoenix, end_locations)
     holostar = create_region_and_connect(
         world, RAC3REGION.HOLOSTAR_STUDIOS,
-        f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.HOLOSTAR_STUDIOS}", phoenix)
-    skidd_cutscene = create_region(world, RAC3REGION.SKIDD_CUTSCENE)
+        f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.HOLOSTAR_STUDIOS}", phoenix, end_locations)
+    skidd_cutscene = create_region(world, RAC3REGION.SKIDD_CUTSCENE, end_locations)
     blackwater.connect(skidd_cutscene, f"{RAC3REGION.BLACKWATER_CITY} -> {RAC3REGION.SKIDD_CUTSCENE}")
     holostar.connect(skidd_cutscene, f"{RAC3REGION.HOLOSTAR_STUDIOS} -> {RAC3REGION.SKIDD_CUTSCENE}")
     create_region_and_connect(world, RAC3REGION.OBANI_DRACO,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.OBANI_DRACO}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.OBANI_DRACO}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.ZELDRIN_STARPORT,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.ZELDRIN_STARPORT}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.ZELDRIN_STARPORT}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.METROPOLIS,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.METROPOLIS}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.METROPOLIS}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.CRASH_SITE,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.CRASH_SITE}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.CRASH_SITE}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.ARIDIA,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.ARIDIA}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.ARIDIA}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.QWARKS_HIDEOUT,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.QWARKS_HIDEOUT}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.QWARKS_HIDEOUT}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.KOROS,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.KOROS}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.KOROS}", phoenix, end_locations)
     create_region_and_connect(world, RAC3REGION.COMMAND_CENTER,
-                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.COMMAND_CENTER}", phoenix)
+                              f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.COMMAND_CENTER}", phoenix, end_locations)
 
     # Victory Location
 
@@ -388,14 +398,16 @@ def create_regions(world: "RaC3World"):
 
     # ----- Dummy regions for weapon upgrade organization -----#
 
-    create_region_and_connect(world, RAC3REGION.NANOTECH, f"{RAC3REGION.MENU} -> {RAC3REGION.NANOTECH}", menu)
+    create_region_and_connect(world, RAC3REGION.NANOTECH,
+                              f"{RAC3REGION.MENU} -> {RAC3REGION.NANOTECH}", menu, end_locations)
 
-    create_region_and_connect(world, RAC3REGION.UPGRADES, f"{RAC3REGION.MENU} -> {RAC3REGION.UPGRADES}", menu)
+    create_region_and_connect(world, RAC3REGION.UPGRADES,
+                              f"{RAC3REGION.MENU} -> {RAC3REGION.UPGRADES}", menu, end_locations)
 
     # New Game Plus
 
     create_region_and_connect(world, RAC3REGION.NGPLUS, f"{RAC3REGION.STARSHIP_PHOENIX} -> {RAC3REGION.NGPLUS}",
-                              phoenix)
+                              phoenix, end_locations)
 
     missing_regions = []
     regions_missing = []
@@ -413,38 +425,39 @@ def create_regions(world: "RaC3World"):
     assert regions_missing == [], f"Regions: {regions_missing} were created but not declared."
 
 
-def create_region(world: "RaC3World", name: str) -> Region:
+def create_region(world: "RaC3World", name: str, end_locations: set[str]) -> Region:
     """
     Create a new Region object already populated with its locations
 
     :param world: RaC3World of current generation
     :param name: Name of the region to be created
+    :param end_locations: Post-goal location names for this player
     :return: Region object of newly created region
     """
     reg = Region(name, world.player, world.multiworld)
     options = world.options
-    for key, data in RAC3_LOCATION_DATA_TABLE.items():
-        if data.REGION == name:
-            match should_skip_location(data, options):
-                case SkipLocation.CREATE:
-                    location = GameLocation(world.player, key, data.AP_CODE, reg)
-                    if name in get_end_locations(world):
-                        location.item_rule = lambda item: item.name not in weapon_data.keys()
-                    reg.locations.append(location)
-                case SkipLocation.SKIP:
-                    continue
-                case SkipLocation.EVENT:
-                    split: int = key.find(":") + 1
-                    reg.add_event(key, key[split:], lambda _: True, GameLocation, GameItem, False)
-    for key, data in RAC3_EVENT_DATA_TABLE.items():
-        if data.REGION == name:
-            reg.add_event(data.EVENT[0], data.EVENT[1], lambda _: True, GameLocation, GameItem, False)
+    restrict_weapon_placement = name in end_locations
+    for key, data in get_region_location_data(name):
+        match should_skip_location(data, options):
+            case SkipLocation.CREATE:
+                location = GameLocation(world.player, key, data.AP_CODE, reg)
+                if restrict_weapon_placement:
+                    location.item_rule = lambda item: item.name not in weapon_data.keys()
+                reg.locations.append(location)
+            case SkipLocation.SKIP:
+                continue
+            case SkipLocation.EVENT:
+                split: int = key.find(":") + 1
+                reg.add_event(key, key[split:], lambda _: True, GameLocation, GameItem, False)
+    for data in EVENT_DATA_BY_REGION.get(name, ()):
+        reg.add_event(data.EVENT[0], data.EVENT[1], lambda _: True, GameLocation, GameItem, False)
 
     world.multiworld.regions.append(reg)
     return reg
 
 
-def create_region_and_connect(world: "RaC3World", name: str, entrance_name: str, connected_region: Region) -> Region:
+def create_region_and_connect(world: "RaC3World", name: str, entrance_name: str, connected_region: Region,
+                              end_locations: set[str]) -> Region:
     """
     Create a new Region, connected to a given region, already populated with its item locations
 
@@ -452,9 +465,10 @@ def create_region_and_connect(world: "RaC3World", name: str, entrance_name: str,
     :param name: Name of the region to be created
     :param entrance_name: Name of the connection linking the two regions
     :param connected_region: Region object to connect the new region to
+    :param end_locations: Post-goal location names for this player
     :return: Region object of newly created region
     """
-    reg: Region = create_region(world, name)
+    reg = create_region(world, name, end_locations)
     connected_region.connect(reg, entrance_name)
     return reg
 

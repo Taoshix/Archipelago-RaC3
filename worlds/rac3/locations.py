@@ -1,6 +1,6 @@
 """This module provides handling of location objects"""
 
-from typing import Iterable, TYPE_CHECKING
+from typing import Iterable, Iterator, TYPE_CHECKING
 
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE, RAC3LOCATIONDATA
 from worlds.rac3.constants.locations.general import RAC3LOCATION
@@ -18,8 +18,10 @@ CHALLENGE_REGIONS = {
     RAC3REGION.METROPOLIS_RANGERS: RAC3REGION.METROPOLIS,
     RAC3REGION.COMMAND_CENTER_2: RAC3REGION.COMMAND_CENTER,
 }
+LOCATION_DATA_BY_REGION: dict[str, list[tuple[str, RAC3LOCATIONDATA]]] = {}
 CHALLENGE_LOCATIONS: dict[str, list[RAC3LOCATIONDATA]] = {}
-for location in RAC3_LOCATION_DATA_TABLE.values():
+for name, location in RAC3_LOCATION_DATA_TABLE.items():
+    LOCATION_DATA_BY_REGION.setdefault(location.REGION, []).append((name, location))
     if location.DESCRIPTION_TEXT_IDS:
         CHALLENGE_LOCATIONS.setdefault(location.REGION, []).append(location)
 
@@ -137,6 +139,6 @@ def get_region_locations(region: str) -> set[str]:
     return set(level[0] for level in get_region_location_data(region))
 
 
-def get_region_location_data(region: str) -> filter:
-    """Returns the location data table filtered to a specific region"""
-    return filter(lambda level: level[1].REGION == region, RAC3_LOCATION_DATA_TABLE.items())
+def get_region_location_data(region: str) -> Iterator[tuple[str, RAC3LOCATIONDATA]]:
+    """Return location data for a region in table order."""
+    return iter(LOCATION_DATA_BY_REGION.get(region, ()))

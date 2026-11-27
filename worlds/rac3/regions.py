@@ -25,6 +25,247 @@ if TYPE_CHECKING:
     from worlds.rac3.world import RaC3World
 
 
+EVERY_SEWER_CRYSTALS: list[str] = [
+    RAC3SEWER.TRADE_1,
+    RAC3SEWER.TRADE_2,
+    RAC3SEWER.TRADE_3,
+    RAC3SEWER.TRADE_4,
+    RAC3SEWER.TRADE_5,
+    RAC3SEWER.TRADE_6,
+    RAC3SEWER.TRADE_7,
+    RAC3SEWER.TRADE_8,
+    RAC3SEWER.TRADE_9,
+    RAC3SEWER.TRADE_10,
+    RAC3SEWER.TRADE_11,
+    RAC3SEWER.TRADE_12,
+    RAC3SEWER.TRADE_13,
+    RAC3SEWER.TRADE_14,
+    RAC3SEWER.TRADE_15,
+    RAC3SEWER.TRADE_16,
+    RAC3SEWER.TRADE_17,
+    RAC3SEWER.TRADE_18,
+    RAC3SEWER.TRADE_19,
+    RAC3SEWER.TRADE_20,
+    RAC3SEWER.TRADE_21,
+    RAC3SEWER.TRADE_22,
+    RAC3SEWER.TRADE_23,
+    RAC3SEWER.TRADE_24,
+    RAC3SEWER.TRADE_25,
+    RAC3SEWER.TRADE_26,
+    RAC3SEWER.TRADE_27,
+    RAC3SEWER.TRADE_28,
+    RAC3SEWER.TRADE_29,
+    RAC3SEWER.TRADE_30,
+    RAC3SEWER.TRADE_31,
+    RAC3SEWER.TRADE_32,
+    RAC3SEWER.TRADE_33,
+    RAC3SEWER.TRADE_34,
+    RAC3SEWER.TRADE_35,
+    RAC3SEWER.TRADE_36,
+    RAC3SEWER.TRADE_37,
+    RAC3SEWER.TRADE_38,
+    RAC3SEWER.TRADE_39,
+    RAC3SEWER.TRADE_40,
+    RAC3SEWER.TRADE_41,
+    RAC3SEWER.TRADE_42,
+    RAC3SEWER.TRADE_43,
+    RAC3SEWER.TRADE_44,
+    RAC3SEWER.TRADE_45,
+    RAC3SEWER.TRADE_46,
+    RAC3SEWER.TRADE_47,
+    RAC3SEWER.TRADE_48,
+    RAC3SEWER.TRADE_49,
+    RAC3SEWER.TRADE_50,
+    RAC3SEWER.TRADE_51,
+    RAC3SEWER.TRADE_52,
+    RAC3SEWER.TRADE_53,
+    RAC3SEWER.TRADE_54,
+    RAC3SEWER.TRADE_55,
+    RAC3SEWER.TRADE_56,
+    RAC3SEWER.TRADE_57,
+    RAC3SEWER.TRADE_58,
+    RAC3SEWER.TRADE_59,
+    RAC3SEWER.TRADE_60,
+    RAC3SEWER.TRADE_61,
+    RAC3SEWER.TRADE_62,
+    RAC3SEWER.TRADE_63,
+    RAC3SEWER.TRADE_64,
+    RAC3SEWER.TRADE_65,
+    RAC3SEWER.TRADE_66,
+    RAC3SEWER.TRADE_67,
+    RAC3SEWER.TRADE_68,
+    RAC3SEWER.TRADE_69,
+    RAC3SEWER.TRADE_70,
+    RAC3SEWER.TRADE_71,
+    RAC3SEWER.TRADE_72,
+    RAC3SEWER.TRADE_73,
+    RAC3SEWER.TRADE_74,
+    RAC3SEWER.TRADE_75,
+    RAC3SEWER.TRADE_76,
+    RAC3SEWER.TRADE_77,
+    RAC3SEWER.TRADE_78,
+    RAC3SEWER.TRADE_79,
+    RAC3SEWER.TRADE_80,
+    RAC3SEWER.TRADE_81,
+    RAC3SEWER.TRADE_82,
+    RAC3SEWER.TRADE_83,
+    RAC3SEWER.TRADE_84,
+    RAC3SEWER.TRADE_85,
+    RAC3SEWER.TRADE_86,
+    RAC3SEWER.TRADE_87,
+    RAC3SEWER.TRADE_88,
+    RAC3SEWER.TRADE_89,
+    RAC3SEWER.TRADE_90,
+    RAC3SEWER.TRADE_91,
+    RAC3SEWER.TRADE_92,
+    RAC3SEWER.TRADE_93,
+    RAC3SEWER.TRADE_94,
+    RAC3SEWER.TRADE_95,
+    RAC3SEWER.TRADE_96,
+    RAC3SEWER.TRADE_97,
+    RAC3SEWER.TRADE_98,
+    RAC3SEWER.TRADE_99,
+    RAC3SEWER.TRADE_100,
+    RAC3SEWER.TRADE_101,
+    RAC3SKILLPOINT.SEWER_MOTHERLOAD,
+]
+
+EVERY_5_SEWER_CRYSTALS: list[str] = [
+    RAC3SEWER.TRADE_5,
+    RAC3SEWER.TRADE_10,
+    RAC3SEWER.TRADE_15,
+    RAC3SEWER.TRADE_20,
+    RAC3SEWER.TRADE_25,
+    RAC3SEWER.TRADE_30,
+    RAC3SEWER.TRADE_35,
+    RAC3SEWER.TRADE_40,
+    RAC3SEWER.TRADE_45,
+    RAC3SEWER.TRADE_50,
+    RAC3SEWER.TRADE_55,
+    RAC3SEWER.TRADE_60,
+    RAC3SEWER.TRADE_65,
+    RAC3SEWER.TRADE_70,
+    RAC3SEWER.TRADE_75,
+    RAC3SEWER.TRADE_80,
+    RAC3SEWER.TRADE_85,
+    RAC3SEWER.TRADE_90,
+    RAC3SEWER.TRADE_95,
+    RAC3SEWER.TRADE_100,
+    RAC3SKILLPOINT.SEWER_MOTHERLOAD,
+]
+
+EVERY_10_SEWER_CRYSTALS: list[str] = [
+    RAC3SEWER.TRADE_10,
+    RAC3SEWER.TRADE_20,
+    RAC3SEWER.TRADE_30,
+    RAC3SEWER.TRADE_40,
+    RAC3SEWER.TRADE_50,
+    RAC3SEWER.TRADE_60,
+    RAC3SEWER.TRADE_70,
+    RAC3SEWER.TRADE_80,
+    RAC3SEWER.TRADE_90,
+    RAC3SEWER.TRADE_100,
+    RAC3SKILLPOINT.SEWER_MOTHERLOAD,
+]
+
+EVERY_20_SEWER_CRYSTALS: list[str] = [
+    RAC3SEWER.TRADE_20,
+    RAC3SEWER.TRADE_40,
+    RAC3SEWER.TRADE_60,
+    RAC3SEWER.TRADE_80,
+    RAC3SEWER.TRADE_100,
+    RAC3SKILLPOINT.SEWER_MOTHERLOAD,
+]
+
+ANNIHILATION_NATION_1: list[str] = [
+    RAC3LOCATION.PHOENIX_GRAND_PRIZE,
+    RAC3TBOLT.NATION_CLIFF,
+    RAC3SKILLPOINT.NATION_CAMERA,
+    RAC3SKILLPOINT.NATION_FLEE,
+    RAC3LOCATION.NATION_TYHRRA_GUISE,
+    RAC3LOCATION.NATION_GRAND_PRIZE_BOUT,
+    RAC3LOCATION.NATION_THE_TERRIBLE_TWO,
+    RAC3LOCATION.NATION_ROBOT_RAMPAGE,
+    RAC3LOCATION.NATION_TWO_MINUTE_WARNING,
+    RAC3LOCATION.NATION_90_SECONDS,
+    RAC3LOCATION.NATION_ONSLAUGHT,
+    RAC3LOCATION.NATION_WHIP_IT_GOOD,
+    RAC3LOCATION.NATION_HYDRA_N_SEEK,
+    RAC3LOCATION.NATION_CHAMPIONSHIP_BOUT,
+    RAC3LOCATION.NATION_HEAT_STREET,
+    RAC3LOCATION.NATION_CRISPY_CRITTER,
+    RAC3LOCATION.NATION_PYRO_PLAYGROUND,
+    RAC3LOCATION.NATION_SUICIDE_RUN,
+]
+
+ANNIHILATION_NATION_2: list[str] = [
+    RAC3TBOLT.NATION_CLIFF,
+    RAC3SKILLPOINT.NATION_CAMERA,
+    RAC3SKILLPOINT.NATION_FLEE,
+    # These 3 are doable on the second part of the challenges as well
+    RAC3SKILLPOINT.NATION_BASH,
+    RAC3LOCATION.NATION_MEET_COURTNEY,
+    RAC3LOCATION.NATION_INFOBOT_HOLOSTAR,
+    RAC3LOCATION.NATION_NINJA_CHALLENGE,
+    RAC3LOCATION.NATION_COUNTING_DUCKS,
+    RAC3LOCATION.NATION_CYCLING_WEAPONS,
+    RAC3LOCATION.NATION_ONE_HIT_WONDER,
+    RAC3LOCATION.NATION_TIME_TO_SUCK,
+    RAC3LOCATION.NATION_NAPTIME,
+    RAC3LOCATION.NATION_MORE_CYCLING_WEAPONS,
+    RAC3LOCATION.NATION_DODGE_THE_TWINS,
+    RAC3LOCATION.NATION_CHOP_CHOP,
+    RAC3LOCATION.NATION_SLEEP_INDUCER,
+    RAC3LOCATION.NATION_THE_OTHER_WHITE_MEAT,
+    RAC3LOCATION.NATION_CHAMPIONSHIP_BOUT_II,
+    # RAC3LOCATION.NATION_QWARKTASTIC_BATTLE,
+    RAC3LOCATION.NATION_BBQ_BOULEVARD,
+    RAC3LOCATION.NATION_MAZE_OF_BLAZE,
+    RAC3TBOLT.NATION_PLATFORM,
+    RAC3LOCATION.NATION_CREMATION_STATION,
+    RAC3LOCATION.NATION_THE_ANNIHILATOR,
+]
+
+EXTRA_RANGER: list[str] = [
+    RAC3LOCATION.TYHRRANOSIS_RANGERS_1,
+    RAC3LOCATION.TYHRRANOSIS_RANGERS_2,
+    RAC3LOCATION.TYHRRANOSIS_RANGERS_3,
+    RAC3LOCATION.TYHRRANOSIS_RANGERS_4,
+    RAC3TBOLT.METROPOLIS_RANGERS,
+    RAC3LOCATION.METROPOLIS_RANGERS_1,
+    RAC3LOCATION.METROPOLIS_RANGERS_2,
+    RAC3LOCATION.METROPOLIS_RANGERS_3,
+    RAC3LOCATION.METROPOLIS_RANGERS_4,
+    RAC3LOCATION.METROPOLIS_RANGERS_5,
+    RAC3LOCATION.METROPOLIS_MAP_O_MATIC,
+]
+
+VELDIN_WEAPONS: list[str] = [
+    RAC3LOCATION.VELDIN_FIRST_RANGER,
+    RAC3LOCATION.VELDIN_SECOND_RANGER,
+]
+
+SIMPLE_SKILLPOINTS: list[str] = [
+    RAC3SKILLPOINT.ARIDIA_HANG_TIME,
+    RAC3SKILLPOINT.PHOENIX_VR_TRAINING,
+    RAC3SKILLPOINT.PHOENIX_ARMOR,
+    RAC3SKILLPOINT.PHOENIX_MONKEY,
+    RAC3SKILLPOINT.MARCADIA_REFLECT,
+    RAC3SKILLPOINT.DAXX_BUGS,
+    RAC3SKILLPOINT.NATION_CAMERA,
+    RAC3SKILLPOINT.AQUATOS_SUNKEN,
+    RAC3SKILLPOINT.TYHRRANOSIS_SHARPSHOOTER,
+    RAC3SKILLPOINT.GEMINI_BELT,
+    RAC3SKILLPOINT.BLACKWATER_BASH,
+    RAC3SKILLPOINT.KOROS_BREAK,
+    RAC3SKILLPOINT.METROPOLIS_GOOD_YEAR,
+    RAC3SKILLPOINT.CRASH_SITE_AIM_HIGH,
+    RAC3SKILLPOINT.ARIDIA_ZAP,
+    RAC3SKILLPOINT.HIDEOUT_DAN,
+    RAC3SKILLPOINT.COMMAND_CENTER_GERMS,
+]
+
+
 class GameLocation(Location):
     """Rac3 game location"""
     game = RAC3OPTION.GAME_TITLE_FULL
@@ -227,242 +468,6 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
     :return: 0 for creating a location, 1 for no location creation, 2 for a tracking event location
     """
 
-    every_sewer_crystals: list[str] = [
-        RAC3SEWER.TRADE_1,
-        RAC3SEWER.TRADE_2,
-        RAC3SEWER.TRADE_3,
-        RAC3SEWER.TRADE_4,
-        RAC3SEWER.TRADE_5,
-        RAC3SEWER.TRADE_6,
-        RAC3SEWER.TRADE_7,
-        RAC3SEWER.TRADE_8,
-        RAC3SEWER.TRADE_9,
-        RAC3SEWER.TRADE_10,
-        RAC3SEWER.TRADE_11,
-        RAC3SEWER.TRADE_12,
-        RAC3SEWER.TRADE_13,
-        RAC3SEWER.TRADE_14,
-        RAC3SEWER.TRADE_15,
-        RAC3SEWER.TRADE_16,
-        RAC3SEWER.TRADE_17,
-        RAC3SEWER.TRADE_18,
-        RAC3SEWER.TRADE_19,
-        RAC3SEWER.TRADE_20,
-        RAC3SEWER.TRADE_21,
-        RAC3SEWER.TRADE_22,
-        RAC3SEWER.TRADE_23,
-        RAC3SEWER.TRADE_24,
-        RAC3SEWER.TRADE_25,
-        RAC3SEWER.TRADE_26,
-        RAC3SEWER.TRADE_27,
-        RAC3SEWER.TRADE_28,
-        RAC3SEWER.TRADE_29,
-        RAC3SEWER.TRADE_30,
-        RAC3SEWER.TRADE_31,
-        RAC3SEWER.TRADE_32,
-        RAC3SEWER.TRADE_33,
-        RAC3SEWER.TRADE_34,
-        RAC3SEWER.TRADE_35,
-        RAC3SEWER.TRADE_36,
-        RAC3SEWER.TRADE_37,
-        RAC3SEWER.TRADE_38,
-        RAC3SEWER.TRADE_39,
-        RAC3SEWER.TRADE_40,
-        RAC3SEWER.TRADE_41,
-        RAC3SEWER.TRADE_42,
-        RAC3SEWER.TRADE_43,
-        RAC3SEWER.TRADE_44,
-        RAC3SEWER.TRADE_45,
-        RAC3SEWER.TRADE_46,
-        RAC3SEWER.TRADE_47,
-        RAC3SEWER.TRADE_48,
-        RAC3SEWER.TRADE_49,
-        RAC3SEWER.TRADE_50,
-        RAC3SEWER.TRADE_51,
-        RAC3SEWER.TRADE_52,
-        RAC3SEWER.TRADE_53,
-        RAC3SEWER.TRADE_54,
-        RAC3SEWER.TRADE_55,
-        RAC3SEWER.TRADE_56,
-        RAC3SEWER.TRADE_57,
-        RAC3SEWER.TRADE_58,
-        RAC3SEWER.TRADE_59,
-        RAC3SEWER.TRADE_60,
-        RAC3SEWER.TRADE_61,
-        RAC3SEWER.TRADE_62,
-        RAC3SEWER.TRADE_63,
-        RAC3SEWER.TRADE_64,
-        RAC3SEWER.TRADE_65,
-        RAC3SEWER.TRADE_66,
-        RAC3SEWER.TRADE_67,
-        RAC3SEWER.TRADE_68,
-        RAC3SEWER.TRADE_69,
-        RAC3SEWER.TRADE_70,
-        RAC3SEWER.TRADE_71,
-        RAC3SEWER.TRADE_72,
-        RAC3SEWER.TRADE_73,
-        RAC3SEWER.TRADE_74,
-        RAC3SEWER.TRADE_75,
-        RAC3SEWER.TRADE_76,
-        RAC3SEWER.TRADE_77,
-        RAC3SEWER.TRADE_78,
-        RAC3SEWER.TRADE_79,
-        RAC3SEWER.TRADE_80,
-        RAC3SEWER.TRADE_81,
-        RAC3SEWER.TRADE_82,
-        RAC3SEWER.TRADE_83,
-        RAC3SEWER.TRADE_84,
-        RAC3SEWER.TRADE_85,
-        RAC3SEWER.TRADE_86,
-        RAC3SEWER.TRADE_87,
-        RAC3SEWER.TRADE_88,
-        RAC3SEWER.TRADE_89,
-        RAC3SEWER.TRADE_90,
-        RAC3SEWER.TRADE_91,
-        RAC3SEWER.TRADE_92,
-        RAC3SEWER.TRADE_93,
-        RAC3SEWER.TRADE_94,
-        RAC3SEWER.TRADE_95,
-        RAC3SEWER.TRADE_96,
-        RAC3SEWER.TRADE_97,
-        RAC3SEWER.TRADE_98,
-        RAC3SEWER.TRADE_99,
-        RAC3SEWER.TRADE_100,
-        RAC3SEWER.TRADE_101,
-        RAC3SKILLPOINT.SEWER_MOTHERLOAD,
-    ]
-    every_5_sewer_crystals: list[str] = [
-        RAC3SEWER.TRADE_5,
-        RAC3SEWER.TRADE_10,
-        RAC3SEWER.TRADE_15,
-        RAC3SEWER.TRADE_20,
-        RAC3SEWER.TRADE_25,
-        RAC3SEWER.TRADE_30,
-        RAC3SEWER.TRADE_35,
-        RAC3SEWER.TRADE_40,
-        RAC3SEWER.TRADE_45,
-        RAC3SEWER.TRADE_50,
-        RAC3SEWER.TRADE_55,
-        RAC3SEWER.TRADE_60,
-        RAC3SEWER.TRADE_65,
-        RAC3SEWER.TRADE_70,
-        RAC3SEWER.TRADE_75,
-        RAC3SEWER.TRADE_80,
-        RAC3SEWER.TRADE_85,
-        RAC3SEWER.TRADE_90,
-        RAC3SEWER.TRADE_95,
-        RAC3SEWER.TRADE_100,
-        RAC3SKILLPOINT.SEWER_MOTHERLOAD,
-    ]
-    every_10_sewer_crystals: list[str] = [
-        RAC3SEWER.TRADE_10,
-        RAC3SEWER.TRADE_20,
-        RAC3SEWER.TRADE_30,
-        RAC3SEWER.TRADE_40,
-        RAC3SEWER.TRADE_50,
-        RAC3SEWER.TRADE_60,
-        RAC3SEWER.TRADE_70,
-        RAC3SEWER.TRADE_80,
-        RAC3SEWER.TRADE_90,
-        RAC3SEWER.TRADE_100,
-        RAC3SKILLPOINT.SEWER_MOTHERLOAD,
-    ]
-    every_20_sewer_crystals: list[str] = [
-        RAC3SEWER.TRADE_20,
-        RAC3SEWER.TRADE_40,
-        RAC3SEWER.TRADE_60,
-        RAC3SEWER.TRADE_80,
-        RAC3SEWER.TRADE_100,
-        RAC3SKILLPOINT.SEWER_MOTHERLOAD,
-    ]
-
-    annihilation_nation_1: list[str] = [
-        RAC3LOCATION.PHOENIX_GRAND_PRIZE,
-        RAC3TBOLT.NATION_CLIFF,
-        RAC3SKILLPOINT.NATION_CAMERA,
-        RAC3SKILLPOINT.NATION_FLEE,
-        RAC3LOCATION.NATION_TYHRRA_GUISE,
-        RAC3LOCATION.NATION_GRAND_PRIZE_BOUT,
-        RAC3LOCATION.NATION_THE_TERRIBLE_TWO,
-        RAC3LOCATION.NATION_ROBOT_RAMPAGE,
-        RAC3LOCATION.NATION_TWO_MINUTE_WARNING,
-        RAC3LOCATION.NATION_90_SECONDS,
-        RAC3LOCATION.NATION_ONSLAUGHT,
-        RAC3LOCATION.NATION_WHIP_IT_GOOD,
-        RAC3LOCATION.NATION_HYDRA_N_SEEK,
-        RAC3LOCATION.NATION_CHAMPIONSHIP_BOUT,
-        RAC3LOCATION.NATION_HEAT_STREET,
-        RAC3LOCATION.NATION_CRISPY_CRITTER,
-        RAC3LOCATION.NATION_PYRO_PLAYGROUND,
-        RAC3LOCATION.NATION_SUICIDE_RUN,
-    ]
-    annihilation_nation_2: list[str] = [
-        RAC3TBOLT.NATION_CLIFF,
-        RAC3SKILLPOINT.NATION_CAMERA,
-        RAC3SKILLPOINT.NATION_FLEE,
-        # These 3 are doable on the second part of the challenges as well
-        RAC3SKILLPOINT.NATION_BASH,
-        RAC3LOCATION.NATION_MEET_COURTNEY,
-        RAC3LOCATION.NATION_INFOBOT_HOLOSTAR,
-        RAC3LOCATION.NATION_NINJA_CHALLENGE,
-        RAC3LOCATION.NATION_COUNTING_DUCKS,
-        RAC3LOCATION.NATION_CYCLING_WEAPONS,
-        RAC3LOCATION.NATION_ONE_HIT_WONDER,
-        RAC3LOCATION.NATION_TIME_TO_SUCK,
-        RAC3LOCATION.NATION_NAPTIME,
-        RAC3LOCATION.NATION_MORE_CYCLING_WEAPONS,
-        RAC3LOCATION.NATION_DODGE_THE_TWINS,
-        RAC3LOCATION.NATION_CHOP_CHOP,
-        RAC3LOCATION.NATION_SLEEP_INDUCER,
-        RAC3LOCATION.NATION_THE_OTHER_WHITE_MEAT,
-        RAC3LOCATION.NATION_CHAMPIONSHIP_BOUT_II,
-        # RAC3LOCATION.NATION_QWARKTASTIC_BATTLE,
-        RAC3LOCATION.NATION_BBQ_BOULEVARD,
-        RAC3LOCATION.NATION_MAZE_OF_BLAZE,
-        RAC3TBOLT.NATION_PLATFORM,
-        RAC3LOCATION.NATION_CREMATION_STATION,
-        RAC3LOCATION.NATION_THE_ANNIHILATOR,
-    ]
-
-    extra_ranger: list[str] = [
-        RAC3LOCATION.TYHRRANOSIS_RANGERS_1,
-        RAC3LOCATION.TYHRRANOSIS_RANGERS_2,
-        RAC3LOCATION.TYHRRANOSIS_RANGERS_3,
-        RAC3LOCATION.TYHRRANOSIS_RANGERS_4,
-        RAC3TBOLT.METROPOLIS_RANGERS,
-        RAC3LOCATION.METROPOLIS_RANGERS_1,
-        RAC3LOCATION.METROPOLIS_RANGERS_2,
-        RAC3LOCATION.METROPOLIS_RANGERS_3,
-        RAC3LOCATION.METROPOLIS_RANGERS_4,
-        RAC3LOCATION.METROPOLIS_RANGERS_5,
-        RAC3LOCATION.METROPOLIS_MAP_O_MATIC,
-    ]
-
-    veldin_weapons: list[str] = [
-        RAC3LOCATION.VELDIN_FIRST_RANGER,
-        RAC3LOCATION.VELDIN_SECOND_RANGER,
-    ]
-
-    simple_skillpoints: list[str] = [
-        RAC3SKILLPOINT.ARIDIA_HANG_TIME,
-        RAC3SKILLPOINT.PHOENIX_VR_TRAINING,
-        RAC3SKILLPOINT.PHOENIX_ARMOR,
-        RAC3SKILLPOINT.PHOENIX_MONKEY,
-        RAC3SKILLPOINT.MARCADIA_REFLECT,
-        RAC3SKILLPOINT.DAXX_BUGS,
-        RAC3SKILLPOINT.NATION_CAMERA,
-        RAC3SKILLPOINT.AQUATOS_SUNKEN,
-        RAC3SKILLPOINT.TYHRRANOSIS_SHARPSHOOTER,
-        RAC3SKILLPOINT.GEMINI_BELT,
-        RAC3SKILLPOINT.BLACKWATER_BASH,
-        RAC3SKILLPOINT.KOROS_BREAK,
-        RAC3SKILLPOINT.METROPOLIS_GOOD_YEAR,
-        RAC3SKILLPOINT.CRASH_SITE_AIM_HIGH,
-        RAC3SKILLPOINT.ARIDIA_ZAP,
-        RAC3SKILLPOINT.HIDEOUT_DAN,
-        RAC3SKILLPOINT.COMMAND_CENTER_GERMS,
-    ]
-
     def should_skip_skill_master() -> bool:
         """
         Determine if the skill master trophy location should be skipped based on options.
@@ -533,7 +538,7 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             case RAC3TAG.SKILLPOINT:
                 if options.skill_points.value == 0:
                     return SkipLocation.EVENT  # Skips skill points when disabled
-                if options.skill_points.value == 1 and data.NAME not in simple_skillpoints:
+                if options.skill_points.value == 1 and data.NAME not in SIMPLE_SKILLPOINTS:
                     return SkipLocation.EVENT  # Skips harder skill points
                 if (options.skill_points.value == 3
                     and all(key not in data.NAME for key in options.skill_points_pick_and_mix.value)):
@@ -547,16 +552,16 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             case RAC3TAG.RANGERS:
                 if options.rangers.value == 0:
                     return SkipLocation.EVENT  # Skips ranger missions locations if rangers option is none
-                if options.rangers.value == 1 and data.NAME in extra_ranger:
+                if options.rangers.value == 1 and data.NAME in EXTRA_RANGER:
                     return SkipLocation.EVENT  # Skips optional ranger missions locations if set to story_missions
-                if options.rangers.value == 2 and data.NAME not in extra_ranger:
+                if options.rangers.value == 2 and data.NAME not in EXTRA_RANGER:
                     return SkipLocation.EVENT  # Skips story ranger missions locations if set to optional_missions
             case RAC3TAG.ARENA:
                 if options.arena.value == 0:
                     return SkipLocation.EVENT  # Skips arena challenges locations if arena option is none
-                if options.arena.value == 1 and data.NAME not in annihilation_nation_1:
+                if options.arena.value == 1 and data.NAME not in ANNIHILATION_NATION_1:
                     return SkipLocation.EVENT  # Skips AN2 challenge locations if arena option is set to first_only
-                if options.arena.value == 2 and data.NAME not in annihilation_nation_2:
+                if options.arena.value == 2 and data.NAME not in ANNIHILATION_NATION_2:
                     return SkipLocation.EVENT  # Skips AN1 challenge locations if arena option is set to second_only
                 if options.goal_qwark == 0 and data.NAME == RAC3LOCATION.NATION_QWARKTASTIC_BATTLE:
                     return SkipLocation.EVENT  # Skip Qwarktastic Battle if Qwarktastic is not a goal condition
@@ -564,19 +569,19 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                 if options.vr_challenges.value == 0:
                     return SkipLocation.EVENT  # Skips vr challenges locations if vr_challenges option is disabled
             case RAC3TAG.SEWER:
-                if (data.NAME in every_sewer_crystals[options.sewer_limitation.value::]
+                if (data.NAME in EVERY_SEWER_CRYSTALS[options.sewer_limitation.value::]
                     and not (data.NAME == RAC3SKILLPOINT.SEWER_MOTHERLOAD and options.sewer_limitation.value >= 100)):
                     return SkipLocation.EVENT  # Place sewer crystal amount specified in sewer_limitations
                 if options.sewer_crystals.value == 0:
                     return SkipLocation.EVENT  # Skip sewer crystal locations if sewer crystals option is disabled
-                if options.sewer_crystals.value == 1 and data.NAME not in every_20_sewer_crystals:
+                if options.sewer_crystals.value == 1 and data.NAME not in EVERY_20_SEWER_CRYSTALS:
                     return SkipLocation.EVENT  # Skip sewer crystal locations that are not in every 20
-                if options.sewer_crystals.value == 2 and data.NAME not in every_10_sewer_crystals:
+                if options.sewer_crystals.value == 2 and data.NAME not in EVERY_10_SEWER_CRYSTALS:
                     return SkipLocation.EVENT  # Skip sewer crystal locations that are not in every 10
-                if options.sewer_crystals.value == 3 and data.NAME not in every_5_sewer_crystals:
+                if options.sewer_crystals.value == 3 and data.NAME not in EVERY_5_SEWER_CRYSTALS:
                     return SkipLocation.EVENT  # Skip sewer crystal locations that are not in every 5
             case RAC3TAG.WEAPONS:
-                if options.weapon_vendors.value == 0 and data.NAME not in veldin_weapons:
+                if options.weapon_vendors.value == 0 and data.NAME not in VELDIN_WEAPONS:
                     return SkipLocation.EVENT  # Skips every weapon vendor checks except the Veldin ones
             case RAC3TAG.NGPLUS:
                 if options.ngplus_vendors.value == 0:

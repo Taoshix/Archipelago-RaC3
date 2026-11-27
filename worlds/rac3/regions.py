@@ -6,6 +6,7 @@ from BaseClasses import Location, Region
 from worlds.rac3.constants.data.event import RAC3_EVENT_DATA_TABLE, RAC3EVENTDATA
 from worlds.rac3.constants.data.item import weapon_data
 from worlds.rac3.constants.data.location import RAC3LOCATIONDATA
+from worlds.rac3.constants.event import RAC3EVENT
 from worlds.rac3.constants.locations.general import RAC3LOCATION
 from worlds.rac3.constants.locations.nanotech import NANOTECH_OPTION_TO_MOD, RAC3NANOTECH
 from worlds.rac3.constants.locations.sewers import RAC3SEWER
@@ -450,6 +451,8 @@ def create_region(world: "RaC3World", name: str, end_locations: set[str]) -> Reg
                 split: int = key.find(":") + 1
                 reg.add_event(key, key[split:], lambda _: True, GameLocation, GameItem, False)
     for data in EVENT_DATA_BY_REGION.get(name, ()):
+        if data.NAME == RAC3EVENT.PHOENIX_MUSEUM[0] and not options.ngplus_items.value:
+            continue
         reg.add_event(data.EVENT[0], data.EVENT[1], lambda _: True, GameLocation, GameItem, False)
 
     world.multiworld.regions.append(reg)
@@ -534,6 +537,8 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                 if not options.trophies.value:  # Skip trophy locations if trophies are disabled
                     return SkipLocation.EVENT
             case RAC3TAG.LONG_TROPHY:
+                if data.NAME == RAC3TROPHY.PHOENIX_OMEGA_ARSENAL and not options.ngplus_items.value:
+                    return SkipLocation.SKIP
                 if options.trophies.value < 2:  # Skip long term trophies if not set to every trophy
                     return SkipLocation.EVENT
                 if should_skip_skill_master() and data.NAME == RAC3TROPHY.PHOENIX_SKILL_MASTER:
@@ -547,8 +552,6 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
                         return SkipLocation.EVENT  # Skip Phoenix Nano Master trophy if nanotech limitation is not
                         # set to include
                         # level 200
-                    if data.NAME == RAC3TROPHY.PHOENIX_OMEGA_ARSENAL and options.ngplus_items.value == 0:
-                        return SkipLocation.EVENT  # Skip Phoenix Omega Arsenal trophy if NG+ items are disabled
             case RAC3TAG.SKILLPOINT:
                 if options.skill_points.value == 0:
                     return SkipLocation.EVENT  # Skips skill points when disabled

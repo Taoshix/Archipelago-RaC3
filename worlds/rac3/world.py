@@ -117,6 +117,10 @@ class RaC3World(World):
 
     def dead_seed_check(self) -> None:
         """Check for option combinations that will result in a dead seed and raise an OptionError to warn the player"""
+        if not self.using_ut and self.options.goal_museum.value and not self.options.ngplus_items.value:
+            raise OptionError(f"For {self.player_name}, goal_museum requires ngplus_items to earn the Omega Arsenal trophy. "
+                              "Enable ngplus_items or disable goal_museum.")
+
         nanotech_locations = get_nanotech_locations(self.options)
         no_nanotech_locations = not nanotech_locations
 

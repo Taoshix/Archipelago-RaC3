@@ -11,6 +11,7 @@ class GoalMuseum(Toggle):
     Off:  Insomniac Museum Teleporter is not required to goal
     On:   Insomniac Museum Teleporter is required to goal
     ---------------------------------------------------------------------------------------
-    WARNING: This requires ALL TROPHIES, effectively a 100% completion of the game
+    WARNING: This requires ALL TROPHIES, effectively a 100% completion of the game.
+    Requires ngplus_items to be enabled to make the Omega Arsenal trophy available.
     """
     display_name = RAC3OPTION.GOAL_MUSEUM

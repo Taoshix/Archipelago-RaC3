@@ -348,6 +348,12 @@ class RAC3ITEMDATA:
         return RAC3ITEMDATA(idx, address, ap_classification=ItemClassification.useful, tags=all_tags)
 
     @staticmethod
+    def construct_mega(idx: int) -> "RAC3ITEMDATA":
+        """Make a Mega weapon upgrade item."""
+        return RAC3ITEMDATA(idx, ap_classification=ItemClassification.progression,
+                            tags=[RAC3ITEMTAG.NGPLUS, RAC3ITEMTAG.MEGA_WEAPON_UPGRADE])
+
+    @staticmethod
     def construct_tbolt(idx):
         """Construct Titanium Bolts"""
         return RAC3ITEMDATA(idx, RAC3STATUS.TITANIUM_BOLT,
@@ -748,6 +754,26 @@ RAC3_ITEM_DATA_TABLE: dict[str, RAC3ITEMDATA] = {
     RAC3ITEM.GADGETRON_DEBT_TRAP: RAC3ITEMDATA.construct_trap(0x162),
     # VidComic Health Upgrades
     RAC3ITEM.BONUS_VIDCOMIC_HEALTH_UPGRADE: RAC3ITEMDATA.construct_vidcomic_health(0x163),
+    # Mega Weapon Upgrades
+    RAC3ITEM.MEGA_SHOCK_CANNON_UPGRADE: RAC3ITEMDATA.construct_mega(0x164),
+    RAC3ITEM.MEGA_NITRO_ERUPTOR_UPGRADE: RAC3ITEMDATA.construct_mega(0x165),
+    RAC3ITEM.MEGA_N90_HURRICANE_UPGRADE: RAC3ITEMDATA.construct_mega(0x166),
+    RAC3ITEM.MEGA_QUANTUM_WHIP_UPGRADE: RAC3ITEMDATA.construct_mega(0x167),
+    RAC3ITEM.MEGA_INFECTO_BOMB_UPGRADE: RAC3ITEMDATA.construct_mega(0x168),
+    RAC3ITEM.MEGA_VORTEX_CANNON_UPGRADE: RAC3ITEMDATA.construct_mega(0x169),
+    RAC3ITEM.MEGA_TEMPEST_UPGRADE: RAC3ITEMDATA.construct_mega(0x16A),
+    RAC3ITEM.MEGA_AGENTS_OF_DREAD_UPGRADE: RAC3ITEMDATA.construct_mega(0x16B),
+    RAC3ITEM.MEGA_SPLITTER_RIFLE_UPGRADE: RAC3ITEMDATA.construct_mega(0x16C),
+    RAC3ITEM.MEGA_DECIMATOR_UPGRADE: RAC3ITEMDATA.construct_mega(0x16D),
+    RAC3ITEM.MEGA_ULTRASHIELD_LAUNCHER_UPGRADE: RAC3ITEMDATA.construct_mega(0x16E),
+    RAC3ITEM.MEGA_MULTI_DISC_GUN_UPGRADE: RAC3ITEMDATA.construct_mega(0x16F),
+    RAC3ITEM.MEGA_RIFT_RIPPER_UPGRADE: RAC3ITEMDATA.construct_mega(0x170),
+    RAC3ITEM.MEGA_QWACK_O_BLITZER_UPGRADE: RAC3ITEMDATA.construct_mega(0x171),
+    RAC3ITEM.MEGA_MEGATURRET_GLOVE_UPGRADE: RAC3ITEMDATA.construct_mega(0x172),
+    RAC3ITEM.MEGA_LIQUID_NITROGEN_GUN_UPGRADE: RAC3ITEMDATA.construct_mega(0x173),
+    RAC3ITEM.MEGA_TESLA_BARRIER_UPGRADE: RAC3ITEMDATA.construct_mega(0x174),
+    RAC3ITEM.MEGA_HEAVY_BOUNCER_UPGRADE: RAC3ITEMDATA.construct_mega(0x175),
+    RAC3ITEM.MEGA_PLASMA_STORM_UPGRADE: RAC3ITEMDATA.construct_mega(0x176),
     # Goal
     # RAC3ITEM.VICTORY: RAC3ITEMDATA.construct_goal(0x201),
 }
@@ -774,6 +800,7 @@ filler_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.FILLER)
 gadget_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.GADGET)
 # goal_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.GOAL)
 infobot_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.INFOBOT)
+mega_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.MEGA_WEAPON_UPGRADE)
 ngplus_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NGPLUS)
 non_prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.NON_PROG_WEAPON)
 prog_weapon_data: dict[str, RAC3ITEMDATA] = from_tag(RAC3ITEMTAG.PROG_WEAPON)
@@ -856,6 +883,7 @@ item_table: dict[str, RAC3ITEMDATA] = {
     **weapon_mod_data,
     **weapon_modpack_data,
     **weapon_upgrade_data,
+    **mega_weapon_data,
     **clank_data,
     **cheat_data,
     **vidcomic_health_data,
@@ -894,6 +922,7 @@ item_groups: dict[str, set[str]] = {
     RAC3ITEMTAG.WEAPON_MOD: set(weapon_mod_data.keys()),
     RAC3ITEMTAG.WEAPON_MODPACK: set(weapon_modpack_data.keys()),
     RAC3ITEMTAG.WEAPON_UPGRADE: set(weapon_upgrade_data.keys()),
+    RAC3ITEMTAG.MEGA_WEAPON_UPGRADE: set(mega_weapon_data.keys()),
     RAC3ITEMTAG.CLANK: set(clank_data.keys()),
     RAC3ITEMTAG.CHEAT: set(cheat_data.keys()),
     RAC3ITEMTAG.QUICK_SELECTABLE: set(quick_selectable_data.keys()),

@@ -8,7 +8,7 @@ from worlds.rac3.constants.data.item import (infobot_data, item_counts, item_tab
                                              ngplus_item_counts, PROG_TO_NAME_DICT, progressive_data, RAC3ITEMDATA,
                                              titanium_bolt_data, vidcomic_health_data)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
-from worlds.rac3.constants.items import RAC3ITEM
+from worlds.rac3.constants.items import MEGA_WEAPON_UPGRADES, RAC3ITEM
 from worlds.rac3.constants.options import RAC3OPTION
 from worlds.rac3.constants.shortcuts import RAC3SHORTCUTS
 from worlds.rac3.rac3options import RaC3Options
@@ -59,16 +59,17 @@ def process_start_inventory(world: "RaC3World") -> None:
                 world.options.start_inventory.value.pop(item)
                 world.options.start_inventory.value[new_item] = 1
     else:
-        for item in NAME_TO_PROG_DICT.keys():
+        conversions = NAME_TO_PROG_DICT.copy()
+        if world.options.ngplus_items.value:
+            conversions.update({upgrade: NAME_TO_PROG_DICT[weapon] for weapon, upgrade in MEGA_WEAPON_UPGRADES.items()})
+        for item, new_item in conversions.items():
             if world.options.start_inventory_from_pool.value.get(item, None):
-                new_item = NAME_TO_PROG_DICT[item]
                 rac3_logger.warning(f"Player: {world.player_name}'s starting {item} from pool have been converted to "
                                     f"{new_item} to match their settings, item totals have been preserved.")
                 count = world.options.start_inventory_from_pool.value[item]
                 world.options.start_inventory_from_pool.value.pop(item)
                 world.options.start_inventory_from_pool.value[new_item] += count
             if world.options.start_inventory.value.get(item, None):
-                new_item = NAME_TO_PROG_DICT[item]
                 rac3_logger.warning(f"Player: {world.player_name}'s starting {item} have been converted to "
                                     f"{new_item} to match their settings, item totals have been preserved.")
                 count = world.options.start_inventory.value[item]
@@ -304,7 +305,8 @@ def create_itempool(world: "RaC3World") -> list[Item]:
         # Progressive Weapons option
         if RAC3ITEMTAG.PROG_WEAPON in item_tags and not options.progressive_weapons.value:
             continue
-        if RAC3ITEMTAG.NON_PROG_WEAPON in item_tags and options.progressive_weapons.value:
+        if (options.progressive_weapons.value
+            and (RAC3ITEMTAG.NON_PROG_WEAPON in item_tags or RAC3ITEMTAG.MEGA_WEAPON_UPGRADE in item_tags)):
             continue
 
         # Progressive Wrench option

@@ -487,6 +487,9 @@ def should_skip_location(data: RAC3LOCATIONDATA, options: type[RaC3Options]) -> 
             return True
         return False
 
+    if RAC3TAG.MEGA_WEAPON_VENDOR in data.TAGS and not options.ngplus_vendors.value:
+        return SkipLocation.SKIP
+
     for tag in sorted(data.TAGS):
         match tag:
             case RAC3TAG.NOT_IMPLEMENTED:  # Skip all locations not yet implemented

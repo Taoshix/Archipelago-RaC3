@@ -15,8 +15,8 @@ from worlds.rac3.client.general_interface import GameInterface
 from worlds.rac3.client.notification import RAC3NOTIFICATION
 from worlds.rac3.client.string_table import StringTable
 from worlds.rac3.client.string_table_entry import StringTableEntry
-from worlds.rac3.client.texthelper import (TEXT_BYTE_TO_EXPECTED_WIDTH, VENDOR_ITEM_NAME_TEXT_IDS,
-                                           format_planet_location_counts, remove_accents)
+from worlds.rac3.client.texthelper import (MEGA_VENDOR_NAME_TEXT_IDS, TEXT_BYTE_TO_EXPECTED_WIDTH,
+                                           VENDOR_ITEM_NAME_TEXT_IDS, format_planet_location_counts, remove_accents)
 from worlds.rac3.client.vendor_name_patch import VendorNamePatch
 from worlds.rac3.constants.action_type import ACTION_TYPE_NAMES, RAC3ACTIONTYPE
 from worlds.rac3.constants.check_type import CHECKTYPE
@@ -51,7 +51,7 @@ from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INST
                                                PATCH_INSTRUCTION_TO_NAME, PATCH_INSTRUCTION_TO_PLANET,
                                                PATCHED_INSTRUCTIONS, RAC3INSTRUCTION)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
-from worlds.rac3.constants.items import QUICK_SELECT_LIST, RAC3ITEM, UPGRADE_DICT
+from worlds.rac3.constants.items import MEGA_WEAPON_UPGRADES, QUICK_SELECT_LIST, RAC3ITEM, UPGRADE_DICT
 from worlds.rac3.constants.locations.challenge_description import (
     GAUNTLET_DESCRIPTION, GAUNTLET_DESCRIPTORS, NATION_CHALLENGE_SIZE,
     NATION_CHALLENGE_TABLE, VR_TRAINING_DESCRIPTION, VR_TRAINING_NAME, VR_TRAINING_NAME_ADDRESS,
@@ -60,6 +60,11 @@ from worlds.rac3.constants.locations.general import MISSION_COUNTS, RAC3LOCATION
 from worlds.rac3.constants.locations.groups import RAC3LOCATIONGROUP
 from worlds.rac3.constants.locations.tags import RAC3TAG
 from worlds.rac3.constants.locations.trophies import RAC3TROPHY
+from worlds.rac3.constants.locations.vendors import MEGA_WEAPON_VENDOR_LOCATIONS
+from worlds.rac3.constants.mega_vendor import (
+    MEGA_PURCHASE_CALL_PATCH, MEGA_PURCHASE_HOOK, MEGA_STOCK_BRANCH, MEGA_STOCK_BRANCH_OFFSET,
+    MEGA_STOCK_BRANCH_PATCH, MEGA_VENDOR_GAME_INDEX, MEGA_VENDOR_PURCHASE_CALLS,
+)
 from worlds.rac3.constants.messages.box_format import THEME_ID_TO_THEME_COLORS
 from worlds.rac3.constants.messages.box_theme import RAC3BOXTHEME
 from worlds.rac3.constants.messages.messagebox import RAC3MESSAGEBOX
@@ -241,7 +246,8 @@ class Rac3Interface(GameInterface):
     visited_planets: set[str] = set()
     weapon_vendor_items: list[str] = []
     armor_vendor_items: list[str] = []
-    omega_weapon_vendors_items: list[str] = []
+    mega_weapon_vendor_items: list[str] = []
+    mega_vendor_patched: bool = False
     vendor_type: RAC3VENDORTYPE | None = None
     vendor_string_pointers: dict[str, int] = {}
     challenge_string_pointers: dict[str, int] = {}
@@ -552,8 +558,10 @@ class Rac3Interface(GameInterface):
     ##########################
 
     def reset_tracked_progress(self) -> None:
-        """Clear the cached goal and location progress for the active file."""
+        """Clear the cached progress for the active file."""
         self.end_game = False
+        self.weapon_levels = dict.fromkeys(non_prog_weapon_data, 1)
+        self.last_hovered_weapon = ""
         self.checked_locations.clear()
         self.collected_tbolt_locations.clear()
         self.visited_planets.clear()
@@ -718,7 +726,7 @@ class Rac3Interface(GameInterface):
         self.vendor_string_pointers = {}
         self.challenge_string_pointers = {}
         self.galactic_map_text_pointer_list = 0
-        start = RAC3INSTRUCTION.CODECAVE_START + 0x10  # The first bytes hold armor purchase flags.
+        start = RAC3INSTRUCTION.CODECAVE_STRINGS
         data = bytearray()
         strings = {
             RAC3VENDOR.NO_ITEMS_AVAILABLE_LOC_KEY: RAC3VENDOR.NO_ITEMS_AVAILABLE_MSG,
@@ -856,6 +864,7 @@ class Rac3Interface(GameInterface):
             or self.game_state_value == RAC3GAMESTATE.PLANET_CHANGE):
             self.invalidate_string_table_cache()
         self.vendor_type = self.vendor_check()
+        self.mega_vendor_patched = self.patch_mega_weapon_vendor()
         self.get_visited_planets()
         self.determine_weapon_vendor_items()
         self.determine_armor_vendor_items()
@@ -962,23 +971,31 @@ class Rac3Interface(GameInterface):
                             items_to_sell.append(item)
             self.weapon_vendor_items = items_to_sell
 
-        if self.options.ngplus_items:
-            omega_items_to_sell: list[str] = []
-            v5_weapons = {weapon_name for weapon_name in self.weapon_levels if self.weapon_levels[weapon_name] == 5}
-            already_omega = {weapon_name for weapon_name in self.weapon_levels if self.weapon_levels[weapon_name] > 5}
-            progressive_weapons_mode = self.options.progressive_weapons
-            if self.options.weapon_level_locations and progressive_weapons_mode == 2:
-                progressive_weapons_mode = 1  # Force manual levelling if weapon level locations are enabled
-            for weapon in v5_weapons:
-                if weapon == RAC3ITEM.RY3N0:
-                    continue
-                if weapon not in already_omega and weapon not in omega_items_to_sell:
-                    if progressive_weapons_mode == 1:
-                        if self.UnlockItem[weapon] > 5:
-                            omega_items_to_sell.append(weapon)
-                    else:
-                        omega_items_to_sell.append(weapon)
-            self.omega_weapon_vendors_items = omega_items_to_sell
+        else:
+            self.weapon_vendor_items = []
+
+    def patch_mega_weapon_vendor(self) -> bool:
+        """Disable native Mega stock and redirect Mega purchases to location flags."""
+        if (self.planet not in MEGA_VENDOR_PURCHASE_CALLS or self.current_game not in MEGA_VENDOR_GAME_INDEX
+            or self.between_planets or self.is_reloading or self.game_state_value == RAC3GAMESTATE.PLANET_CHANGE):
+            return False
+        if not (self.options.ngplus_vendors or self.options.ngplus_start or self._read8(RAC3STATUS.CHALLENGE_MODE)):
+            return False
+
+        region = MEGA_VENDOR_GAME_INDEX[self.current_game]
+        purchase, original = MEGA_VENDOR_PURCHASE_CALLS[self.planet][region]
+        stock = purchase - MEGA_STOCK_BRANCH_OFFSET[region]
+        current_call, current_stock = self._read32_batch([purchase, stock], should_convert=False)
+        if current_call == MEGA_PURCHASE_CALL_PATCH and current_stock == MEGA_STOCK_BRANCH_PATCH:
+            return True
+        if (self.game_state_value == RAC3GAMESTATE.VENDOR or current_call not in (original, MEGA_PURCHASE_CALL_PATCH)
+            or current_stock not in (MEGA_STOCK_BRANCH, MEGA_STOCK_BRANCH_PATCH)):
+            return False
+
+        self._write_bytes(RAC3INSTRUCTION.MEGA_PURCHASE_ROUTINE, MEGA_PURCHASE_HOOK, should_convert=False)
+        self._write32(purchase, MEGA_PURCHASE_CALL_PATCH, should_convert=False)
+        self._write32(stock, MEGA_STOCK_BRANCH_PATCH, should_convert=False)
+        return False  # Wait until the patch has been flushed before adding Mega rows.
 
     def determine_armor_vendor_items(self):
         """Determine which items should be sold by the armor vendor on the Starship Phoenix."""
@@ -1284,19 +1301,13 @@ class Rac3Interface(GameInterface):
     def get_valid_weapon_level_ups(self) -> list[str]:
         """Returns a list of valid weapons that can be leveled up from an xp reward, used for notifications"""
         valid_weapons = []
+        progressive = bool(self.options.progressive_weapons)
         for weapon_name, weapon_data in non_prog_weapon_data.items():
             if self.UnlockItem[weapon_name]:
                 level = max(
                     RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[self._read8(weapon_data.LEVEL_ADDRESS)]].LEVEL,
                     self.weapon_levels.get(weapon_name, 1))
-                if level == 5:
-                    continue  # people should buy NG+ mega variant instead of getting them for free
-                if self.options.ngplus_items:
-                    max_level = 8
-                else:
-                    max_level = 5
-                if ((weapon_name != RAC3ITEM.RY3N0 and level < max_level) or
-                    (weapon_name == RAC3ITEM.RY3N0 and level < self.ryno)):
+                if level != 5 and level < self.get_weapon_level_cap(weapon_name, progressive):
                     valid_weapons.append(weapon_name)
         return valid_weapons
 
@@ -1306,8 +1317,8 @@ class Rac3Interface(GameInterface):
         current_id = self._read8(weapon_data.LEVEL_ADDRESS)
         current_name = ITEM_NAME_FROM_ID[current_id]
         current_level = max(RAC3_ITEM_DATA_TABLE[current_name].LEVEL, self.weapon_levels.get(weapon_name, 1))
-        max_level = 8 if self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0 else 5
-        if current_level < max_level:
+        level_cap = self.get_weapon_level_cap(weapon_name, bool(self.options.progressive_weapons))
+        if current_level != 5 and current_level < level_cap:
             target_level = current_level + 1
             target_id = UPGRADE_DICT[weapon_name][target_level - 1]
             target_name = ITEM_NAME_FROM_ID[target_id]
@@ -1374,14 +1385,15 @@ class Rac3Interface(GameInterface):
             or self.weapon_demo and RAC3_ITEM_DATA_TABLE[  # Prevent sending weapon purchases by testing a weapon in VR
                 ITEM_NAME_FROM_ID[self.weapon_demo]].UNLOCK_ADDRESS_2 == loc_data.CHECK_ADDRESS):
             return False
-        if (self.options.weapon_level_locations and
-            self.options.progressive_weapons and
-            RAC3TAG.WEAPON_LEVEL in loc_data.TAGS):
+        if self.options.weapon_level_locations and RAC3TAG.WEAPON_LEVEL in loc_data.TAGS:
             weapon_id = loc_data.CHECK_ADDRESS[0].VALUE
             weapon_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID.get(weapon_id, RAC3ITEM.SHOCK_CANNON_V8)].LEVEL
             weapon_name = next(name for name, ids in UPGRADE_DICT.items() if weapon_id in ids)
-            if weapon_level > self.weapon_levels[weapon_name]:
-                return False  # Prevent weapon over-levelling from sending
+            if (weapon_level >= 6
+                and weapon_level > self.get_weapon_level_cap(weapon_name, bool(self.options.progressive_weapons))):
+                return False  # Ignore Mega levels until the corresponding level is unlocked.
+            if self.options.progressive_weapons and weapon_level > self.weapon_levels[weapon_name]:
+                return False
         # TODO: Implement a distance based checktype
         current_pos = self.player_pos
         pos_loc: bool = False
@@ -1816,8 +1828,13 @@ class Rac3Interface(GameInterface):
     # Vendor Handling #
     ###################
 
+    def is_slimcognito_vendor(self) -> bool:
+        return self.planet == RAC3REGION.AQUATOS and bool(self._read8(RAC3WEAPONVENDOR.get_vendor_property_address(
+            self.planet, RAC3WEAPONVENDOR.VENDOR_WEAPON_TYPE_OFFSET, self.current_game)))
+
     def vendor_update(self):
         """Read current vendor inventory and replace all items after the all ammo item with all items in the game"""
+        self.mega_weapon_vendor_items = []
         # Only update vendor if on a known planet with a vendor
         if self.planet not in PLANET_VENDOR_OFFSET.keys() or self.vendor_type is None:
             return
@@ -1846,52 +1863,49 @@ class Rac3Interface(GameInterface):
                     self.UnlockItem[ITEM_NAME_FROM_ID[pending_item]] == 0):
                     self._write8(RAC3STATUS.PENDING_ITEM, 0)
 
-                progressive_weapons_mode = self.options.progressive_weapons
-                if self.options.weapon_level_locations and progressive_weapons_mode == 2:
-                    progressive_weapons_mode = 1  # Force manual leveling if weapon level locations are enabled
-                should_add_ngplus_items = (self.options.ngplus_items and progressive_weapons_mode < 2)
-                if not self.options.weapon_vendors and not should_add_ngplus_items:
+                if not self.options.weapon_vendors and not self.options.ngplus_vendors:
                     return
-                is_slimcognito = (self.planet == RAC3REGION.AQUATOS
-                                  and bool(self._read8(RAC3WEAPONVENDOR.get_vendor_property_address(
-                        self.planet, RAC3WEAPONVENDOR.VENDOR_WEAPON_TYPE_OFFSET))))
+                is_slimcognito = self.is_slimcognito_vendor()
                 randomized_items = [item for item in self.weapon_vendor_items
                                     if (item in MEGACORP_WEAPONS) == is_slimcognito]
 
-                # Slim Cognito does not have a max ammo item, so we just replace the entire inventory
                 if is_slimcognito:
-                    new_inventory.extend(
-                        RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID) for item in randomized_items)
+                    if not self.options.weapon_vendors:
+                        return
                 else:
-                    # Only show gadgetron weapons, keep current inventory up to all_ammo
                     vendor_size = self._read32(RAC3VENDOR.get_vendor_property_address(
                         self.planet, RAC3VENDOR.SLOT_COUNT_OFFSET, self.current_game))
-                    found_all_ammo = False
-                    for slot_data in [self.read_weapon_vendor_slot_data(slot) for slot in range(vendor_size)]:
-                        # Remove ammo for weapons we don't have unlocked yet
-                        weapon = ITEM_NAME_FROM_ID.get(slot_data.item_id.value, None)
-                        if weapon is not None and weapon in non_prog_weapon_data:
-                            if self.UnlockItem[weapon] == 0:
+                    for slot in range(vendor_size):
+                        slot_data = self.read_weapon_vendor_slot_data(slot)
+                        if slot_data.mega.value:
+                            continue
+                        if self.options.weapon_vendors:
+                            weapon = ITEM_NAME_FROM_ID.get(slot_data.item_id.value)
+                            if weapon in non_prog_weapon_data and not self.UnlockItem[weapon]:
                                 continue
-
                         new_inventory.append(slot_data)
-                        if slot_data.all_ammo.value:
-                            found_all_ammo = True
+                        if self.options.weapon_vendors and slot_data.all_ammo.value:
                             break
-                    # Fallback in case the all ammo is missing
-                    if not found_all_ammo:
+                    if self.options.weapon_vendors and not any(slot.all_ammo.value for slot in new_inventory):
                         new_inventory = [RAC3WEAPONVENDORSLOTDATA(all_ammo=1)]
-                    if self.options.weapon_vendors:
-                        new_inventory.extend(RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID)
-                                             for item in randomized_items)
-                    if should_add_ngplus_items:
-                        new_inventory.extend([RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID, mega=1)
-                                              for item in self.omega_weapon_vendors_items])
-                if self.planet == RAC3REGION.STARSHIP_PHOENIX or is_slimcognito:
-                    # add memory card item
+
+                    if self.options.ngplus_vendors and self.mega_vendor_patched:
+                        self.mega_weapon_vendor_items = [
+                            weapon for weapon, location in MEGA_WEAPON_VENDOR_LOCATIONS.items()
+                            if location not in self.checked_locations
+                            and self.UnlockItem[weapon]
+                            and self.weapon_levels.get(weapon, 1) >= 5
+                        ]
+
+                new_inventory.extend(RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID)
+                                     for item in randomized_items)
+                new_inventory.extend(RAC3WEAPONVENDORSLOTDATA(RAC3_ITEM_DATA_TABLE[item].ID, mega=1)
+                                     for item in self.mega_weapon_vendor_items)
+                if self.options.weapon_vendors and (self.planet == RAC3REGION.STARSHIP_PHOENIX or is_slimcognito):
                     new_inventory.append(RAC3WEAPONVENDORSLOTDATA(memcard=1))
-                if self.options.weapon_vendors:
-                    self.overwrite_vendor_item_names(randomized_items, ITEM_TO_WEAPON_VENDOR_LOCATION)
+                self.overwrite_vendor_item_names(randomized_items, ITEM_TO_WEAPON_VENDOR_LOCATION)
+                self.overwrite_vendor_item_names(
+                    self.mega_weapon_vendor_items, MEGA_WEAPON_VENDOR_LOCATIONS, MEGA_VENDOR_NAME_TEXT_IDS)
             case RAC3VENDORTYPE.ARMOR:
                 if not self.options.armor_vendor:
                     return
@@ -2309,11 +2323,12 @@ class Rac3Interface(GameInterface):
             if self._read32(row, should_convert=False) != pointer:
                 self._write32(row, pointer, should_convert=False)
 
-    def overwrite_vendor_item_names(self, items: list[str], locations: dict[str, str]):
+    def overwrite_vendor_item_names(self, items: list[str], locations: dict[str, str],
+                                    text_ids: dict[str, int] = VENDOR_ITEM_NAME_TEXT_IDS) -> None:
         """Overwrite string pointers of item names to the code cave strings."""
         replacements = {}
         for item in items:
-            text_id = VENDOR_ITEM_NAME_TEXT_IDS.get(item)
+            text_id = text_ids.get(item)
             replacement = self.vendor_string_pointers.get(locations.get(item, ""), 0)
             if text_id is not None and text_id not in self.vendor_name_patches and replacement:
                 replacements[text_id] = self.address_convert(replacement)
@@ -2345,18 +2360,17 @@ class Rac3Interface(GameInterface):
         vendor_location_apcodes = []
         match vendor_type:
             case RAC3VENDORTYPE.WEAPON:
-                if not self.options.weapon_vendors or not self.options.scout_vendors.get(RAC3VENDORNAME.WEAPON, False):
+                if not self.options.scout_vendors.get(RAC3VENDORNAME.WEAPON, False):
                     return None
                 vendor_items = self.weapon_vendor_items
-                is_slimcognito = (self.planet == RAC3REGION.AQUATOS and bool(self._read8(
-                    RAC3VENDOR.get_vendor_property_address(self.planet, RAC3WEAPONVENDOR.VENDOR_WEAPON_TYPE_OFFSET))))
-                if is_slimcognito:  # Only hint Megacorp weapons
+                if self.is_slimcognito_vendor():  # Only hint Megacorp weapons
                     filtered_items = [item for item in vendor_items if item in MEGACORP_WEAPONS]
                 else:  # Only hint Gadgetron weapons
                     filtered_items = [item for item in vendor_items if item not in MEGACORP_WEAPONS]
 
                 vendor_locations = [ITEM_TO_WEAPON_VENDOR_LOCATION[item] for item in filtered_items if
                                     item in ITEM_TO_WEAPON_VENDOR_LOCATION]
+                vendor_locations.extend(MEGA_WEAPON_VENDOR_LOCATIONS[item] for item in self.mega_weapon_vendor_items)
                 vendor_location_apcodes = [RAC3_LOCATION_DATA_TABLE[loc].AP_CODE for loc in vendor_locations]
             case RAC3VENDORTYPE.ARMOR:
                 if not self.options.armor_vendor or not self.options.scout_vendors.get(RAC3VENDORNAME.ARMOR, False):
@@ -2811,7 +2825,44 @@ class Rac3Interface(GameInterface):
         #     if trap_name not in self.trap_timers and trap_name != RAC3ITEM.LOCK_TRAP:
         #         self._write8(status_address, 0)
 
-    def sync_weapon_xp_thresholds(self, progressive_weapon_mode: int):
+    def get_weapon_level_cap(self, weapon_name: str, progressive: bool) -> int:
+        """Get the highest level allowed by the received weapon and Mega upgrade items."""
+        owned = self.UnlockItem[weapon_name]
+        if not owned:
+            return 0
+        if weapon_name == RAC3ITEM.RY3N0:
+            return min(self.ryno, owned) if progressive else self.ryno
+        if progressive:
+            return min(owned, 8 if self.options.ngplus_items else 5)
+        if self.options.ngplus_items and self.UnlockItem.get(MEGA_WEAPON_UPGRADES[weapon_name]):
+            return 8
+        return 5
+
+    def apply_mega_weapon_upgrades(self, progressive: bool) -> set[str]:
+        """Upgrade V5 weapons whose Mega upgrade or 6th progressive weapon has been received."""
+        if (not self.options.ngplus_items or self.between_planets or self.is_reloading or self.vendor_type is not None
+            or self.game_state_value in (RAC3GAMESTATE.PLANET_CHANGE, RAC3GAMESTATE.WEAPON_UPGRADE)):
+            return set()
+
+        upgraded = set()
+        for weapon in MEGA_WEAPON_UPGRADES:
+            if self.get_weapon_level_cap(weapon, progressive) < 6:
+                continue
+            data = non_prog_weapon_data[weapon]
+            v5, v6 = UPGRADE_DICT[weapon][4:6]
+            if self._read8(data.LEVEL_ADDRESS) != v5:
+                continue
+
+            self._write32(data.XP_ADDRESS, 0)
+            self._write8(data.LEVEL_ADDRESS, v6)
+            ammo = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[v6]].AMMO
+            if ammo:
+                self._write32(data.AMMO_ADDRESS, ammo)
+            self.weapon_levels[weapon] = 6
+            upgraded.add(weapon)
+        return upgraded
+
+    def sync_weapon_xp_thresholds(self, progressive_weapon_mode: int) -> None:
         """Block weapon levels the player has not unlocked."""
         if (self.planet not in PLANET_GADGETDEF_OFFSET or self.between_planets or self.is_reloading
             or self.game_state_value == RAC3GAMESTATE.PLANET_CHANGE):
@@ -2821,13 +2872,7 @@ class Rac3Interface(GameInterface):
         thresholds: dict[int, tuple[int, bool]] = {}
         for weapon_name in non_prog_weapon_data:
             variants = UPGRADE_DICT[weapon_name]
-            unlocked_level = self.UnlockItem[weapon_name]
-            if unlocked_level and not progressive_weapon_mode:
-                unlocked_level = len(variants)
-            if weapon_name == RAC3ITEM.RY3N0:
-                unlocked_level = min(unlocked_level, self.ryno)
-            elif progressive_weapon_mode and not self.options.ngplus_items:
-                unlocked_level = min(unlocked_level, 5)
+            unlocked_level = self.get_weapon_level_cap(weapon_name, bool(progressive_weapon_mode))
 
             for index, next_variant in enumerate(variants[1:]):
                 # GadgetDef stores the threshold to leave the current weapon level in units of XP >> 5.
@@ -2844,7 +2889,7 @@ class Rac3Interface(GameInterface):
             if current == before:
                 self._write32(address, after)
 
-    def weapon_exp_cycler(self):
+    def weapon_exp_cycler(self) -> None:
         """
         Synchronize weapon experience and level with the player's item collection and vendor state.
 
@@ -2859,21 +2904,15 @@ class Rac3Interface(GameInterface):
         progressive_weapon_mode = self.options.progressive_weapons
         if self.options.weapon_level_locations and progressive_weapon_mode == 2:
             progressive_weapon_mode = 1  # Force manual levelling if weapon level locations are enabled
+        mega_upgrades = self.apply_mega_weapon_upgrades(bool(progressive_weapon_mode))
         self.sync_weapon_xp_thresholds(progressive_weapon_mode)
 
         # Manual weapon levelling for progressive weapons
         if progressive_weapon_mode == 1:
             for weapon_name, weapon_data in non_prog_weapon_data.items():
-                target_level = self.UnlockItem[weapon_name]
+                target_level = self.get_weapon_level_cap(weapon_name, True)
                 if not target_level:
                     continue
-                if target_level > 5 and (not self.options.ngplus_items or weapon_name == RAC3ITEM.RY3N0):
-                    target_level = 5
-                if target_level > 8 and self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0:
-                    target_level = 8
-                # Todo: update the ryno special cases to handle any weapon
-                if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
-                    target_level = self.ryno
                 prev_saved = min(self.weapon_levels.get(weapon_name, 1), target_level)
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 if current_id not in ITEM_NAME_FROM_ID:
@@ -2911,19 +2950,19 @@ class Rac3Interface(GameInterface):
         # Automatic weapon levelling for progressive weapons
         elif progressive_weapon_mode == 2:
             for weapon_name in non_prog_weapon_data.keys():
-                target_level = self.UnlockItem[weapon_name]
-                if not target_level:
+                target_level = self.get_weapon_level_cap(weapon_name, True)
+                if not target_level or weapon_name in mega_upgrades:
                     continue
-                if target_level > 5 and (not self.options.ngplus_items or weapon_name == RAC3ITEM.RY3N0):
-                    target_level = 5
-                if target_level > 8 and self.options.ngplus_items and weapon_name != RAC3ITEM.RY3N0:
-                    target_level = 8
+                if target_level > 5 and self.weapon_levels.get(weapon_name, 1) < 6:
+                    current_id = self._read8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS)
+                    if current_id not in UPGRADE_DICT[weapon_name][5:]:
+                        target_level = 5  # Reach V5 before the Mega upgrade can take effect.
                 if self.vendor_type == RAC3VENDORTYPE.WEAPON:
-                    if self.read_weapon_vendor_slot_data(self.vendor_cursor_pos).item_id.value == RAC3_ITEM_DATA_TABLE[
-                        weapon_name].ID and not self.hovering_over_ammo():
-                        target_level = 1
-                if weapon_name == RAC3ITEM.RY3N0 and target_level > self.ryno:
-                    target_level = self.ryno
+                    if (self.read_weapon_vendor_slot_data(self.vendor_cursor_pos).item_id.value ==
+                        RAC3_ITEM_DATA_TABLE[weapon_name].ID and not self.hovering_over_ammo()
+                        and not self.hovering_over_mega()):
+                        self._write8(non_prog_weapon_data[weapon_name].LEVEL_ADDRESS, UPGRADE_DICT[weapon_name][0])
+                        continue  # Keep the tracked level for Mega eligibility while this slot uses the base name.
                 if weapon_name == RAC3ITEM.RY3N0 and self.weapon_levels.get(weapon_name, 1) > self.ryno:
                     self.weapon_levels[weapon_name] = self.ryno
                 # logger.debug(f"weapon: {weapon_name}, target: {target_level}")
@@ -2948,8 +2987,16 @@ class Rac3Interface(GameInterface):
                 current_id = self._read8(weapon_data.LEVEL_ADDRESS)
                 current_level = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[current_id]].LEVEL
                 prev_saved = self.weapon_levels.get(weapon_name, 1)
-                if current_level > prev_saved:
-                    self.weapon_levels[weapon_name] = current_level
+                if weapon_name in MEGA_WEAPON_UPGRADES:
+                    cap = self.get_weapon_level_cap(weapon_name, False)
+                    prev_saved = min(prev_saved, cap)
+                    if current_level > cap:
+                        current_level = cap
+                        variant = UPGRADE_DICT[weapon_name][cap - 1]
+                        self._write8(weapon_data.LEVEL_ADDRESS, variant)
+                        threshold = RAC3_ITEM_DATA_TABLE[ITEM_NAME_FROM_ID[variant]].XP_THRESHOLD
+                        self._write32(weapon_data.XP_ADDRESS, threshold)
+                self.weapon_levels[weapon_name] = max(prev_saved, current_level)
                 if self.vendor_type == RAC3VENDORTYPE.WEAPON:
                     if self.read_weapon_vendor_slot_data(self.vendor_cursor_pos).item_id.value == RAC3_ITEM_DATA_TABLE[
                         weapon_name].ID and not self.hovering_over_ammo() and not self.hovering_over_mega():
@@ -3738,7 +3785,7 @@ class Rac3Interface(GameInterface):
             f"Current Action Type: {ACTION_TYPE_NAMES.get(self.action_type, 'Unknown')} ("
             f"{hex(self.action_type).upper()})")
         logger.info(f"Current Available Weapon Vendor Items: {self.weapon_vendor_items}")
-        logger.info(f"Current Available Omega Weapon Items: {self.omega_weapon_vendors_items}")
+        logger.info(f"Current Available Mega Weapon Items: {self.mega_weapon_vendor_items}")
         logger.info(f"Current Available Armor Vendor Items: {self.armor_vendor_items}")
         if self.cycle_times:
             cycle_min = min(self.cycle_times)

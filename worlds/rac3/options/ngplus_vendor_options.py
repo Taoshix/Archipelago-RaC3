@@ -6,10 +6,7 @@ from worlds.rac3.constants.options import RAC3OPTION
 
 class NGPlusVendor(Toggle):
     """
-    Determines if the RY3N0 Purchase should be a location in the vendor or not.
-    ------------------------------------------------------------------------------------
-    No:   The RY3N0 is not a purchasable location.
-    Yes:  The RY3N0 is a purchasable location.
-    ------------------------------------------------------------------------------------
+    Adds Mega weapon vendor locations once the corresponding weapon reaches V5.
+    If weapon vendors are enabled, this option also adds the RY3N0 as a vendor location.
     """
     display_name = RAC3OPTION.NGPLUS_VENDOR

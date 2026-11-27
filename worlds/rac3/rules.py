@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import CollectionRule, CollectionState
 from worlds.generic.Rules import add_rule
-from worlds.rac3.constants.data.item import infobot_data, prog_weapon_data
+from worlds.rac3.constants.data.item import infobot_data
 from worlds.rac3.constants.data.location import RAC3_LOCATION_DATA_TABLE
 from worlds.rac3.constants.event import BASE_PLANETS, RAC3EVENT
 from worlds.rac3.constants.items import RAC3ITEM
@@ -416,16 +416,53 @@ def set_rules(world: "RaC3World"):
         RAC3TROPHY.PHOENIX_NANO_FINDER:
             lambda state: state.has_from_list(infobot_data.keys(), world.player,
                                               calc_nanotech_requirement(10, True)),
-        RAC3TROPHY.PHOENIX_OMEGA_ARSENAL:
-            lambda state:
-            world.options.progressive_weapons.value == 0 or
-            (state.has_all_counts(
-                {weapon: 0 if weapon == RAC3ITEM.PROGRESSIVE_RY3N0 else 5 for weapon in prog_weapon_data.keys()},
-                world.player) and
-             world.options.ngplus_items.value == 0) or
-            state.has_all_counts(
-                {weapon: 5 if weapon == RAC3ITEM.PROGRESSIVE_RY3N0 else 8 for weapon in prog_weapon_data.keys()},
-                world.player),
+        RAC3TROPHY.PHOENIX_OMEGA_ARSENAL: lambda state: (
+            state.has_all_counts({
+                RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER: 8,
+                RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER: 8,
+                RAC3ITEM.PROGRESSIVE_N60_STORM: 8,
+                RAC3ITEM.PROGRESSIVE_PLASMA_WHIP: 8,
+                RAC3ITEM.PROGRESSIVE_INFECTOR: 8,
+                RAC3ITEM.PROGRESSIVE_SUCK_CANNON: 8,
+                RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA: 8,
+                RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM: 8,
+                RAC3ITEM.PROGRESSIVE_FLUX_RIFLE: 8,
+                RAC3ITEM.PROGRESSIVE_ANNIHILATOR: 8,
+                RAC3ITEM.PROGRESSIVE_HOLO_SHIELD: 8,
+                RAC3ITEM.PROGRESSIVE_DISC_BLADE: 8,
+                RAC3ITEM.PROGRESSIVE_RIFT_INDUCER: 8,
+                RAC3ITEM.PROGRESSIVE_QWACK_O_RAY: 8,
+                RAC3ITEM.PROGRESSIVE_MINI_TURRET: 8,
+                RAC3ITEM.PROGRESSIVE_LAVA_GUN: 8,
+                RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER: 8,
+                RAC3ITEM.PROGRESSIVE_BOUNCER: 8,
+                RAC3ITEM.PROGRESSIVE_PLASMA_COIL: 8,
+                RAC3ITEM.PROGRESSIVE_RY3N0: 5,
+            }, world.player)
+            if world.options.progressive_weapons.value
+            else state.has_all([
+                RAC3ITEM.SHOCK_BLASTER, RAC3ITEM.MEGA_SHOCK_CANNON_UPGRADE,
+                RAC3ITEM.NITRO_LAUNCHER, RAC3ITEM.MEGA_NITRO_ERUPTOR_UPGRADE,
+                RAC3ITEM.N60_STORM, RAC3ITEM.MEGA_N90_HURRICANE_UPGRADE,
+                RAC3ITEM.PLASMA_WHIP, RAC3ITEM.MEGA_QUANTUM_WHIP_UPGRADE,
+                RAC3ITEM.INFECTOR, RAC3ITEM.MEGA_INFECTO_BOMB_UPGRADE,
+                RAC3ITEM.SUCK_CANNON, RAC3ITEM.MEGA_VORTEX_CANNON_UPGRADE,
+                RAC3ITEM.SPITTING_HYDRA, RAC3ITEM.MEGA_TEMPEST_UPGRADE,
+                RAC3ITEM.AGENTS_OF_DOOM, RAC3ITEM.MEGA_AGENTS_OF_DREAD_UPGRADE,
+                RAC3ITEM.FLUX_RIFLE, RAC3ITEM.MEGA_SPLITTER_RIFLE_UPGRADE,
+                RAC3ITEM.ANNIHILATOR, RAC3ITEM.MEGA_DECIMATOR_UPGRADE,
+                RAC3ITEM.HOLO_SHIELD, RAC3ITEM.MEGA_ULTRASHIELD_LAUNCHER_UPGRADE,
+                RAC3ITEM.DISC_BLADE, RAC3ITEM.MEGA_MULTI_DISC_GUN_UPGRADE,
+                RAC3ITEM.RIFT_INDUCER, RAC3ITEM.MEGA_RIFT_RIPPER_UPGRADE,
+                RAC3ITEM.QWACK_O_RAY, RAC3ITEM.MEGA_QWACK_O_BLITZER_UPGRADE,
+                RAC3ITEM.MINI_TURRET, RAC3ITEM.MEGA_MEGATURRET_GLOVE_UPGRADE,
+                RAC3ITEM.LAVA_GUN, RAC3ITEM.MEGA_LIQUID_NITROGEN_GUN_UPGRADE,
+                RAC3ITEM.SHIELD_CHARGER, RAC3ITEM.MEGA_TESLA_BARRIER_UPGRADE,
+                RAC3ITEM.BOUNCER, RAC3ITEM.MEGA_HEAVY_BOUNCER_UPGRADE,
+                RAC3ITEM.PLASMA_COIL, RAC3ITEM.MEGA_PLASMA_STORM_UPGRADE,
+                RAC3ITEM.RY3N0,
+            ], world.player)
+        ),
 
         # RAC3VENDOR.MARCADIA_HYDRA
         # RAC3TBOLT.MARCADIA_POOL
@@ -877,6 +914,82 @@ def set_rules(world: "RaC3World"):
                           and state.has(RAC3ITEM.PROGRESSIVE_WRENCH, world.player, a_wrench),
 
         RAC3VENDORLOCATION.NGPLUS_RY3N0: lambda state: state.has_from_list(infobot_data.keys(), world.player, 10),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_SHOCK_CANNON:
+            lambda state: (state.has(RAC3ITEM.SHOCK_BLASTER, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_NITRO_ERUPTOR:
+            lambda state: (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_N90_HURRICANE:
+            lambda state: (state.has(RAC3ITEM.N60_STORM, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_QUANTUM_WHIP:
+            lambda state: (state.has(RAC3ITEM.PLASMA_WHIP, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_INFECTO_BOMB:
+            lambda state: (state.has(RAC3ITEM.INFECTOR, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_VORTEX_CANNON:
+            lambda state: (state.has(RAC3ITEM.SUCK_CANNON, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_TEMPEST:
+            lambda state: (state.has(RAC3ITEM.SPITTING_HYDRA, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_AGENTS_OF_DREAD:
+            lambda state: (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_SPLITTER_RIFLE:
+            lambda state: (state.has(RAC3ITEM.FLUX_RIFLE, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_DECIMATOR:
+            lambda state: (state.has(RAC3ITEM.ANNIHILATOR, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_ULTRASHIELD_LAUNCHER:
+            lambda state: (state.has(RAC3ITEM.HOLO_SHIELD, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_MULTI_DISC_GUN:
+            lambda state: (state.has(RAC3ITEM.DISC_BLADE, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_RIFT_RIPPER:
+            lambda state: (state.has(RAC3ITEM.RIFT_INDUCER, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_QWACK_O_BLITZER:
+            lambda state: (state.has(RAC3ITEM.QWACK_O_RAY, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_MEGATURRET_GLOVE:
+            lambda state: (state.has(RAC3ITEM.MINI_TURRET, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_LIQUID_NITROGEN_GUN:
+            lambda state: (state.has(RAC3ITEM.LAVA_GUN, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_TESLA_BARRIER:
+            lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_HEAVY_BOUNCER:
+            lambda state: (state.has(RAC3ITEM.BOUNCER, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 5))
+                          and can_earn_good_exp(state),
+        RAC3VENDORLOCATION.NGPLUS_MEGA_PLASMA_STORM:
+            lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player)
+                           or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 5))
+                          and can_earn_good_exp(state),
 
         RAC3NANOTECH.LEVEL_11: lambda state: state.has_from_list(infobot_data.keys(), world.player,
                                                                  calc_nanotech_requirement(1)),
@@ -1267,12 +1380,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 4),
         RAC3WEAPONLEVEL.SHOCK_BLASTER_V5: lambda state: state.has(RAC3ITEM.SHOCK_BLASTER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 5),
-        RAC3WEAPONLEVEL.SHOCK_BLASTER_V6: lambda state: (state.has(RAC3ITEM.SHOCK_BLASTER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SHOCK_BLASTER_V7: lambda state: (state.has(RAC3ITEM.SHOCK_BLASTER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SHOCK_BLASTER_V8: lambda state: (state.has(RAC3ITEM.SHOCK_BLASTER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SHOCK_BLASTER_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_SHOCK_CANNON_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SHOCK_BLASTER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.SHOCK_BLASTER_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_SHOCK_CANNON_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SHOCK_BLASTER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SHOCK_BLASTER_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_SHOCK_CANNON_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SHOCK_BLASTER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SHOCK_BLASTER, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.NITRO_LAUNCHER_V2: lambda state: state.has(RAC3ITEM.NITRO_LAUNCHER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 2),
         RAC3WEAPONLEVEL.NITRO_LAUNCHER_V3: lambda state: state.has(RAC3ITEM.NITRO_LAUNCHER, world.player) or state.has(
@@ -1281,12 +1409,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 4),
         RAC3WEAPONLEVEL.NITRO_LAUNCHER_V5: lambda state: state.has(RAC3ITEM.NITRO_LAUNCHER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 5),
-        RAC3WEAPONLEVEL.NITRO_LAUNCHER_V6: lambda state: (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.NITRO_LAUNCHER_V7: lambda state: (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.NITRO_LAUNCHER_V8: lambda state: (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.NITRO_LAUNCHER_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_NITRO_ERUPTOR_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.NITRO_LAUNCHER_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_NITRO_ERUPTOR_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.NITRO_LAUNCHER_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_NITRO_ERUPTOR_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.NITRO_LAUNCHER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_NITRO_LAUNCHER, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.PLASMA_WHIP_V2: lambda state: state.has(RAC3ITEM.PLASMA_WHIP, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 2),
         RAC3WEAPONLEVEL.PLASMA_WHIP_V3: lambda state: state.has(RAC3ITEM.PLASMA_WHIP, world.player) or state.has(
@@ -1295,12 +1438,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 4),
         RAC3WEAPONLEVEL.PLASMA_WHIP_V5: lambda state: state.has(RAC3ITEM.PLASMA_WHIP, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 5),
-        RAC3WEAPONLEVEL.PLASMA_WHIP_V6: lambda state: (state.has(RAC3ITEM.PLASMA_WHIP, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.PLASMA_WHIP_V7: lambda state: (state.has(RAC3ITEM.PLASMA_WHIP, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.PLASMA_WHIP_V8: lambda state: (state.has(RAC3ITEM.PLASMA_WHIP, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.PLASMA_WHIP_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_QUANTUM_WHIP_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.PLASMA_WHIP, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.PLASMA_WHIP_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_QUANTUM_WHIP_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.PLASMA_WHIP, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.PLASMA_WHIP_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_QUANTUM_WHIP_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.PLASMA_WHIP, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_WHIP, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.N60_STORM_V2: lambda state: state.has(RAC3ITEM.N60_STORM, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 2),
         RAC3WEAPONLEVEL.N60_STORM_V3: lambda state: state.has(RAC3ITEM.N60_STORM, world.player) or state.has(
@@ -1309,12 +1467,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 4),
         RAC3WEAPONLEVEL.N60_STORM_V5: lambda state: state.has(RAC3ITEM.N60_STORM, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 5),
-        RAC3WEAPONLEVEL.N60_STORM_V6: lambda state: (state.has(RAC3ITEM.N60_STORM, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.N60_STORM_V7: lambda state: (state.has(RAC3ITEM.N60_STORM, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.N60_STORM_V8: lambda state: (state.has(RAC3ITEM.N60_STORM, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.N60_STORM_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_N90_HURRICANE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.N60_STORM, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.N60_STORM_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_N90_HURRICANE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.N60_STORM, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.N60_STORM_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_N90_HURRICANE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.N60_STORM, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_N60_STORM, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.INFECTOR_V2: lambda state: state.has(RAC3ITEM.INFECTOR, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 2),
         RAC3WEAPONLEVEL.INFECTOR_V3: lambda state: state.has(RAC3ITEM.INFECTOR, world.player) or state.has(
@@ -1323,12 +1496,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 4),
         RAC3WEAPONLEVEL.INFECTOR_V5: lambda state: state.has(RAC3ITEM.INFECTOR, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 5),
-        RAC3WEAPONLEVEL.INFECTOR_V6: lambda state: (state.has(RAC3ITEM.INFECTOR, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.INFECTOR_V7: lambda state: (state.has(RAC3ITEM.INFECTOR, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.INFECTOR_V8: lambda state: (state.has(RAC3ITEM.INFECTOR, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.INFECTOR_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_INFECTO_BOMB_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.INFECTOR, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.INFECTOR_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_INFECTO_BOMB_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.INFECTOR, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.INFECTOR_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_INFECTO_BOMB_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.INFECTOR, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_INFECTOR, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.SUCK_CANNON_V2: lambda state: state.has(RAC3ITEM.SUCK_CANNON, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 2),
         RAC3WEAPONLEVEL.SUCK_CANNON_V3: lambda state: state.has(RAC3ITEM.SUCK_CANNON, world.player) or state.has(
@@ -1337,12 +1525,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 4),
         RAC3WEAPONLEVEL.SUCK_CANNON_V5: lambda state: state.has(RAC3ITEM.SUCK_CANNON, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 5),
-        RAC3WEAPONLEVEL.SUCK_CANNON_V6: lambda state: (state.has(RAC3ITEM.SUCK_CANNON, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SUCK_CANNON_V7: lambda state: (state.has(RAC3ITEM.SUCK_CANNON, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SUCK_CANNON_V8: lambda state: (state.has(RAC3ITEM.SUCK_CANNON, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SUCK_CANNON_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_VORTEX_CANNON_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SUCK_CANNON, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.SUCK_CANNON_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_VORTEX_CANNON_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SUCK_CANNON, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SUCK_CANNON_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_VORTEX_CANNON_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SUCK_CANNON, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SUCK_CANNON, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.SPITTING_HYDRA_V2: lambda state: state.has(RAC3ITEM.SPITTING_HYDRA, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 2),
         RAC3WEAPONLEVEL.SPITTING_HYDRA_V3: lambda state: state.has(RAC3ITEM.SPITTING_HYDRA, world.player) or state.has(
@@ -1351,12 +1554,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 4),
         RAC3WEAPONLEVEL.SPITTING_HYDRA_V5: lambda state: state.has(RAC3ITEM.SPITTING_HYDRA, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 5),
-        RAC3WEAPONLEVEL.SPITTING_HYDRA_V6: lambda state: (state.has(RAC3ITEM.SPITTING_HYDRA, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SPITTING_HYDRA_V7: lambda state: (state.has(RAC3ITEM.SPITTING_HYDRA, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SPITTING_HYDRA_V8: lambda state: (state.has(RAC3ITEM.SPITTING_HYDRA, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SPITTING_HYDRA_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_TEMPEST_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SPITTING_HYDRA, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.SPITTING_HYDRA_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_TEMPEST_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SPITTING_HYDRA, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SPITTING_HYDRA_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_TEMPEST_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SPITTING_HYDRA, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SPITTING_HYDRA, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V2: lambda state: state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 2),
         RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V3: lambda state: state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player) or state.has(
@@ -1365,12 +1583,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 4),
         RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V5: lambda state: state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 5),
-        RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V6: lambda state: (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V7: lambda state: (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V8: lambda state: (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_AGENTS_OF_DREAD_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_AGENTS_OF_DREAD_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.AGENTS_OF_DOOM_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_AGENTS_OF_DREAD_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.AGENTS_OF_DOOM, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_AGENTS_OF_DOOM, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.FLUX_RIFLE_V2: lambda state: state.has(RAC3ITEM.FLUX_RIFLE, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 2),
         RAC3WEAPONLEVEL.FLUX_RIFLE_V3: lambda state: state.has(RAC3ITEM.FLUX_RIFLE, world.player) or state.has(
@@ -1379,12 +1612,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 4),
         RAC3WEAPONLEVEL.FLUX_RIFLE_V5: lambda state: state.has(RAC3ITEM.FLUX_RIFLE, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 5),
-        RAC3WEAPONLEVEL.FLUX_RIFLE_V6: lambda state: (state.has(RAC3ITEM.FLUX_RIFLE, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.FLUX_RIFLE_V7: lambda state: (state.has(RAC3ITEM.FLUX_RIFLE, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.FLUX_RIFLE_V8: lambda state: (state.has(RAC3ITEM.FLUX_RIFLE, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.FLUX_RIFLE_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_SPLITTER_RIFLE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.FLUX_RIFLE, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.FLUX_RIFLE_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_SPLITTER_RIFLE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.FLUX_RIFLE, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.FLUX_RIFLE_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_SPLITTER_RIFLE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.FLUX_RIFLE, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_FLUX_RIFLE, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.LAVA_GUN_V2: lambda state: state.has(RAC3ITEM.LAVA_GUN, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 2),
         RAC3WEAPONLEVEL.LAVA_GUN_V3: lambda state: state.has(RAC3ITEM.LAVA_GUN, world.player) or state.has(
@@ -1393,12 +1641,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 4),
         RAC3WEAPONLEVEL.LAVA_GUN_V5: lambda state: state.has(RAC3ITEM.LAVA_GUN, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 5),
-        RAC3WEAPONLEVEL.LAVA_GUN_V6: lambda state: (state.has(RAC3ITEM.LAVA_GUN, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.LAVA_GUN_V7: lambda state: (state.has(RAC3ITEM.LAVA_GUN, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.LAVA_GUN_V8: lambda state: (state.has(RAC3ITEM.LAVA_GUN, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.LAVA_GUN_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_LIQUID_NITROGEN_GUN_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.LAVA_GUN, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.LAVA_GUN_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_LIQUID_NITROGEN_GUN_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.LAVA_GUN, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.LAVA_GUN_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_LIQUID_NITROGEN_GUN_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.LAVA_GUN, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_LAVA_GUN, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.MINI_TURRET_V2: lambda state: state.has(RAC3ITEM.MINI_TURRET, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 2),
         RAC3WEAPONLEVEL.MINI_TURRET_V3: lambda state: state.has(RAC3ITEM.MINI_TURRET, world.player) or state.has(
@@ -1407,12 +1670,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 4),
         RAC3WEAPONLEVEL.MINI_TURRET_V5: lambda state: state.has(RAC3ITEM.MINI_TURRET, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 5),
-        RAC3WEAPONLEVEL.MINI_TURRET_V6: lambda state: (state.has(RAC3ITEM.MINI_TURRET, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.MINI_TURRET_V7: lambda state: (state.has(RAC3ITEM.MINI_TURRET, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.MINI_TURRET_V8: lambda state: (state.has(RAC3ITEM.MINI_TURRET, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.MINI_TURRET_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_MEGATURRET_GLOVE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.MINI_TURRET, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.MINI_TURRET_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_MEGATURRET_GLOVE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.MINI_TURRET, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.MINI_TURRET_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_MEGATURRET_GLOVE_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.MINI_TURRET, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_MINI_TURRET, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.ANNIHILATOR_V2: lambda state: state.has(RAC3ITEM.ANNIHILATOR, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 2),
         RAC3WEAPONLEVEL.ANNIHILATOR_V3: lambda state: state.has(RAC3ITEM.ANNIHILATOR, world.player) or state.has(
@@ -1421,12 +1699,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 4),
         RAC3WEAPONLEVEL.ANNIHILATOR_V5: lambda state: state.has(RAC3ITEM.ANNIHILATOR, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 5),
-        RAC3WEAPONLEVEL.ANNIHILATOR_V6: lambda state: (state.has(RAC3ITEM.ANNIHILATOR, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.ANNIHILATOR_V7: lambda state: (state.has(RAC3ITEM.ANNIHILATOR, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.ANNIHILATOR_V8: lambda state: (state.has(RAC3ITEM.ANNIHILATOR, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.ANNIHILATOR_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_DECIMATOR_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.ANNIHILATOR, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.ANNIHILATOR_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_DECIMATOR_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.ANNIHILATOR, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.ANNIHILATOR_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_DECIMATOR_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.ANNIHILATOR, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_ANNIHILATOR, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.HOLO_SHIELD_V2: lambda state: state.has(RAC3ITEM.HOLO_SHIELD, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 2),
         RAC3WEAPONLEVEL.HOLO_SHIELD_V3: lambda state: state.has(RAC3ITEM.HOLO_SHIELD, world.player) or state.has(
@@ -1435,12 +1728,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 4),
         RAC3WEAPONLEVEL.HOLO_SHIELD_V5: lambda state: state.has(RAC3ITEM.HOLO_SHIELD, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 5),
-        RAC3WEAPONLEVEL.HOLO_SHIELD_V6: lambda state: (state.has(RAC3ITEM.HOLO_SHIELD, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.HOLO_SHIELD_V7: lambda state: (state.has(RAC3ITEM.HOLO_SHIELD, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.HOLO_SHIELD_V8: lambda state: (state.has(RAC3ITEM.HOLO_SHIELD, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.HOLO_SHIELD_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_ULTRASHIELD_LAUNCHER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.HOLO_SHIELD, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.HOLO_SHIELD_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_ULTRASHIELD_LAUNCHER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.HOLO_SHIELD, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.HOLO_SHIELD_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_ULTRASHIELD_LAUNCHER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.HOLO_SHIELD, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_HOLO_SHIELD, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.DISC_BLADE_V2: lambda state: state.has(RAC3ITEM.DISC_BLADE, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 2),
         RAC3WEAPONLEVEL.DISC_BLADE_V3: lambda state: state.has(RAC3ITEM.DISC_BLADE, world.player) or state.has(
@@ -1449,12 +1757,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 4),
         RAC3WEAPONLEVEL.DISC_BLADE_V5: lambda state: state.has(RAC3ITEM.DISC_BLADE, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 5),
-        RAC3WEAPONLEVEL.DISC_BLADE_V6: lambda state: (state.has(RAC3ITEM.DISC_BLADE, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.DISC_BLADE_V7: lambda state: (state.has(RAC3ITEM.DISC_BLADE, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.DISC_BLADE_V8: lambda state: (state.has(RAC3ITEM.DISC_BLADE, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.DISC_BLADE_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_MULTI_DISC_GUN_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.DISC_BLADE, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.DISC_BLADE_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_MULTI_DISC_GUN_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.DISC_BLADE, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.DISC_BLADE_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_MULTI_DISC_GUN_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.DISC_BLADE, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_DISC_BLADE, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.RIFT_INDUCER_V2: lambda state: state.has(RAC3ITEM.RIFT_INDUCER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 2),
         RAC3WEAPONLEVEL.RIFT_INDUCER_V3: lambda state: state.has(RAC3ITEM.RIFT_INDUCER, world.player) or state.has(
@@ -1463,12 +1786,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 4),
         RAC3WEAPONLEVEL.RIFT_INDUCER_V5: lambda state: state.has(RAC3ITEM.RIFT_INDUCER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 5),
-        RAC3WEAPONLEVEL.RIFT_INDUCER_V6: lambda state: (state.has(RAC3ITEM.RIFT_INDUCER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.RIFT_INDUCER_V7: lambda state: (state.has(RAC3ITEM.RIFT_INDUCER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.RIFT_INDUCER_V8: lambda state: (state.has(RAC3ITEM.RIFT_INDUCER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.RIFT_INDUCER_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_RIFT_RIPPER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.RIFT_INDUCER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.RIFT_INDUCER_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_RIFT_RIPPER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.RIFT_INDUCER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.RIFT_INDUCER_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_RIFT_RIPPER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.RIFT_INDUCER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_RIFT_INDUCER, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.QWACK_O_RAY_V2: lambda state: state.has(RAC3ITEM.QWACK_O_RAY, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 2),
         RAC3WEAPONLEVEL.QWACK_O_RAY_V3: lambda state: state.has(RAC3ITEM.QWACK_O_RAY, world.player) or state.has(
@@ -1477,12 +1815,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 4),
         RAC3WEAPONLEVEL.QWACK_O_RAY_V5: lambda state: state.has(RAC3ITEM.QWACK_O_RAY, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 5),
-        RAC3WEAPONLEVEL.QWACK_O_RAY_V6: lambda state: (state.has(RAC3ITEM.QWACK_O_RAY, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.QWACK_O_RAY_V7: lambda state: (state.has(RAC3ITEM.QWACK_O_RAY, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.QWACK_O_RAY_V8: lambda state: (state.has(RAC3ITEM.QWACK_O_RAY, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.QWACK_O_RAY_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_QWACK_O_BLITZER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.QWACK_O_RAY, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 5)))
+        ),
+        RAC3WEAPONLEVEL.QWACK_O_RAY_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_QWACK_O_BLITZER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.QWACK_O_RAY, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.QWACK_O_RAY_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_QWACK_O_BLITZER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.QWACK_O_RAY, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_QWACK_O_RAY, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.BOUNCER_V2: lambda state: (state.has(RAC3ITEM.BOUNCER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 2)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.BOUNCER_V3: lambda state: (state.has(RAC3ITEM.BOUNCER, world.player) or state.has(
@@ -1491,12 +1844,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 4)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.BOUNCER_V5: lambda state: (state.has(RAC3ITEM.BOUNCER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 5)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.BOUNCER_V6: lambda state: (state.has(RAC3ITEM.BOUNCER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.BOUNCER_V7: lambda state: (state.has(RAC3ITEM.BOUNCER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.BOUNCER_V8: lambda state: (state.has(RAC3ITEM.BOUNCER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.BOUNCER_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_HEAVY_BOUNCER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.BOUNCER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.BOUNCER_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_HEAVY_BOUNCER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.BOUNCER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.BOUNCER_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_HEAVY_BOUNCER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.BOUNCER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_BOUNCER, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.PLASMA_COIL_V2: lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 2)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.PLASMA_COIL_V3: lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player) or state.has(
@@ -1505,12 +1873,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 4)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.PLASMA_COIL_V5: lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 5)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.PLASMA_COIL_V6: lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.PLASMA_COIL_V7: lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.PLASMA_COIL_V8: lambda state: (state.has(RAC3ITEM.PLASMA_COIL, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.PLASMA_COIL_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_PLASMA_STORM_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.PLASMA_COIL, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.PLASMA_COIL_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_PLASMA_STORM_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.PLASMA_COIL, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.PLASMA_COIL_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_PLASMA_STORM_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.PLASMA_COIL, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_PLASMA_COIL, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.SHIELD_CHARGER_V2: lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 2)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.SHIELD_CHARGER_V3: lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player) or state.has(
@@ -1519,12 +1902,27 @@ def set_rules(world: "RaC3World"):
             RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 4)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.SHIELD_CHARGER_V5: lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 5)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SHIELD_CHARGER_V6: lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 6)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SHIELD_CHARGER_V7: lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 7)) and can_earn_good_exp(state),
-        RAC3WEAPONLEVEL.SHIELD_CHARGER_V8: lambda state: (state.has(RAC3ITEM.SHIELD_CHARGER, world.player) or state.has(
-            RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 8)) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SHIELD_CHARGER_V6: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 6)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_TESLA_BARRIER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SHIELD_CHARGER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SHIELD_CHARGER_V7: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 7)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_TESLA_BARRIER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SHIELD_CHARGER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 5)))
+        ) and can_earn_good_exp(state),
+        RAC3WEAPONLEVEL.SHIELD_CHARGER_V8: lambda state: (
+            state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 8)
+            if world.options.progressive_weapons.value
+            else (state.has(RAC3ITEM.MEGA_TESLA_BARRIER_UPGRADE, world.player)
+                  and (state.has(RAC3ITEM.SHIELD_CHARGER, world.player)
+                       or state.has(RAC3ITEM.PROGRESSIVE_SHIELD_CHARGER, world.player, 5)))
+        ) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.RY3N0_V2: lambda state: (state.has(RAC3ITEM.RY3N0, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_RY3N0, world.player, 2)) and can_earn_good_exp(state),
         RAC3WEAPONLEVEL.RY3N0_V3: lambda state: (state.has(RAC3ITEM.RY3N0, world.player) or state.has(
@@ -1534,6 +1932,7 @@ def set_rules(world: "RaC3World"):
         RAC3WEAPONLEVEL.RY3N0_V5: lambda state: (state.has(RAC3ITEM.RY3N0, world.player) or state.has(
             RAC3ITEM.PROGRESSIVE_RY3N0, world.player, 5)) and can_earn_good_exp(state),
     }
+
     event_rules_dict: dict[str, CollectionRule] = {
         RAC3EVENT.FLORANA_QWARK[0]: lambda state: state.has_any(
             [RAC3ITEM.HELI_PACK, RAC3ITEM.CLANK, RAC3ITEM.PROGRESSIVE_PACK, RAC3ITEM.CHARGE_BOOTS], world.player),

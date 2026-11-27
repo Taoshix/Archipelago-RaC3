@@ -22,6 +22,7 @@ class RAC3TAG:
     VR = "VR"
     NOT_IMPLEMENTED = "Not Implemented"
     NGPLUS = "New Game Plus"
+    MEGA_WEAPON_VENDOR = "Mega Weapon Vendor"
     SHIP = "Ship"
     ARMOR = "Armor"
     WEAPON_LEVEL = "Weapon Level"
@@ -47,6 +48,7 @@ all_tags: list[str] = [
     RAC3TAG.VR,
     RAC3TAG.NOT_IMPLEMENTED,
     RAC3TAG.NGPLUS,
+    RAC3TAG.MEGA_WEAPON_VENDOR,
     RAC3TAG.SHIP,
     RAC3TAG.ARMOR,
     RAC3TAG.WEAPON_LEVEL,

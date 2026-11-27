@@ -22,6 +22,7 @@ class RAC3ITEMTAG:
     WEAPON = "Weapon"
     WRENCH = "Wrench"
     WEAPON_UPGRADE = "Weapon Upgrade"
+    MEGA_WEAPON_UPGRADE = "Mega Weapon Upgrade"
     CLANK = "Clank Packs"
     CHEAT = "Cheat Codes"
     QUICK_SELECTABLE = "Quick Selectable"

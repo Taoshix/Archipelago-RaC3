@@ -15,6 +15,7 @@ from worlds.rac3.constants.data.vendorslot import (ITEM_TO_ARMOR_VENDOR_LOCATION
 from worlds.rac3.constants.input import RAC3INPUT
 from worlds.rac3.constants.items import RAC3ITEM
 from worlds.rac3.constants.locations.general import RAC3LOCATION
+from worlds.rac3.constants.locations.vendors import MEGA_WEAPON_VENDOR_LOCATIONS
 from worlds.rac3.constants.messages.box_theme import RAC3BOXTHEME
 from worlds.rac3.constants.messages.text_strings import RAC3TEXTFORMATSTRING
 from worlds.rac3.constants.moby_flag import HACKER_PUZZLE_TO_REGION
@@ -260,6 +261,8 @@ async def handle_codecave(ctx: "Context") -> None:
     all_vendor_locations: list[str] = [RAC3LOCATION.HIDEOUT_PDA]
     if ctx.slot_data.get(RAC3OPTION.WEAPON_VENDORS, False):
         all_vendor_locations.extend(ITEM_TO_WEAPON_VENDOR_LOCATION.values())
+    if ctx.slot_data[RAC3OPTION.NGPLUS_VENDOR]:
+        all_vendor_locations.extend(MEGA_WEAPON_VENDOR_LOCATIONS.values())
     if ctx.slot_data.get(RAC3OPTION.ARMOR_VENDOR, False):
         all_vendor_locations.extend(ITEM_TO_ARMOR_VENDOR_LOCATION.values())
     if ctx.slot_data.get(RAC3OPTION.SHIP_VENDOR, False):

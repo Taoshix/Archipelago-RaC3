@@ -6,16 +6,8 @@ from worlds.rac3.constants.options import RAC3OPTION
 
 class NGPlusItems(Toggle):
     """
-    Determines how New Game Plus items appear in the multiworld.
-    When enabled, it puts the RY3N0 into the item pool and the mega versions of weapons in the vendor
-    if you have a V5 weapon.
-    ---------------------------------------------------------------------------------------------------------
-    No:   The RY3N0 will not appear in the multiworld, the mega versions of weapons are not purchasable.
-    Yes:  The RY3N0 will appear in the multiworld, the mega versions of weapons are purchasable.
-    ---------------------------------------------------------------------------------------------------------
-    For progressive weapons, it will instead add 3 more upgrades to the pool, up to V8.
-    When enabled, locations for the mega weapon vendor purchases will not be sent out, it'll provide the mega version
-    of the weapon only.
-    ---------------------------------------------------------------------------------------------------------
+    Adds the RY3N0 to the item pool.
+    With regular weapons, each weapon gets a Mega Upgrade item that takes it from V5 to V6.
+    With progressive weapons, the 6th progressive weapon takes the weapon from V5 to V6.
     """
     display_name = RAC3OPTION.NGPLUS_ITEMS

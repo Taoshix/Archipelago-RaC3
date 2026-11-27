@@ -149,7 +149,8 @@ class RAC3GALACTICMAP:
     @staticmethod
     def get_rows_address(planet: str) -> int | None:
         """Return the US-relative row address for use with address_convert."""
-        if planet not in INFOBOT_FROM_PLANET:
+        # Phoenix Assault has a ship menu and shares the Starship Phoenix Infobot.
+        if planet not in INFOBOT_FROM_PLANET and planet != RAC3REGION.PHOENIX_ASSAULT:
             return None
         return RAC3STATUS.GALACTIC_MAP_ROWS_BASE + PLANET_ROWS_OFFSET[planet]
 

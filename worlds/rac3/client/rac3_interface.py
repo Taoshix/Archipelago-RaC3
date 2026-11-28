@@ -709,11 +709,18 @@ class Rac3Interface(GameInterface):
         self.last_death_count = self.death_count
 
     def add_cosmetics(self):
-        """Apply the generated cosmetics to the current game"""
+        """Apply the generated cosmetics and unlock the selected player skin."""
         self._write8(RAC3STATUS.SHIP_CONFIG, self.options.ship_nose + self.options.ship_wings)
         self._write8(RAC3STATUS.SHIP_SKIN, self.options.ship_skin)
-        self._write8(RAC3STATUS.PLAYER_SKIN, self.options.player_skin)
-        self._write8(RAC3STATUS.PLAYER_SKIN_2, self.options.player_skin)
+
+        skin_id = self.options.player_skin
+        # The low byte also contains the default armor and armor-skin unlocks.
+        if 0x05 <= skin_id < 0x08:
+            self._write_bits((RAC3STATUS.PLAYER_SKIN_UNLOCKS_LOW, skin_id))
+        elif 0x08 <= skin_id < 0x10:
+            self._write_bits((RAC3STATUS.PLAYER_SKIN_UNLOCKS_HIGH, skin_id - 0x08))
+        self._write8(RAC3STATUS.PLAYER_SKIN, skin_id)
+        self._write8(RAC3STATUS.PLAYER_SKIN_2, skin_id)
         self._write32(RAC3STATUS.LOADED_SKIN, 0xFFFFFFFF)  # Invalidate cached skin
 
     def setup_challenge_mode(self):

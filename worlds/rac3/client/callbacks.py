@@ -66,6 +66,9 @@ async def pcsx2_sync_task(ctx: "Context") -> None:
                     ctx.game_interface.emulator_connected = False
                     logger.info(message)
                     ctx.last_pine_message = message
+                if ctx.game_interface.first_connection:
+                    ctx.game_interface.first_connection = False
+                    await sleep(0.5) # Let the client UI load before attempting to connect to the game
                 ctx.game_interface.connect_to_game()
                 if not ctx.game_interface.get_connection_state():
                     if connection_retry_attempts < 3:

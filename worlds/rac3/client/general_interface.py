@@ -25,6 +25,7 @@ class GameInterface:
     game_id_error: str | None = None
     is_connecting: bool = False
     emulator_connected: bool = False
+    first_connection: bool = True
     cycle_reads_count: int = 0
     cycle_writes_count: int = 0
     cycle_batch_reads_count: int = 0

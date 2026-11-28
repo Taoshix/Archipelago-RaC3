@@ -125,7 +125,11 @@ async def _handle_game_ready(ctx: "Context") -> None:
     if ctx.slot_data is not None and ctx.slot is not None:
         # Check if exit to main menu
         menu = ctx.main_menu
-        ctx.main_menu = ctx.game_interface.check_main_menu()
+        in_main_menu = ctx.game_interface.check_main_menu()
+        # Keep the file-load transition pending until its server save is available.
+        if menu and not in_main_menu and not ctx.data_received:
+            return
+        ctx.main_menu = in_main_menu
 
         if ctx.main_menu:
             ctx.save_file_identity = None
@@ -152,8 +156,9 @@ async def _handle_game_ready(ctx: "Context") -> None:
             logger.info(f"Items Received: {received_count}")
             saved_count = ctx.stored_data.get(RAC3OPTION.PROCESSED_LOCATIONS, received_count)
             items_to_restore = max(0, min(saved_count, received_count))
+            restored_items = ctx.items_received[:items_to_restore]
             ctx.game_interface.initial_fillers.clear()
-            for index, item in enumerate(ctx.items_received[:items_to_restore]):
+            for index, item in enumerate(restored_items):
                 logger.debug(f"Restoring item {index}: {ctx.item_names.lookup_in_slot(item.item, item.player)}")
                 ctx.game_interface.important_items(item.item, ctx.player_names[ctx.slot], item.location)
                 ctx.game_interface.filler_items(item.item)
@@ -171,6 +176,7 @@ async def _handle_game_ready(ctx: "Context") -> None:
             logger.info(f"Locations collected: {counter}")
             logger.info("Updating save data...")
             ctx.game_interface.load_save(ctx.save_data)
+            ctx.game_interface.fill_quick_select((item.item for item in restored_items), ctx.save_data)
             ctx.game_interface.init_stored_fillers()
             ctx.game_interface.process_offline_fillers(ctx.data_received)
             ctx.save_file_identity = file_identity

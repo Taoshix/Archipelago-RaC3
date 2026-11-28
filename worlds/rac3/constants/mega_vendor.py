@@ -92,6 +92,8 @@ MEGA_VENDOR_PURCHASE_CALLS: dict[str, tuple[tuple[int, int], ...]] = {
     ),
 }
 
+# Hooks the function that sets weapon to V6 and resets XP.
+# Replace that call with a call that writes to code cave.
 MEGA_PURCHASE_CALL_PATCH = 0x0C000000 | (RAC3INSTRUCTION.MEGA_PURCHASE_ROUTINE >> 2)
 MEGA_PURCHASE_HOOK = pack(
     "<7I",

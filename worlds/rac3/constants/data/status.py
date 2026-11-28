@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from worlds.rac3.constants.items import RAC3ITEM
+from worlds.rac3.constants.items import QUICK_SELECT_LIST, RAC3ITEM
 from worlds.rac3.constants.status import RAC3STATUS
 
 
@@ -38,3 +38,5 @@ RAC3_STATUS_DATA_TABLE: dict[str, RAC3STATUSDATA] = {
     RAC3ITEM.QUICK_SELECT_E: RAC3STATUSDATA(0xE),
     RAC3ITEM.QUICK_SELECT_F: RAC3STATUSDATA(0xF),
 }
+
+QUICK_SELECT_ADDRESSES: tuple[int, ...] = tuple(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS for slot in QUICK_SELECT_LIST)

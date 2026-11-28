@@ -32,7 +32,7 @@ from worlds.rac3.constants.data.position import RAC3POSITIONDATA
 from worlds.rac3.constants.data.region import INFOBOT_FROM_PLANET, PLANET_FROM_INFOBOT, RAC3_REGION_DATA_TABLE
 from worlds.rac3.constants.data.ship_slot import RAC3_SHIP_DATA_TABLE
 from worlds.rac3.constants.data.shortcut import RAC3_SHORTCUT_DATA_TABLE
-from worlds.rac3.constants.data.status import RAC3_STATUS_DATA_TABLE
+from worlds.rac3.constants.data.status import QUICK_SELECT_ADDRESSES
 from worlds.rac3.constants.data.vendorslot import (ARMOR_VENDOR_INVENTORY, ARMOR_VENDOR_LOCATION_TO_ITEM,
                                                    ARMOR_VENDOR_LOCATION_TO_UNLOCK_REGION,
                                                    ITEM_TO_ARMOR_VENDOR_LOCATION, ITEM_TO_WEAPON_VENDOR_LOCATION,
@@ -51,7 +51,7 @@ from worlds.rac3.constants.instruction import (ORIGINAL_INSTRUCTIONS, PATCH_INST
                                                PATCH_INSTRUCTION_TO_NAME, PATCH_INSTRUCTION_TO_PLANET,
                                                PATCHED_INSTRUCTIONS, RAC3INSTRUCTION)
 from worlds.rac3.constants.item_tags import RAC3ITEMTAG
-from worlds.rac3.constants.items import MEGA_WEAPON_UPGRADES, QUICK_SELECT_LIST, RAC3ITEM, UPGRADE_DICT
+from worlds.rac3.constants.items import MEGA_WEAPON_UPGRADES, RAC3ITEM, UPGRADE_DICT
 from worlds.rac3.constants.locations.challenge_description import (
     GAUNTLET_DESCRIPTION, GAUNTLET_DESCRIPTORS, NATION_CHALLENGE_SIZE,
     NATION_CHALLENGE_TABLE, VR_TRAINING_DESCRIPTION, VR_TRAINING_NAME, VR_TRAINING_NAME_ADDRESS,
@@ -619,7 +619,7 @@ class Rac3Interface(GameInterface):
         if (RAC3ITEMTAG.FILLER in RAC3_ITEM_DATA_TABLE[ITEM_FROM_AP_CODE[item]].TAGS or RAC3ITEMTAG.TRAP in
             RAC3_ITEM_DATA_TABLE[ITEM_FROM_AP_CODE[item]].TAGS):
             return
-        self.item_received(item, us, None, location)
+        self.item_received(item, us, None, location, add_to_quick_select=False)
 
     def filler_items(self, item: int):
         """Runs when loading into game from the main menu to update the player with filler items from the server"""
@@ -1091,7 +1091,9 @@ class Rac3Interface(GameInterface):
                       item_code: int,
                       our_name: str | None,
                       other_player: str | None,
-                      location: int):
+                      location: int,
+                      *,
+                      add_to_quick_select: bool = True):
         """Handle receiving items from the multiworld"""
         name = PROG_TO_NAME_DICT.get(ITEM_FROM_AP_CODE[item_code], ITEM_FROM_AP_CODE[item_code])
         if other_player is not None:
@@ -1295,8 +1297,10 @@ class Rac3Interface(GameInterface):
         if name in non_prog_weapon_data.keys():
             if non_prog_weapon_data[name].AMMO:
                 self._write32(non_prog_weapon_data[name].AMMO_ADDRESS, non_prog_weapon_data[name].AMMO)
-        if name in quick_selectable_data.keys() and self.UnlockItem[name] == 1:
+        if name in quick_selectable_data and self.UnlockItem[name] == 1:
             self.update_equip(name)
+            if add_to_quick_select:
+                self.fill_quick_select((item_code,))
 
     def get_valid_weapon_level_ups(self) -> list[str]:
         """Returns a list of valid weapons that can be leveled up from an xp reward, used for notifications"""
@@ -1351,24 +1355,50 @@ class Rac3Interface(GameInterface):
                 return False
         return True
 
-    # TODO: Make this more elegant in terms of how it checks for the next available quick select slot
     def update_equip(self, name: str):
-        """Equip the most recently collected weapon/gadget, update recent uses"""
-        if quick_selectable_data[name].ID:
-            if name in equipable_data.keys():
-                last_used_0 = self._read8(RAC3STATUS.LAST_USED_0)
-                last_used_1 = self._read8(RAC3STATUS.LAST_USED_1)
-                self._write8(RAC3STATUS.LAST_USED_2, last_used_1)
-                self._write8(RAC3STATUS.LAST_USED_1, last_used_0)
-                self._write8(RAC3STATUS.LAST_USED_0, equipable_data[name].ID)
-                self._write8(RAC3STATUS.EQUIPPED, equipable_data[name].ID)
-                if not self._read8(RAC3STATUS.WEAPON_LOCK):
-                    self._write8(RAC3STATUS.PENDING_ITEM, equipable_data[name].ID)
-            for slot in QUICK_SELECT_LIST:
-                slot_address = RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS
-                if not self._read8(slot_address):
-                    self._write8(slot_address, quick_selectable_data[name].ID)
-                    break
+        """Equip the most recently collected weapon or gadget and update recent uses."""
+        if not quick_selectable_data[name].ID or name not in equipable_data:
+            return
+        item_id = equipable_data[name].ID
+        last_used_0 = self._read8(RAC3STATUS.LAST_USED_0)
+        last_used_1 = self._read8(RAC3STATUS.LAST_USED_1)
+        self._write8(RAC3STATUS.LAST_USED_2, last_used_1)
+        self._write8(RAC3STATUS.LAST_USED_1, last_used_0)
+        self._write8(RAC3STATUS.LAST_USED_0, item_id)
+        self._write8(RAC3STATUS.EQUIPPED, item_id)
+        if not self._read8(RAC3STATUS.WEAPON_LOCK):
+            self._write8(RAC3STATUS.PENDING_ITEM, item_id)
+
+    def read_quick_select(self) -> list[int]:
+        """Read both wheels, including changes queued for this cycle."""
+        addresses = [self.address_convert(address) for address in QUICK_SELECT_ADDRESSES]
+        slots = self._read32_batch(addresses, should_convert=False)
+        return [self.write_batcher.get((address, self.DataType.INT32), item_id)
+                for address, item_id in zip(addresses, slots)]
+
+    def fill_quick_select(self, item_codes: Iterable[int], save: dict[int, tuple[int, int]] | None = None) -> None:
+        """Restore saved slots when provided, then fill empty slots in order."""
+        current_slots = self.read_quick_select()
+        slots = current_slots.copy()
+        if save is not None:
+            for index, address in enumerate(QUICK_SELECT_ADDRESSES):
+                entry = save.get(address)
+                if entry is not None and entry[0] == CHECKTYPE.INT:
+                    item_id = entry[1]
+                    slots[index] = item_id if self.equipment_slot_is_valid(item_id) else 0
+
+        for item_code in item_codes:
+            if 0 not in slots:
+                break
+            item_name = ITEM_FROM_AP_CODE[item_code]
+            name = PROG_TO_NAME_DICT.get(item_name, item_name)
+            data = quick_selectable_data.get(name)
+            if data and data.ID and data.ID not in slots and self.UnlockItem.get(name):
+                slots[slots.index(0)] = data.ID
+
+        for address, current_id, item_id in zip(QUICK_SELECT_ADDRESSES, current_slots, slots):
+            if current_id != item_id:
+                self._write32(address, item_id)
 
     ###################
     # Check Locations #
@@ -3040,18 +3070,18 @@ class Rac3Interface(GameInterface):
         #                 self._write_float(RAC3GADGETDEF.get_property_address(
         #                     self.planet, variant_id, RAC3GADGETDEF.DAMAGE_OFFSET), 999999.0)
 
+    def equipment_slot_is_valid(self, item_id: int) -> bool:
+        """Check whether an equipment slot can keep its current item ID."""
+        return item_id in [0, 1] or bool(self.UnlockItem.get(ITEM_NAME_FROM_ID.get(item_id, "")))
+
     def verify_quick_select_and_last_used(self):
-        """Check each slot in quick select and held item history, reset if that item has not been collected yet."""
-        _slots = [RAC3STATUS.LAST_USED_0, RAC3STATUS.LAST_USED_1, RAC3STATUS.LAST_USED_2, RAC3STATUS.EQUIPPED]
-        for slot in QUICK_SELECT_LIST:
-            _slots.append(RAC3_STATUS_DATA_TABLE[slot].SLOT_ADDRESS)
-        for addr in _slots:
-            idx = self._read8(addr)
-            if idx > 1:
-                name = ITEM_NAME_FROM_ID[idx]
-                if not self.UnlockItem[name]:
-                    # Not unlocked, but set
-                    self._write8(addr, 0)
+        """Clear Quick Select and held-item slots that contain unavailable items."""
+        for address in (RAC3STATUS.LAST_USED_0, RAC3STATUS.LAST_USED_1, RAC3STATUS.LAST_USED_2, RAC3STATUS.EQUIPPED):
+            if not self.equipment_slot_is_valid(self._read8(address)):
+                self._write8(address, 0)
+        for address, item_id in zip(QUICK_SELECT_ADDRESSES, self.read_quick_select()):
+            if not self.equipment_slot_is_valid(item_id):
+                self._write32(address, 0)
 
     def clank_cycler(self):
         """Handle Clank removal and replace a locked Thruster-Pack with Heli-Pack"""
@@ -3715,6 +3745,8 @@ class Rac3Interface(GameInterface):
                 case CHECKTYPE.INT:
                     save[data.ADDRESS] = (data.TYPE, self._read32(data.ADDRESS))
 
+        save.update({address: (CHECKTYPE.INT, item_id)
+                     for address, item_id in zip(QUICK_SELECT_ADDRESSES, self.read_quick_select())})
         return save
 
     #######################

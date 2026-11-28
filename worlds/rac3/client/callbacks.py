@@ -437,6 +437,7 @@ async def handle_planet_changed(ctx: "Context") -> None:
         ctx.game_interface.region_disabled_warning()
         ctx.game_interface.speedup_unavailable_warning()
         ctx.game_interface.tyhrranosis_fix()
+        ctx.game_interface.add_cosmetics()
 
     # Handle UT map changes
     last_planet = ctx.current_planet
